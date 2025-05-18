@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Speech Pronunciation Analyzer</title>
+  <style>
+    body { font-family: sans-serif; padding: 30px; max-width: 800px; margin: auto; }
+    .word { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 12px; }
+    .phones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+    .phone { padding: 6px 10px; border-radius: 10px; color: white; font-weight: bold; }
+    .ok { background-color: #4caf50; }
+    .miss { background-color: #f44336; }
+    .phone:hover::after {
+      content: attr(data-expected);
+      position: absolute;
+      background: #333;
+      color: white;
+      padding: 4px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .extra { background-color: #ff9800; }
+    .stress-fail { color: red; font-style: italic; }
+  </style>
+</head>
+<body>
+  <h2>🎤 Speech Pronunciation Analyzer</h2>
+<p>Sample: One argument put forward in favour of charging students is that education is becoming more expensive to fund as universities grow in size. Consequently, making students pay may maintain standards and ensure the quality of the teaching. In addition, it is argued that most students benefit from university in terms of higher paid jobs, so it is fair that they pay for at least some of the cost, especially given that the majority of students attending university are from the middle classes. Last but not least, in many countries, there is a shortage of people to do manual jobs such as plumbing and carpentry, so making university more expensive may encourage people to take up these jobs.</p>
+  <form id="analyzeForm">
+    <label>Audio File (WAV or MP3):</label><br>
+    <input type="file" name="audio" id="audioInput" ><br><br>
+
+
+    <label>Hoặc dán blob URL:</label><br>
+    <input type="text" id="blobUrlInput" style="width: 100%;"><br><br>
+
+
+
+
+    <label>Sentence:</label><br>
+    <textarea type="text" name="text" style="width: 100%;" 
+           placeholder="Transcription is a spy novel by British novelist Kate Atkinson, published in September 2018"></textarea><br><br>
+
+    <button id="analyzeBtn">Analyze</button>
+
+  </form>
+
+  <button id="recordBtn">🎙 Ghi âm</button>
+  <button id="stopBtn" disabled>⏹ Dừng</button>
+  <audio id="audioPreview" controls style="margin-top:10px; display:none;"></audio>
+
+  <hr>
+  <div id="result"></div>
+
+  <script>
+      let mediaRecorder;
+  let audioChunks = [];
+
+  document.getElementById('recordBtn').onclick = async () => {
+    audioChunks = [];
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.start();
+
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.onstop = async () => {
+      const blob = new Blob(audioChunks, { type: 'audio/wav' });
+      const audioURL = URL.createObjectURL(blob);
+
+      document.getElementById('audioPreview').src = audioURL;
+      document.getElementById('audioPreview').style.display = 'block';
+
+      // tạo ảo blob URL input
+      const response = await fetch(audioURL);
+      const file = new File([await response.blob()], "recorded.wav");
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      audioInput.files = dataTransfer.files;
+    };
+
+    document.getElementById('recordBtn').disabled = true;
+    document.getElementById('stopBtn').disabled = false;
+  };
+
+  document.getElementById('stopBtn').onclick = () => {
+    mediaRecorder.stop();
+    document.getElementById('recordBtn').disabled = false;
+    document.getElementById('stopBtn').disabled = true;
+  };
+    const form = document.getElementById('analyzeForm');
+    const audioInput = document.getElementById('audioInput');
+    const blobUrlInput = document.getElementById('blobUrlInput');
+  
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+  
+      const formData = new FormData();
+      const sentence = this.text.value.trim();
+      const file = audioInput.files[0];
+      const audioUrl = blobUrlInput.value.trim();
+  
+      if (file) {
+        formData.append('audio', file);
+      }  else if (audioUrl.includes('drive.google.com')) {
+        // Chuyển link Google Drive sang dạng direct download nếu cần
+        const match = audioUrl.match(/id=([^&]+)/);
+        if (match) {
+          const fileId = match[1];
+          const directUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+          formData.append('audio_url', directUrl);
+        } else {
+          alert("⚠️ Link Google Drive không hợp lệ. Hãy dùng link có dạng 'id=...'");
+          return;
+        }
+      } else if (audioUrl.endsWith('.mp3') || audioUrl.endsWith('.wav')) {
+        formData.append('audio_url', audioUrl);
+      }
+      else {
+              alert("⚠️ Bạn phải chọn file hoặc dán link audio (.mp3 hoặc .wav)");
+              return;
+            }
+  
+      formData.append('text', sentence);
+  
+      try {
+        const response = await fetch('http://127.0.0.1:5000/analyze_sentence', {
+          method: 'POST',
+          body: formData
+        });
+  
+        const result = await response.json();
+        const container = document.getElementById('result');
+        container.innerHTML = '';
+  
+        if (result.words) {
+          result.words.forEach(word => {
+            const div = document.createElement('div');
+            div.className = 'word';
+  
+            let html = `<strong>${word.word}</strong><br>`;
+            if (!word.stress_correct) html += `<div class="stress-fail">⚠️ Stress might be incorrect</div>`;
+  
+            html += `<div class="phones">`;
+            word.comparison.forEach(p => {
+              let cls = '';
+              if (p.match) cls = 'ok';
+              else if (p.expected && !p.user) cls = 'miss';
+              else if (!p.expected && p.user) cls = 'extra';
+              else cls = 'miss';
+  
+              html += `<div class="phone ${cls}" data-expected="Expected: ${p.expected || '-'}">${p.user || p.expected}</div>`;
+            });
+  
+            html += `</div>`;
+            div.innerHTML = html;
+            container.appendChild(div);
+          });
+        } else {
+          container.innerHTML = `<p style="color:red;">${result.error || "Something went wrong"}</p>`;
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+        document.getElementById('result').innerHTML = `<p style="color:red;">⚠️ Failed to connect to backend.</p>`;
+      }
+    });
+  </script>
+</body>
+</html>

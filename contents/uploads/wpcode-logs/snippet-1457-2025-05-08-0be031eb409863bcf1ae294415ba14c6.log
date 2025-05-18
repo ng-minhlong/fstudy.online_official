@@ -1,0 +1,1 @@
+2025-05-08T10:00:06+00:00 Cannot redeclare check_and_update_user_role() (previously declared in C:\xampp\htdocs\contents\plugins\insert-headers-and-footers\includes\class-wpcode-snippet-execute.php(419) : eval()'d code:89)

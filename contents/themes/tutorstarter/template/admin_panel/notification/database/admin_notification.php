@@ -1,0 +1,423 @@
+<?php
+/*
+ * Template Name: Notification System
+ */
+require_once('C:\xampp\htdocs\wordpress\wp-load.php'); // Adjust the path as necessary
+
+$servername = "localhost";
+$username = "root";
+$password = ""; // No password by default
+$dbname = "wordpress";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Lấy danh sách role từ WordPress
+$roles = wp_roles()->roles;
+
+// Convert role list sang JSON để truyền vào JavaScript
+$roles_json = json_encode($roles);
+
+echo '<script>
+    // Truyền danh sách roles vào JavaScript
+    const rolesList = ' . $roles_json . ';
+</script>';
+
+// Get filter value from the form input
+$id_test_filter = isset($_GET['id_test_filter']) ? $_GET['id_test_filter'] : '';
+
+// Pagination logic
+$limit = 10; // Number of records per page
+$page = isset($_GET['page']) ? $_GET['page'] : 1; // Current page number
+$offset = ($page - 1) * $limit; // Calculate offset
+
+$total_sql = "SELECT COUNT(*) FROM notification_admin";
+if ($id_test_filter) {
+    $total_sql .= " WHERE id_test LIKE '%$id_test_filter%'"; // Apply filter to total count
+}
+$total_result = $conn->query($total_sql);
+$total_rows = $total_result->fetch_row()[0];
+$total_pages = ceil($total_rows / $limit); // Calculate total pages
+
+$sql = "SELECT * FROM notification_admin";
+if ($id_test_filter) {
+    $sql .= " WHERE id_test LIKE '%$id_test_filter%'"; // Apply filter to the SQL query
+}
+$sql .= " LIMIT $limit OFFSET $offset"; // Add pagination limits
+$result = $conn->query($sql);
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Notification Admin System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+
+    
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Admin Notification</h1>
+
+<!-- Filter form -->
+<form method="GET" action="">
+        <div class="mb-3">
+            <label for="id_test_filter" class="form-label">Filter by ID Test:</label>
+            <input type="text" name="id_test_filter" id="id_test_filter" class="form-control" value="<?php echo isset($_GET['id_test_filter']) ? $_GET['id_test_filter'] : ''; ?>">
+        </div>
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a href="?" class="btn btn-secondary">Clear Filter</a>
+    </form>
+
+<!-- Display the data from the database -->
+<table class="table table-bordered">
+    <tr>
+        <th>Number</th>
+        <th>ID Notification</th>
+        <th>Timestamp</th>
+        <th>Title</th>
+        <th>Content</th>
+        <th>Level Notification</th>
+        <th>Role Receive</th>
+        <th>User Receive </th>
+        <th>View Notification</th>
+        <th>Actions</th>
+    </tr>
+
+    <?php
+        if ($result->num_rows > 0) {
+            while($row = $result->fetch_assoc()) {
+             
+               
+                echo "<tr id='row_{$row['number']}'>
+                        <td>{$row['number']}</td>
+                        <td>{$row['id_notification']}</td>
+                        <td>{$row['timestamp']}</td>
+                        <td>{$row['title']}</td>
+                        <td>{$row['content']}</td>
+                        <td>{$row['level_notification']}</td>
+                        <td  class='role_receive'>{$row['role_receive']}</td>
+                        <td>{$row['user_receive']}</td>
+
+                        <td>";
+        
+              
+                        echo "<a href='http://localhost/wordpress/notification/" . $row['id_notification'] . "' target='_blank'>Di chuyển tới link</a>";
+                  
+                
+        
+                echo "</td>
+                
+
+
+                     
+                  
+                        <td>
+                            <button class='btn btn-primary btn-sm' onclick='openEditModal({$row['number']})'>Edit</button>
+                            <button class='btn btn-danger btn-sm' onclick='deleteRecord({$row['number']})'>Delete</button>
+                        </td>
+                      </tr>";
+            }
+        } else {
+            echo "<tr><td colspan='9'>No data found</td></tr>";
+        }
+        ?>
+
+
+
+
+</table>
+  <!-- Pagination buttons -->
+  <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            <?php if ($page > 1): ?>
+                <li class="page-item"><a class="page-link" href="?page=<?php echo $page - 1; ?>&id_test_filter=<?php echo $id_test_filter; ?>">Previous</a></li>
+            <?php endif; ?>
+
+            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                <li class="page-item <?php if ($i == $page) echo 'active'; ?>">
+                    <a class="page-link" href="?page=<?php echo $i; ?>&id_test_filter=<?php echo $id_test_filter; ?>"><?php echo $i; ?></a>
+                </li>
+            <?php endfor; ?>
+
+            <?php if ($page < $total_pages): ?>
+                <li class="page-item"><a class="page-link" href="?page=<?php echo $page + 1; ?>&id_test_filter=<?php echo $id_test_filter; ?>">Next</a></li>
+            <?php endif; ?>
+        </ul>
+    </nav>
+<!-- Button to Add New Record -->
+<button class="btn btn-success" onclick="openAddModal()">Add New Notification</button>
+<!-- View More Modal -->
+<div class="modal" id="viewMoreModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewMoreTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewMoreContent">
+                <!-- Full content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Edit Modal -->
+<div class="modal" id="editModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                
+                <h5 class="modal-title">Edit Notification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="edit_number" name="number">
+                    
+                    ID Notification: <input type="text" id="edit_id_notification" name="id_notification" class="form-control" required><br>
+                    Title: <textarea type="text" id="edit_title" name="title" class="form-control" required></textarea><br>
+                    Content: <textarea type="text" id="edit_content" name="content" class="form-control" required></textarea><br>
+
+                    Level Notification:<select id="edit_level_notification" name="level_notification" class="form-control" required>
+                        <option value=""></option>
+                        <option value="Normal">Normal</option>
+                        <option value="Important">Important</option>
+                    
+                    </select><br>
+                    <!-- Role Receiver Section -->
+<div>
+    <label for="role_receive">Role Receiver:</label>
+    <div id="roleReceiveCheckboxes" class="form-check">
+        <!-- Checkboxes sẽ được render bằng JavaScript -->
+    </div>
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" id="selectEveryone" onclick="toggleAllRoles()">
+        <label class="form-check-label" for="selectEveryone">Select Everyone</label>
+    </div>
+</div>
+<br>
+
+                    User Receiver: <textarea id="edit_user_receive" name="user_receive" class="form-control" required></textarea><br>
+                      
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal" id="addModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Question</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addForm">                    
+                    ID Notification: <input type="text" id="add_id_notification" name="id_notification" class="form-control" required><br>
+                    Title: <textarea type="text" id="add_title" name="title" class="form-control" required></textarea><br>
+                    Content: <textarea type="text" id="add_content" name="content" class="form-control" required></textarea><br>
+
+                    Level Notification:<select id="add_level_notification" name="level_notification" class="form-control" required>
+                        <option value=""></option>
+                        <option value="Normal">Normal</option>
+                        <option value="Important">Important</option>
+                    
+                    </select><br>
+                    <!-- Role Receiver Section -->
+<div>
+    <label for="role_receive">Role Receiver:</label>
+    <div id="roleReceiveCheckboxes" class="form-check">
+        <!-- Checkboxes sẽ được render bằng JavaScript -->
+    </div>
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" id="selectEveryone" onclick="toggleAllRoles()">
+        <label class="form-check-label" for="selectEveryone">Select Everyone</label>
+    </div>
+</div>
+<br>
+                    User Receiver: <textarea id="add_user_receive" name="user_receive" class="form-control" required></textarea><br>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="saveNew()">Add Question</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- jQuery and JavaScript for AJAX -->
+<script>
+
+function renderRoleCheckboxes(modalId, selectedRoles = []) {
+    const rolesContainer = document.querySelector(`${modalId} #roleReceiveCheckboxes`);
+    rolesContainer.innerHTML = ""; // Xóa các checkbox cũ
+
+    // Render checkbox từ rolesList
+    for (const role in rolesList) {
+        const checked = selectedRoles.includes(role) ? "checked" : "";
+        rolesContainer.innerHTML += `
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input role-checkbox" id="role_${role}" name="role_receive[]" value="${role}" ${checked}>
+                <label class="form-check-label" for="role_${role}">${rolesList[role].name}</label>
+            </div>
+        `;
+    }
+}
+
+// Toggle tất cả roles khi tích Select Everyone
+function toggleAllRoles() {
+    const checkboxes = document.querySelectorAll(".role-checkbox");
+    const selectEveryone = document.getElementById("selectEveryone").checked;
+    checkboxes.forEach((checkbox) => {
+        checkbox.checked = selectEveryone;
+    });
+}
+
+
+// Open the edit modal and populate it with data
+function openEditModal(number) {
+  
+     // Lấy phần tử dòng tương ứng
+     const rowElement = document.querySelector(`#row_${number}`);
+    if (!rowElement) {
+        console.error(`Row with ID #row_${number} not found.`);
+        return;
+    }
+
+    // Lấy giá trị từ cột role_receive
+    const roleReceiveElement = rowElement.querySelector('.role_receive');
+    if (!roleReceiveElement) {
+        console.error(`.role_receive element not found inside #row_${number}.`);
+        return;
+    }
+
+    // Nếu có giá trị role_receive, tách chúng thành mảng
+    const selectedRoles = roleReceiveElement.textContent.trim().split(",");
+    renderRoleCheckboxes("#editModal", selectedRoles); // Gọi hàm để render checkbox cho modal
+
+    $.ajax({
+        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/notification/database/get_notification.php', // Fetch the question details
+        type: 'POST',
+        data: { number: number },
+        success: function(response) {
+            var data = JSON.parse(response);
+            $('#edit_number').val(data.number);
+            $('#edit_id_notification').val(data.id_notification);
+            $('#edit_title').val(data.title);
+            $('#edit_content').val(data.content);
+            $('#edit_level_notification').val(data.level_notification);
+            $('#edit_role_receive').val(data.role_receive);
+            $('#edit_user_receive').val(data.user_receive);
+
+            $('#editModal').modal('show');
+        }
+    });
+}
+// Save the edited data
+function saveEdit() {
+    const selectedRoles = Array.from(document.querySelectorAll("#editModal .role-checkbox:checked"))
+        .map((checkbox) => checkbox.value);
+
+    // Gửi dữ liệu role qua AJAX hoặc form
+    console.log(selectedRoles); // Thực hiện logic lưu role
+
+    $.ajax({
+        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/notification/database/update_notification.php',
+        type: 'POST',
+        data: $('#editForm').serialize(),
+        success: function(response) {
+            location.reload(); // Reload the page to reflect changes
+        }
+    });
+}
+
+function openAddModal() {
+    $('#addForm')[0].reset(); // Clear form data
+    renderRoleCheckboxes("#addModal"); // Render tất cả checkbox cho modal Add
+
+    $('#addModal').modal('show'); // Show the modal
+}
+
+// Save the new question
+function saveNew() {
+    const selectedRoles = Array.from(document.querySelectorAll("#addModal .role-checkbox:checked"))
+        .map((checkbox) => checkbox.value);
+
+    // Gửi dữ liệu role qua AJAX hoặc form
+    console.log(selectedRoles); // Thực hiện logic lưu role
+
+
+    $.ajax({
+        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/notification/database/add_notification.php',
+        type: 'POST',
+        data: $('#addForm').serialize(),
+        success: function(response) {
+            location.reload(); // Reload to show the new record
+        }
+    });
+}
+
+// Delete a record
+function deleteRecord(number) {
+    if (confirm('Are you sure you want to delete this question?')) {
+        $.ajax({
+            url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/notification/database/delete_notification.php',
+            type: 'POST',
+            data: { number: number },
+            success: function(response) {
+                location.reload(); // Reload after deletion
+            }
+        });
+    }
+}
+function showFullContent(title, content) {
+    // Set the title of the modal
+    $('#viewMoreTitle').text(title);
+
+    // Set the content with HTML allowed
+    $('#viewMoreContent').html(content);
+
+    // Show the modal
+    $('#viewMoreModal').modal('show');
+}
+
+
+</script>
+
+
+</body>
+</html>

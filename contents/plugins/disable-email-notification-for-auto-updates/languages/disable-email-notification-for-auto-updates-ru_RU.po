@@ -1,0 +1,250 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: disable-email-notification-for-auto-updates-v1.0.3\n"
+"POT-Creation-Date: 2024-12-29 18:41+0545\n"
+"PO-Revision-Date: 2024-12-29 18:41+0545\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: ru_RU\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.5\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-KeywordsList: esc_html_e;esc_html__;esc_attr_e;__;_e;esc_html;"
+"esc_attr\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: admin/class-admin.php:29
+msgid "Donate"
+msgstr "Пожертвовать"
+
+#: admin/class-admin.php:30 admin/partials/admin-display.php:3
+msgid "Settings"
+msgstr "Настройки"
+
+#: admin/class-admin.php:42 admin/class-admin.php:43
+#: includes/BaseController.php:10
+msgid ""
+"Disable Email Notifications and Block Plugin, WP Core, and Theme Updates"
+msgstr ""
+"Отключить уведомления по электронной почте и заблокировать обновления "
+"плагинов, ядра WP и тем"
+
+#: admin/class-admin.php:136
+msgid "New WP Security Plugin: "
+msgstr "Новый плагин безопасности для WP: "
+
+#: admin/class-admin.php:137
+msgid ""
+"Enhance WP security by implementing measures like Security Headers, changing "
+"the Login URL, disabling WP JSON API, and more."
+msgstr ""
+"Усиление безопасности WP с помощью мер, таких как безопасность заголовков, "
+"изменение URL для входа, отключение WP JSON API и другие."
+
+#: admin/class-admin.php:141
+msgid "Download Plugin"
+msgstr "Скачать плагин"
+
+#: admin/class-admin.php:144
+msgid "Dismiss Notice"
+msgstr "Закрыть уведомление"
+
+#: admin/partials/_about.php:1
+msgid "Brief Info"
+msgstr "Краткая информация"
+
+#: admin/partials/_about.php:4
+msgid ""
+"This plugin allows you to disable email notifications when plugins, themes, "
+"or WordPress are updated. Additionally, you can choose specific plugins to "
+"hide update notifications or completely block WordPress core and theme "
+"updates."
+msgstr ""
+"Этот плагин позволяет отключить уведомления по электронной почте о том, что "
+"плагины, темы или WordPress были обновлены. Также вы можете выбрать "
+"конкретные плагины для скрытия уведомлений об обновлениях или полностью "
+"заблокировать обновления ядра WordPress и тем."
+
+#: admin/partials/_about.php:7
+msgid "For any queries, please write to us at"
+msgstr "По всем вопросам пишите нам на"
+
+#: admin/partials/_about.php:8
+msgid "info@ideastocode.com"
+msgstr "info@ideastocode.com"
+
+#: admin/partials/_about.php:10
+msgid "To learn more about the plugin, tutorial, and other details:"
+msgstr ""
+"Чтобы узнать больше о плагине, учебных материалах и других подробностях:"
+
+#: admin/partials/_about.php:12
+msgid "Click here"
+msgstr "Нажмите здесь"
+
+#: admin/partials/_about.php:18
+msgid "ideasToCode"
+msgstr "ideasToCode"
+
+#: admin/partials/_about.php:19
+msgid "Ideas To Code"
+msgstr "Идеи для кода"
+
+#: admin/partials/_disable_plugin_updates.php:21
+#: admin/partials/_disable_plugin_updates.php:27
+#: admin/partials/_hide_plugin_from_dashboard.php:19
+#: admin/partials/_hide_plugin_from_dashboard.php:25
+msgid "["
+msgstr "["
+
+#: admin/partials/_disable_plugin_updates.php:38
+#: admin/partials/_hide_plugin_from_dashboard.php:34
+#: admin/partials/_settings.php:102
+msgid "Save Changes"
+msgstr "Сохранить изменения"
+
+#: admin/partials/_hide_plugin_from_dashboard.php:6
+msgid "Hides only from the Plugin list, not the admin bar."
+msgstr ""
+
+#: admin/partials/_other_plugins.php:2
+msgid "Here are some useful plugins from us; more to follow."
+msgstr "Вот несколько полезных плагинов от нас; будет больше."
+
+#: admin/partials/_other_plugins.php:9 admin/partials/_other_plugins.php:10
+msgid "security-headers-aplus-score"
+msgstr "security-headers-aplus-score"
+
+#: admin/partials/_other_plugins.php:12
+msgid "Improve WP Security"
+msgstr "Улучшить безопасность WP"
+
+#: admin/partials/_other_plugins.php:15
+msgid ""
+"This plugin will enhance WordPress security by adopting various measures, "
+"such as adding security headers, disabling the WP REST API, disabling XML-"
+"RPC,nchanging the default WP-login URL and more."
+msgstr ""
+"Этот плагин усилит безопасность WordPress с помощью различных мер, таких как "
+"добавление заголовков безопасности, отключение WP REST API, отключение XML-"
+"RPC, изменение URL для входа по умолчанию и других."
+
+#: admin/partials/_other_plugins.php:17 admin/partials/_other_plugins.php:35
+msgid "Learn More"
+msgstr "Узнать больше"
+
+#: admin/partials/_other_plugins.php:25 admin/partials/_other_plugins.php:26
+msgid "enable-svg-webp-ico-upload"
+msgstr "enable-svg-webp-ico-upload"
+
+#: admin/partials/_other_plugins.php:29
+msgid "Easy SVG, WebP & ICO Upload"
+msgstr "Простая загрузка SVG, WebP и ICO"
+
+#: admin/partials/_other_plugins.php:32
+msgid ""
+"By default, WordPress does not allow uploading SVG, WebP, & ICO (in some "
+"cases) images. This plugin will quickly enable you to upload all these "
+"images."
+msgstr ""
+"По умолчанию WordPress не позволяет загружать изображения SVG, WebP и ICO (в "
+"некоторых случаях). Этот плагин быстро позволит вам загружать все эти "
+"изображения."
+
+#: admin/partials/_settings.php:20
+msgid "Disable Email Notification (Plugins)"
+msgstr "Отключить уведомления по электронной почте (плагины)"
+
+#: admin/partials/_settings.php:33
+msgid "Disable Email Notification (Themes)"
+msgstr "Отключить уведомления по электронной почте (темы)"
+
+#: admin/partials/_settings.php:46
+msgid "Disable Email Notification (WordPress)"
+msgstr "Отключить уведомления по электронной почте (WordPress)"
+
+#: admin/partials/_settings.php:63
+msgid "Remove Update Button (Dashboard)"
+msgstr "Удалить кнопку обновления (панель инструментов)"
+
+#: admin/partials/_settings.php:76
+msgid "Block WordPress Core updates"
+msgstr "Заблокировать обновления ядра WordPress"
+
+#: admin/partials/_settings.php:89
+msgid "Block WordPress Theme updates"
+msgstr "Заблокировать обновления темы WordPress"
+
+#: admin/partials/_settings.php:108
+msgid "IMPORTANT!"
+msgstr "ВАЖНО!"
+
+#: admin/partials/_settings.php:109
+msgid ""
+"- IT IS NOT RECOMMENDED TO DISABLE WORDPRESS CORE UPDATES, OR EVEN THEME AND "
+"PLUGIN UPDATES. ALWAYS KEEP THEM UPDATED FOR SECURITY REASONS."
+msgstr ""
+"- НЕ РЕКОМЕНДУЕТСЯ ОТКЛЮЧАТЬ ОБНОВЛЕНИЯ ЯДРА WORDPRESS, ТЕМЫ И ПЛАГИНОВ. "
+"ВСЕГДА ДЕРЖИТЕ ИХ ОБНОВЛЕННЫМИ ПО СОБОРОСТЯМ БЕЗОПАСНОСТИ."
+
+#: admin/partials/_settings.php:110
+msgid "- ALWAYS KEEP THEM UPDATED FOR SECURITY REASONS."
+msgstr "- ВСЕГДА ДЕРЖИТЕ ИХ ОБНОВЛЕННЫМИ ПО СОБОРОСТЯМ БЕЗОПАСНОСТИ."
+
+#: admin/partials/_youtube.php:1
+msgid "Check out our YouTube Channel"
+msgstr "Посмотрите наш канал на YouTube"
+
+#: admin/partials/_youtube.php:7
+msgid "LetsLearnWordPress YouTube"
+msgstr "LetsLearnWordPress YouTube"
+
+#: admin/partials/_youtube.php:8
+msgid "LetsLearnWordPress YouTube Channel"
+msgstr "Канал LetsLearnWordPress на YouTube"
+
+#: admin/partials/_youtube.php:10
+msgid "Let's Learn WordPress"
+msgstr "Давайте учиться WordPress"
+
+#: admin/partials/_youtube.php:12
+msgid ""
+"Join Let's Learn WordPress to find valuable information, tips, and tricks on "
+"WordPress that can improve your website for free."
+msgstr ""
+"Присоединяйтесь к Let's Learn WordPress, чтобы найти полезную информацию, "
+"советы и хитрости по WordPress, которые помогут улучшить ваш сайт бесплатно."
+
+#: admin/partials/_youtube.php:13
+msgid "Check YouTube"
+msgstr "Посмотрите на YouTube"
+
+#: admin/partials/admin-display.php:4
+msgid "Block Plugin Updates"
+msgstr "Заблокировать обновления плагинов"
+
+#: admin/partials/admin-display.php:5
+msgid "Hide Plugins"
+msgstr "Скрыть плагины"
+
+#: admin/partials/admin-display.php:6
+msgid "YouTube"
+msgstr "YouTube"
+
+#: admin/partials/admin-display.php:7
+msgid "Other Plugins"
+msgstr "Другие плагины"
+
+#: admin/partials/admin-display.php:8
+msgid "About"
+msgstr "О плагине"
+
+#: admin/partials/admin-display.php:10
+msgid "settings"
+msgstr "настройки"
+
+#: admin/partials/admin-display.php:41
+msgid "nav-tab-active"
+msgstr "nav-tab-active"

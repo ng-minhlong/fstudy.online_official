@@ -1,0 +1,95 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    font-size: 18px;
+
+}
+
+
+.content-left {
+    width: 50%;
+    padding: 20px;
+    border-right: 1px solid #ccc;
+}
+
+.content-right {
+    width: 50%;
+    padding: 20px;
+}
+
+.question {
+    margin-bottom: 20px;
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+}
+
+.pagination-container button {
+    margin: 0 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+#questions-container {
+    padding: 20px;
+}
+
+#questions-container label {
+    display: block;
+    margin: 20px 0;
+}
+
+
+.audio-player {
+      max-width: 800px;
+      margin: 20px auto;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    audio {
+      flex: 1;
+      outline: none;
+      border-radius: 10px;
+    }
+    /* Ẩn nút download và menu playback speed mặc định */
+    audio::-webkit-media-controls-enclosure {
+      overflow: hidden;
+    }
+    audio::-webkit-media-controls-download-button,
+    audio::-webkit-media-controls-playback-rate-button {
+      display: none;
+    }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .controls button, .controls select {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background: #007bff;
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      outline: none;
+      transition: background 0.3s ease;
+    }
+    .controls button:hover, .controls select:hover {
+      background: #0056b3;
+    }
+    .controls select {
+      background: #fff;
+      color: #333;
+    }

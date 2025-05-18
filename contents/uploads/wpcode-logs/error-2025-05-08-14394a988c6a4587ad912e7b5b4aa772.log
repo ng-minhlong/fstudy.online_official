@@ -1,0 +1,4 @@
+2025-05-08T09:35:13+00:00 Cannot redeclare update_role_after_registration() (previously declared in C:\xampp\htdocs\contents\plugins\insert-headers-and-footers\includes\class-wpcode-snippet-execute.php(419) : eval()'d code:156)
+2025-05-08T09:35:14+00:00 Cannot redeclare update_role_after_registration() (previously declared in C:\xampp\htdocs\contents\plugins\insert-headers-and-footers\includes\class-wpcode-snippet-execute.php(419) : eval()'d code:156)
+2025-05-08T10:00:06+00:00 Snippet "secure functions (logs Login Logout Backlist ... run all web)" (#1457) was automatically deactivated due to a fatal error.
+2025-05-08T10:00:06+00:00 Cannot redeclare check_and_update_user_role() (previously declared in C:\xampp\htdocs\contents\plugins\insert-headers-and-footers\includes\class-wpcode-snippet-execute.php(419) : eval()'d code:89)

@@ -1,0 +1,1234 @@
+body {
+                top: 0px !important; 
+                 margin: 0;
+                 letter-spacing: .1px;
+                 line-height: 1.5;
+
+              font-family: sf pro text, -apple-system, BlinkMacSystemFont, Roboto,
+                  segoe ui, Helvetica, Arial, sans-serif, apple color emoji,
+                  segoe ui emoji, segoe ui symbol;
+          }
+      
+          
+        
+        
+          code {
+              background-color: #fff;
+              border: 1px solid #d1d7dc;
+              color: #b4690e;
+              font-size: 90%;
+              padding: 0.2rem 0.4rem;
+          }
+
+
+         
+
+          .header-question {
+              font-size: 24px;
+              font-weight: 700;
+              margin-bottom: 8px;
+          }
+         
+        
+          #imageToggle{
+            height: 30%;
+          }
+
+         
+
+       
+
+          .answer-list {
+              display: block;
+              /*border-left: 4px dotted blue; */
+          }
+          /*#bookmark-question{
+            background-color: yellow;
+          }*/
+
+
+
+          .input {
+            width: 100%;
+            height: 30px;
+          }
+
+          
+          .blank-block{
+            width: 0%;
+          }
+          .main-block {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+          }
+
+          .main-block {
+              flex: 3;
+              width: 100%;
+
+          }
+
+
+
+
+          button {
+              background-color: black;
+              padding: 8px 12px 8px 12px;
+              border: none;
+              color: white;
+              font-family: sf pro text, -apple-system, BlinkMacSystemFont, Roboto,
+                  segoe ui, Helvetica, Arial, sans-serif, apple color emoji,
+                  segoe ui emoji, segoe ui symbol;
+              margin-top: 20px;
+              font-weight: 700;
+          }
+
+
+          .buttonsidebar {
+              background-color: transparent;
+              padding: 8px 12px 8px 12px;
+              border: none;
+              color: black;
+              font-family: sf pro text, -apple-system, BlinkMacSystemFont, Roboto,
+                  segoe ui, Helvetica, Arial, sans-serif, apple color emoji,
+                  segoe ui emoji, segoe ui symbol;
+              margin-top: 20px;
+              font-weight: 700;
+              font-size: 20px;
+
+          }
+
+
+          button:hover {
+              background-color: #3e4143;
+          }
+
+          .rd-fm,
+          .cb-fm {
+              display: none;
+          }
+          .answer-options img {
+            /*height: 25px;*/
+            max-width: 100%; /* Maintain the aspect ratio */
+        }
+
+          .answer-options:hover {
+              background-color: rgba(23, 57, 83, 0.12);
+          }
+
+          .answer-options:hover input {
+              background-color: rgba(23, 57, 83, 0.12);
+          }
+
+          
+
+          .true {
+              border-color: limegreen;
+          }
+
+          .false {
+              border-color: red;
+          }
+
+          .pass {
+              color: limegreen;
+          }
+
+          .fail {
+              color: red;
+          }
+
+
+/* Modify your existing CSS styles */
+
+
+
+
+.button-10 {
+    display: flex;
+    align-items: center;
+    padding: 6px 14px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+    border-radius: 6px;
+    font-size: 15px;
+    border: none;
+  
+    color: #fff;
+    background: linear-gradient(180deg, #4B91F7 0%, #367AF6 100%);
+     background-origin: border-box;
+    box-shadow: 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+
+  .quick-view-checkbox-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+    border-radius: 6px;
+    font-size: 15px;
+    border: none;
+    color: #fff;
+    /*background: linear-gradient(180deg, #4B91F7 0%, #367AF6 100%);*/
+    background: black;
+     background-origin: border-box;
+    box-shadow: 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    text-align: center;
+}
+
+  
+  .button-10:focus {
+    box-shadow: inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2), 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), 0px 0px 0px 3.5px rgba(58, 108, 217, 0.5);
+    outline: 0;
+  }
+#button-container {
+    display: flex;
+    max-width: 100%;
+}
+
+/* Optional CSS styles for the options bar */
+#options-bar {
+    position: absolute;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 5px;
+}
+#checkbox-button{
+    display: none;
+    
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%);
+    padding: 4px 14px;
+    border-radius: 8px;
+    border: solid 2px #000;
+    font-weight: 700;
+    user-select: none;
+    cursor: initial;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    opacity: 1;
+    pointer-events: all;
+    cursor: pointer;
+    transition: all .2s 0s ease;
+    font-family: Roboto;
+    font-size: 1.1rem;
+    background-color: #000;
+    color: #fff;
+}
+.color-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin: 0 5px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* Optional CSS styles for the highlighted text */
+.highlight-buttons {
+    position: absolute;
+    display: none;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 5px;
+    z-index: 1000;
+}
+
+.highlight-buttons button {
+    margin: 2px;
+}
+.highlighted {
+    background-color: yellow;
+
+}
+
+
+.small-button {
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin-right: 5px;
+    border-radius: 5px;
+}
+
+#clock-block {
+    text-align: center; /* Center the content horizontally */
+    flex-grow: 1; /* Take up remaining space */
+}
+
+#countdown {
+    margin: 0;
+    font-size: 16px; /* Adjust the font size */
+}
+
+#submit-button {
+    background-color: blue;
+    color: white;
+    border: none;
+    display: none;
+
+    padding: 13px;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 2px;
+        margin-left: 2px;
+        
+}
+
+#submit-button:hover {
+    background-color: darkblue;
+}
+
+.container {
+    margin-bottom: 60px; /* Ensure space for the time-remaining-container */
+    display: flex;
+}
+
+
+
+
+.navi-button{
+    flex: 1; /* Flex-grow to take up available space */
+    display: flex; /* Align right elements horizontally */
+    align-items: center; /* Center them vertically */
+    justify-content: flex-end; /* Align content to the right */
+
+}
+#calculator {
+    position: absolute;
+    z-index: 9;
+    width: 60%; /* Set width to match iframe width */
+    background-color: #f1f1f1;
+    text-align: center;
+    border: 1px solid #d3d3d3;
+    height: 400px;
+}
+#right-main-button{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 14px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+    border-radius: 6px;
+    border: none;
+  
+    color: #141313;
+    background: transparent;
+     background-origin: border-box;
+    box-shadow: 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+#calculator-guide {
+    display: flex; /* Use flexbox for alignment */
+    align-items: center; /* Center items vertically */
+    justify-content: space-between; /* Space between left and right content */
+    padding: 10px;
+    width: 100%; /* Make width 100% to match the parent */
+    cursor: move;
+    z-index: 9;
+    background-color: #2196F3;
+    color: #fff;
+    box-sizing: border-box; /* Include padding and border in width */
+}
+
+.drag-text {
+    margin: 0; /* Remove default margin */
+}
+
+#close-cal {
+    background-color: transparent; /* Transparent background for button */
+    border: none; /* Remove border */
+    color: #fff; /* Text color */
+    cursor: pointer; /* Pointer cursor */
+    font-size: 16px; /* Adjust font size */
+}
+
+
+.icon-text-wrapper {
+    display: flex;                 /* Flex container for icon and text */
+    align-items: center;           /* Align items vertically */
+    gap: 5px;                      /* Space between icon and text */
+}
+
+.bi-calculator {
+    vertical-align: middle;        /* Align the SVG icon vertically with the text */
+}
+
+@media (max-width: 768px) {
+    #time-remaining-container {
+        background-color: #fff;
+        padding: 5px;
+    }
+
+    #button-container {
+        margin-bottom: 5px;
+    }
+
+    #clock-block {
+        text-align: left;
+    }
+
+    .button-10 {
+        display: flex;
+        align-items: center;
+        padding: 6px 14px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+        border-radius: 6px;
+        font-size: 12px;
+        border: none;
+      
+        color: #fff;
+        background: linear-gradient(180deg, #4B91F7 0%, #367AF6 100%);
+         background-origin: border-box;
+        box-shadow: 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2);
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+      }
+    
+      
+
+    
+    
+}
+
+ #loading-popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        z-index: 1000; /* Ensure it's above other content */
+    }
+
+            /* Center the loading indicator */
+    #loading-spinner {
+        display: block;
+        margin: 0 auto;
+    }
+
+
+
+     #loading-popup-remember {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        z-index: 1000; /* Ensure it's above other content */
+    }
+
+            /* Center the loading indicator */
+    #loading-spinner-remember {
+        display: block;
+        margin: 0 auto;
+    }
+
+
+
+
+
+
+
+.fixedrightsmallbuttoncontainer {
+    position: fixed;
+    bottom: 30%;
+    right: 0px; 
+    color: white;
+    border: none;
+
+}
+
+.fixedrightsmallbutton {
+    position: fixed;
+    bottom: 50%;
+    right: 0px; 
+    color: white;
+    border: none;
+   
+}
+
+
+
+.fixedleftsmallbuttoncontainer {
+    position: fixed;
+    bottom: 30%;
+    left: 0px; 
+    color: white;
+    border: none;
+
+}
+
+
+/* Add this CSS to style the draft popup */
+
+.popup {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+.popup-content {
+    background-color: #fefefe;
+    margin: 5% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    max-height: 70%;
+    overflow: auto;
+    width: 70%; /* Could be more or less, depending on screen size */
+}
+
+
+
+
+
+
+  #toggle-time-button {
+            position: fixed;
+            top: calc(100% - 150px); /* Initially positioned above the time-remaining-container with a 1px margin */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: transparent; /* Changed button color to green */
+border: 2px solid grey;
+            border-radius: 50px;
+
+
+            color: grey; /* Changed button text color to white */
+            font-family: sf pro text, -apple-system, BlinkMacSystemFont, Roboto,
+                segoe ui, Helvetica, Arial, sans-serif, apple color emoji,
+                segoe ui emoji, segoe ui symbol;
+            font-weight: 700;
+            font-size: 15px; /* Increased font size for a bigger button */
+            padding: 5px 10px; /* Increased padding for a larger button */
+            cursor: pointer;
+            z-index: 999; /* Ensure it's above other elements */
+            transition: top 0.3s ease; /* Smooth transition for position change */
+        }
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+
+
+/* Add this CSS to style the checkbox popup */
+
+
+
+/* Add this CSS to style the checkbox popup */
+.popup-checkbox {
+  
+
+
+
+    display: none; /* Hidden by default */
+    position: fixed; /* Position it fixed for centering */
+    bottom: 90px;
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Center horizontally */
+    border-radius: 10px;
+    background-color: white;
+    padding: 20px;
+    box-shadow: #00000080 0 4px 30px;
+    border-style: dotted;
+    z-index: 1000; /* Sit on top */
+    width: 60%;
+}
+.icon-detail {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    border: none;
+    border-top: solid #b2b2b2 1px;
+    width: 100%;
+    box-sizing: border-box;
+    padding-top: 10px;
+    margin-top: 20px;
+}
+
+.dashed-square {
+    width: 21px;
+    height: 21px;
+    border: dashed 1px #000;
+    margin: 0 5px;
+}
+.single-detail {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 3px;
+}
+
+.checkboxes-container{
+    border-top: solid #b2b2b2 1px;
+    padding-top: 10px
+}
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+    z-index: 999; /* Ensure it's above other content */
+}
+
+
+.popup-content-checkbox {
+    background-color: #fefefe;
+    border-radius: 25px;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    
+
+
+  border: 1px dotted black;
+
+
+    width: 70%; /* Could be more or less, depending on screen size */
+}
+
+
+
+
+.close-checkbox {
+    cursor: pointer;
+     color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+
+/* Add this CSS to style the draft popup */
+
+.popup-translate {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+.popup-content-translate {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 40%; /* Could be more or less, depending on screen size */
+}
+
+.close-btn-remember {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    cursor: pointer;
+  }
+
+.close-translate {
+    color: #aaa;
+    position: center;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+.draft-textarea {
+  width: 100%;
+  height: 150px;
+    resize:vertical; 
+}
+
+
+/* Updated CSS for the color choice popup */
+
+
+#color-popup .popup-content {
+    color: black;
+    width: 20%;
+}
+
+#color-popup input[type="radio"] {
+    margin-right: 5px;
+}
+
+
+
+
+
+/* Cho checkbox và question container*/
+
+.checkbox-container {
+    cursor: pointer;
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+            background-color: white;
+            border: 2px solid black;
+            display: inline-block;
+            text-align: center;
+            line-height: 30px;
+            color: black;
+            font-weight: bold;
+}
+
+.checkbox-container.noanswer{
+    
+    background-color: white;
+    
+
+}
+.checkbox-container.answered {
+    background-color: green;
+    
+        }
+        
+.checkbox-container.checkboxed{
+    background-color: yellow;
+    
+}
+
+#checkbox-explain {
+    display: flex; /* Enable flexbox */
+    flex-direction: row; /* Arrange items in a row */
+    align-items: center; /* Center items vertically */
+    justify-content: center; /* Center items horizontally */
+}
+
+
+
+        /* Styles for individual question items */
+.question-item {
+        flex-grow: 1; /* Allow questions to grow and fill the available space */
+}
+
+.container {
+            margin-bottom: 60px; /* Ensure space for the time-remaining-container */
+            display: flex;
+}
+
+
+
+/* Report error css */
+
+.popup-report {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+.popup-content-report {
+    background-color: #1f242d;
+    margin: 10% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 60%; /* Could be more or less, depending on screen size */
+}
+
+.contact h2{
+    font-size: 40px;
+    color: #ededed;
+    text-align: center;
+    margin-bottom: 10px;
+}
+.contact form{
+    width: 100%;
+    text-align: center;
+}
+form .input-box{
+    display: flex;
+    justify-content: space-between;
+}
+.input-box .input-field{
+    width: 45%;
+}
+
+.field .item{
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: 2px solid #0ef;
+    outline: none;
+    border-radius: 6px;
+    font-size: 16px;
+    color: #ededed;
+    margin: 12px 0;
+
+}
+
+.field .item::placeholder{
+    color: rgba(255,255,255, .3);
+}
+
+.field .error-txt{
+    font-size: 14.5px;
+    color: #d93025;
+    text-align: left;
+    margin: -5px 0 10px;
+    display: none;
+}
+form .textarea-field .item{
+    resize: none;
+}
+form .textarea-field .error-txt{
+    margin-top: -10px;
+}
+
+form button{
+    padding: 12px 32px;
+    background: #0ef;
+    border: none;
+    outline:none;
+    border-radius: 6px;
+    box-shadow: 0 0 10px #0ef;
+    font-size: 16px;
+    color: #333;
+    letter-spacing: 1px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: .5s;
+}
+
+form button:hover{
+    box-shadow: none;
+}
+.field.error .item{
+    border-color: #d93025;
+}
+
+.field.error .error-txt{
+    display:block;
+}
+
+/* End report error css*/
+
+
+/* Note sidebar*/
+ #sidebar {
+    position: relative;
+        top: 0;
+        right: 0;
+        height: 100%;
+        background-color: #333;
+        color: #fff;
+        padding: 20px;
+        box-sizing: border-box;
+        transition: transform 0.3s ease;
+        z-index: 0;
+    }
+    
+    #sidebar ul {
+        list-style-type: none;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+    }
+    
+    #sidebar ul li {
+        padding: 20px;
+          float: left;
+        cursor: pointer;
+          display: inline;
+
+    }
+    
+    #content {
+        margin-right: 220px;
+        padding: 20px;
+    }
+    
+    #content textarea {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    /* End note sidebar */
+
+
+    
+
+ 
+
+
+@media print {
+    body {
+    visibility: hidden;
+  }
+  
+ 
+  .explain-zone{
+    visibility: hidden;
+ 
+    
+  }
+ 
+  
+  
+}
+.question-container {
+    border-top: 1px dashed #000; /* Line above */
+    border-bottom: 1px dashed #000; /* Line below */
+    margin-bottom: 20px; /* Space between questions */
+    padding: 10px; /* Space around content */
+}
+
+/* Main container for questions and answers */
+.question-answer-container {
+    display: flex; /* Flexbox to align questions and answers side by side */
+    align-items: flex-start; /* Align items to the top */
+    justify-content: space-between; /* Space between the items */
+    position: relative; /* Position relative for vertical line */
+    width: 100%;
+}
+
+/* Question side styles */
+.question-side {
+    width: 45%; /* 45% width for question side */
+    padding: 10px; /* Padding for spacing */
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+
+
+/* Answer side styles */
+.answer-side {
+    width: 45%; /* 45% width for answer side */
+    padding: 10px; /* Padding for spacing */
+    box-sizing: border-box; /* Include padding in width calculation */
+
+}
+
+/* Horizontal line styles */
+.horizontal-line {
+    border: none; /* Remove any default border */
+    border-top: 2px dashed #000; /* Top border as a dashed line */
+    margin: 20px 0; /* Space above and below */
+    width: 100%; /* Full width of the container */
+}
+
+/* Answer box styles */
+.answer-box-container {
+    margin-top: 10px; /* Top margin for spacing */
+}
+
+/* Answer box item styles */
+.answer-box {
+    padding: 5px; /* Padding for spacing */
+    border: 1px solid #ddd; /* Border around each answer */
+    margin: 5px 0; /* Margin for spacing */
+    border-radius: 5px; /* Rounded corners */
+}
+
+/* Media Query for Smaller Screens */
+@media (max-width: 767px) {
+    .question-answer-container {
+        flex-direction: column; /* Stack items vertically */
+    }
+
+    .question-side,
+    .answer-side {
+        width: 100%; /* Full width on smaller screens */
+    }
+
+    .vertical-line {
+        display: none; /* Hide vertical line on smaller screens */
+    }
+}
+
+
+
+.section::-webkit-scrollbar-track {
+  background-color: red;
+}
+
+.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+.answer-box-container {
+    display: flex;
+    justify-content: space-between; /* Space out the boxes evenly */
+    flex-wrap: wrap; /* Wrap the boxes if they don’t fit in one line */
+    gap: 10px; /* Space between each box */
+    margin-bottom: 20px; /* Space below the container */
+}
+
+.answer-box {
+    padding: 10px 15px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;
+    flex: 1 1 auto; /* Flexible width but prevents shrinking below content size */
+    min-width: 100px; /* Ensures boxes have a minimum width */
+    max-width: 200px; /* Ensures boxes don’t grow too large */
+}
+
+
+
+
+/* Header */
+.header {
+  overflow: hidden;
+  background-color: #f1f1f1;
+  padding: 5px 10px;
+}
+
+.header a {
+  float: left;
+  color: black;
+  text-align: center;
+  padding: 12px;
+  text-decoration: none;
+  font-size: 18px; 
+  line-height: 25px;
+  border-radius: 4px;
+}
+
+.header a.logo {
+  font-size: 25px;
+  font-weight: bold;
+}
+
+.header a:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+.header a.active {
+  background-color: dodgerblue;
+  color: white;
+}
+
+.header-right {
+  float: right;
+}
+
+@media screen and (max-width: 500px) {
+  .header a {
+    float: none;
+    display: block;
+    text-align: left;
+  }
+  
+  .header-right {
+    float: none;
+  }
+}
+
+
+.draggable {
+    padding: 10px;
+    margin: 5px;
+    background-color: #e0e0e0;
+    border: 1px solid #ccc;
+    cursor: move;
+}
+
+.dropzone {
+    width: 200px;
+    height: 150px;
+    margin: 10px;
+    padding: 10px;
+    border: 2px dashed #ccc;
+    display: inline-block;
+    vertical-align: top;
+}
+
+  
+  td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+  }
+  
+  
+
+
+  body.light-mode {
+    background-color: white;
+    color: black;
+}
+
+body.dark-mode {
+    background-color: #334040;
+    color: white;
+}
+
+.header.light-mode {
+    background-color: #f1f1f1;
+}
+
+.header.dark-mode {
+    background-color: #343737;
+}
+
+.answer-box.light-mode{
+    background-color: #f1f1f1;
+
+}
+
+.answer-box.dark-mode{
+    background-color: #2c1399;
+    color: white;
+}
+
+#guide_completion {
+    width: 100%;
+    padding: 50px 0;
+    text-align: center;
+    background-color: lightblue;
+    margin-top: 20px;
+  }
+
+
+.open-draft-button{
+    background-color: rgb(92, 92, 194);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+   
+    padding: 10px;
+    font-size: 11px;
+}
+
+.draft {
+    width: 100%;
+    height: 70px;
+    overflow: auto;
+    resize: none;
+    background-color: lightblue;
+    display:none;
+  }
+
+#start-test{
+    display: none;
+}
+  
+/* CSS */
+
+
+.wp-dark-mode-active .tooltip {
+    background-color: #343b47 !important;
+}
+
+
+.tooltip {
+    position: relative;
+    cursor: pointer;
+    background-color: yellow;
+
+  }
+  
+  .tooltip .tooltiptext {
+    visibility: hidden;
+    width: 180px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 10px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%; /* Position above the span */
+    left: 50%;
+    margin-left: -75px; /* Center the tooltip */
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  
+  .tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%; /* Arrow at the bottom */
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+  }
+  
+  .tooltip.active .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
+  
+  .tooltiptext button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    margin: 2px 0;
+    font-size: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .tooltiptext button:hover {
+    background-color: #3e8e41;
+  }
+
+#highlight-icon-modify{
+    width : 20px;
+    height: 20px;
+}
+.tooltiptext img {
+    display: inline-block;
+    width: 20px;  /* Set the desired width */
+    height: 20px; /* Set the desired height */
+    margin-right: 5px; /* Add some space between images */
+    cursor: pointer; /* Change cursor to pointer on hover */
+    vertical-align: middle; /* Align images vertically in the middle */
+}

@@ -1,0 +1,243 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: disable-email-notification-for-auto-updates-v1.0.3\n"
+"POT-Creation-Date: 2024-12-29 18:40+0545\n"
+"PO-Revision-Date: 2024-12-29 18:40+0545\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fa_IR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.5\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-KeywordsList: esc_html_e;esc_html__;esc_attr_e;__;_e;esc_html;esc_attr\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: admin/class-admin.php:29
+msgid "Donate"
+msgstr "اهداء"
+
+#: admin/class-admin.php:30 admin/partials/admin-display.php:3
+msgid "Settings"
+msgstr "تنظیمات"
+
+#: admin/class-admin.php:42 admin/class-admin.php:43 includes/BaseController.php:10
+msgid "Disable Email Notifications and Block Plugin, WP Core, and Theme Updates"
+msgstr ""
+"غیرفعال کردن اطلاعیه‌های ایمیل و مسدود کردن به‌روزرسانی‌های افزونه‌ها، هسته وردپرس و "
+"قالب‌ها"
+
+#: admin/class-admin.php:136
+msgid "New WP Security Plugin: "
+msgstr "افزونه امنیتی جدید وردپرس: "
+
+#: admin/class-admin.php:137
+msgid ""
+"Enhance WP security by implementing measures like Security Headers, changing the "
+"Login URL, disabling WP JSON API, and more."
+msgstr ""
+"امنیت وردپرس را با اجرای اقداماتی مانند هدرهای امنیتی، تغییر URL ورود، غیرفعال "
+"کردن API JSON وردپرس و موارد دیگر افزایش دهید."
+
+#: admin/class-admin.php:141
+msgid "Download Plugin"
+msgstr "دانلود افزونه"
+
+#: admin/class-admin.php:144
+msgid "Dismiss Notice"
+msgstr "بستن اطلاعیه"
+
+#: admin/partials/_about.php:1
+msgid "Brief Info"
+msgstr "اطلاعات مختصر"
+
+#: admin/partials/_about.php:4
+msgid ""
+"This plugin allows you to disable email notifications when plugins, themes, or "
+"WordPress are updated. Additionally, you can choose specific plugins to hide "
+"update notifications or completely block WordPress core and theme updates."
+msgstr ""
+"این افزونه به شما امکان می‌دهد تا اطلاعیه‌های ایمیلی را هنگامی که افزونه‌ها، قالب‌ها "
+"یا وردپرس به‌روزرسانی می‌شوند غیرفعال کنید. علاوه بر این، می‌توانید افزونه‌های خاصی "
+"را برای پنهان کردن اطلاعیه‌های به‌روزرسانی انتخاب کنید یا به‌طور کامل به‌روزرسانی "
+"هسته وردپرس و قالب‌ها را مسدود کنید."
+
+#: admin/partials/_about.php:7
+msgid "For any queries, please write to us at"
+msgstr "برای هر گونه سوال، لطفاً با ما تماس بگیرید به آدرس"
+
+#: admin/partials/_about.php:8
+msgid "info@ideastocode.com"
+msgstr "info@ideastocode.com"
+
+#: admin/partials/_about.php:10
+msgid "To learn more about the plugin, tutorial, and other details:"
+msgstr "برای یادگیری بیشتر در مورد افزونه، آموزش‌ها و جزئیات دیگر:"
+
+#: admin/partials/_about.php:12
+msgid "Click here"
+msgstr "اینجا کلیک کنید"
+
+#: admin/partials/_about.php:18
+msgid "ideasToCode"
+msgstr "ایده‌ها به کد"
+
+#: admin/partials/_about.php:19
+msgid "Ideas To Code"
+msgstr "ایده‌ها به کد"
+
+#: admin/partials/_disable_plugin_updates.php:21
+#: admin/partials/_disable_plugin_updates.php:27
+#: admin/partials/_hide_plugin_from_dashboard.php:19
+#: admin/partials/_hide_plugin_from_dashboard.php:25
+msgid "["
+msgstr "["
+
+#: admin/partials/_disable_plugin_updates.php:38
+#: admin/partials/_hide_plugin_from_dashboard.php:34
+#: admin/partials/_settings.php:102
+msgid "Save Changes"
+msgstr "ذخیره تغییرات"
+
+#: admin/partials/_hide_plugin_from_dashboard.php:6
+msgid "Hides only from the Plugin list, not the admin bar."
+msgstr ""
+
+#: admin/partials/_other_plugins.php:2
+msgid "Here are some useful plugins from us; more to follow."
+msgstr "در اینجا برخی از افزونه‌های مفید از ما آمده است؛ بیشتر در راه است."
+
+#: admin/partials/_other_plugins.php:9 admin/partials/_other_plugins.php:10
+msgid "security-headers-aplus-score"
+msgstr "امتیاز-هدرهای-امنیتی-Aplus"
+
+#: admin/partials/_other_plugins.php:12
+msgid "Improve WP Security"
+msgstr "بهبود امنیت وردپرس"
+
+#: admin/partials/_other_plugins.php:15
+msgid ""
+"This plugin will enhance WordPress security by adopting various measures, such "
+"as adding security headers, disabling the WP REST API, disabling XML-RPC,"
+"nchanging the default WP-login URL and more."
+msgstr ""
+"این افزونه امنیت وردپرس را با اتخاذ اقدامات مختلفی مانند افزودن هدرهای امنیتی، "
+"غیرفعال کردن API REST وردپرس، غیرفعال کردن XML-RPC، تغییر URL ورود پیش‌فرض وردپرس "
+"و موارد دیگر بهبود می‌بخشد."
+
+#: admin/partials/_other_plugins.php:17 admin/partials/_other_plugins.php:35
+msgid "Learn More"
+msgstr "یادگیری بیشتر"
+
+#: admin/partials/_other_plugins.php:25 admin/partials/_other_plugins.php:26
+msgid "enable-svg-webp-ico-upload"
+msgstr "فعال‌سازی‌بارگذاری-SVG-و-WebP-و-ICO"
+
+#: admin/partials/_other_plugins.php:29
+msgid "Easy SVG, WebP & ICO Upload"
+msgstr "بارگذاری آسان SVG، WebP و ICO"
+
+#: admin/partials/_other_plugins.php:32
+msgid ""
+"By default, WordPress does not allow uploading SVG, WebP, & ICO (in some cases) "
+"images. This plugin will quickly enable you to upload all these images."
+msgstr ""
+"به‌طور پیش‌فرض، وردپرس اجازه بارگذاری تصاویر SVG، WebP و ICO (در برخی موارد) را "
+"نمی‌دهد. این افزونه به شما امکان می‌دهد به سرعت تمام این تصاویر را بارگذاری کنید."
+
+#: admin/partials/_settings.php:20
+msgid "Disable Email Notification (Plugins)"
+msgstr "غیرفعال کردن اطلاعیه ایمیل (افزونه‌ها)"
+
+#: admin/partials/_settings.php:33
+msgid "Disable Email Notification (Themes)"
+msgstr "غیرفعال کردن اطلاعیه ایمیل (قالب‌ها)"
+
+#: admin/partials/_settings.php:46
+msgid "Disable Email Notification (WordPress)"
+msgstr "غیرفعال کردن اطلاعیه ایمیل (وردپرس)"
+
+#: admin/partials/_settings.php:63
+msgid "Remove Update Button (Dashboard)"
+msgstr "حذف دکمه به‌روزرسانی (داشبورد)"
+
+#: admin/partials/_settings.php:76
+msgid "Block WordPress Core updates"
+msgstr "مسدود کردن به‌روزرسانی‌های هسته وردپرس"
+
+#: admin/partials/_settings.php:89
+msgid "Block WordPress Theme updates"
+msgstr "مسدود کردن به‌روزرسانی‌های قالب وردپرس"
+
+#: admin/partials/_settings.php:108
+msgid "IMPORTANT!"
+msgstr "مهم!"
+
+#: admin/partials/_settings.php:109
+msgid ""
+"- IT IS NOT RECOMMENDED TO DISABLE WORDPRESS CORE UPDATES, OR EVEN THEME AND "
+"PLUGIN UPDATES. ALWAYS KEEP THEM UPDATED FOR SECURITY REASONS."
+msgstr ""
+"- غیرفعال کردن به‌روزرسانی‌های هسته وردپرس، یا حتی به‌روزرسانی‌های قالب و افزونه‌ها "
+"توصیه نمی‌شود. همیشه آنها را برای دلایل امنیتی به‌روز نگه دارید."
+
+#: admin/partials/_settings.php:110
+msgid "- ALWAYS KEEP THEM UPDATED FOR SECURITY REASONS."
+msgstr "- همیشه آنها را برای دلایل امنیتی به‌روز نگه دارید."
+
+#: admin/partials/_youtube.php:1
+msgid "Check out our YouTube Channel"
+msgstr "کانال یوتیوب ما را مشاهده کنید"
+
+#: admin/partials/_youtube.php:7
+msgid "LetsLearnWordPress YouTube"
+msgstr "LetsLearnWordPress یوتیوب"
+
+#: admin/partials/_youtube.php:8
+msgid "LetsLearnWordPress YouTube Channel"
+msgstr "کانال یوتیوب LetsLearnWordPress"
+
+#: admin/partials/_youtube.php:10
+msgid "Let's Learn WordPress"
+msgstr "بیا یاد بگیریم وردپرس"
+
+#: admin/partials/_youtube.php:12
+msgid ""
+"Join Let's Learn WordPress to find valuable information, tips, and tricks on "
+"WordPress that can improve your website for free."
+msgstr ""
+"به LetsLearnWordPress بپیوندید تا اطلاعات مفید، نکات و ترفندهای وردپرس را پیدا "
+"کنید که می‌توانند سایت شما را به‌طور رایگان بهبود بخشند."
+
+#: admin/partials/_youtube.php:13
+msgid "Check YouTube"
+msgstr "یوتیوب را بررسی کنید"
+
+#: admin/partials/admin-display.php:4
+msgid "Block Plugin Updates"
+msgstr "مسدود کردن به‌روزرسانی افزونه‌ها"
+
+#: admin/partials/admin-display.php:5
+msgid "Hide Plugins"
+msgstr "پنهان کردن افزونه‌ها"
+
+#: admin/partials/admin-display.php:6
+msgid "YouTube"
+msgstr "یوتیوب"
+
+#: admin/partials/admin-display.php:7
+msgid "Other Plugins"
+msgstr "افزونه‌های دیگر"
+
+#: admin/partials/admin-display.php:8
+msgid "About"
+msgstr "درباره"
+
+#: admin/partials/admin-display.php:10
+msgid "settings"
+msgstr "تنظیمات"
+
+#: admin/partials/admin-display.php:41
+msgid "nav-tab-active"
+msgstr "تب-فعال"
