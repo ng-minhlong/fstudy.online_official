@@ -317,7 +317,7 @@ echo" <link rel='stylesheet' href='" . $site_url . "/contents/themes/tutorstarte
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 16px;
         }
 
         .button:hover {
@@ -505,44 +505,28 @@ echo" <link rel='stylesheet' href='" . $site_url . "/contents/themes/tutorstarte
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        #colophon.site-footer { display: none !important; }
-        .loader {
-            position: relative;
-            width: 108px;
+        .header {
             display: flex;
             justify-content: space-between;
-          }
-          .loader::after , .loader::before  {
-            content: '';
-            display: inline-block;
-            width: 48px;
-            height: 48px;
-            background-color: #FFF;
-            background-image:  radial-gradient(circle 14px, #0d161b 100%, transparent 0);
-            background-repeat: no-repeat;
-            border-radius: 50%;
-            animation: eyeMove 10s infinite , blink 10s infinite;
-          }
-          @keyframes eyeMove {
-            0%  , 10% {     background-position: 0px 0px}
-            13%  , 40% {     background-position: -15px 0px}
-            43%  , 70% {     background-position: 15px 0px}
-            73%  , 90% {     background-position: 0px 15px}
-            93%  , 100% {     background-position: 0px 0px}
-          }
-          @keyframes blink {
-            0%  , 10% , 12% , 20%, 22%, 40%, 42% , 60%, 62%,  70%, 72% , 90%, 92%, 98% , 100%
-            { height: 48px}
-            11% , 21% ,41% , 61% , 71% , 91% , 99%
-            { height: 18px}
-          }
+            align-items: center;
+        }
+
+        .header > div {
+            display: flex;
+            gap: 10px; /* Tạo khoảng cách giữa các nút */
+            align-items: center;
+        }
+
+
+        #colophon.site-footer { display: none !important; }
+       
     </style>
 </head>
 
 
 <body>
     <div class="loader-container" id = "loader">
-            <span class="loader"></span>
+            <span class="loader-t1"></span>
         </div> 
     <div class ="container1" id = "ctn-container" style = "display: none">
                
@@ -578,9 +562,10 @@ echo" <link rel='stylesheet' href='" . $site_url . "/contents/themes/tutorstarte
 
         <div class = "left-cols"> 
             <div class="header">
-                <button class="button" id="problemListButton">Problem List</button>
-                <button class="button" id="retryButton" style = "display: none">Retry</button>
-                
+                <div>
+                    <button class="button" id="problemListButton"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ebe8e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>Problem List</button>
+                    <button class="button" id="retryButton" style = "display: none"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ebe8e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/></svg>Retry</button>
+                </div>
 
                 <div>
                     <button class="button">Previous</button>
@@ -596,7 +581,9 @@ echo" <link rel='stylesheet' href='" . $site_url . "/contents/themes/tutorstarte
 
             
                     <div id="problemContent" class="tab-content active">
-                           <div class="problem-content">
+                            <button id="translate-problem-btn" class="button">Dịch đề thi</button>
+
+                            <div class="problem-content">
                                 <h3 id="problem-title-main"></h3>
                                 <div class="meta-info">
                                     <span id="problem-difficulty" class="difficulty-medium"></span>
@@ -613,7 +600,7 @@ echo" <link rel='stylesheet' href='" . $site_url . "/contents/themes/tutorstarte
                         </div>
                     
                     <div id="solutionContent" class="tab-content">
-                        <!-- Nội dung solution sẽ được thêm sau -->
+                        <button id="translate-solution-btn" class="button">Dịch lời giải</button>
                         <p>Solution - For review only !</p>
                         <div class="code-section">
                                     <pre id="python-code"></pre>
@@ -649,7 +636,7 @@ echo" <link rel='stylesheet' href='" . $site_url . "/contents/themes/tutorstarte
                     <div class="cols-code">
                         <div class="d-flex justify-content-between mb-2 bg-dark rounded p-2">
                             <div class="col-12 w-25">
-                                <label class="visually-hidden" for="inlineFormSelectPref">Chọn ngôn ngữ</label>
+                                <label class="visually-hidden" for="inlineFormSelectPref" style = "color: white">Chọn ngôn ngữ</label>
                                 <select  class="dropdown" id="inlineFormSelectPref">
                                     <option selected>Choose...</option>
                                     <option value="Java">Java</option>
@@ -658,8 +645,7 @@ echo" <link rel='stylesheet' href='" . $site_url . "/contents/themes/tutorstarte
                                 </select>
                             </div>
                             <div>
-                                <button type="button" class="btn btn-success">Coding Sprint</button>
-                                <button type="button" id="run" class="btn btn-success"><i class="bi bi-play-fill"></i></button>
+                                <button type="button" id="run" class="btn btn-success">Submit Code</button>
                             </div>
                         </div>
                         <textarea class = "textarea-code" placeholder = "test nha" type="text" id="editor" class="form-control" aria-label="First name"></textarea>
@@ -695,6 +681,7 @@ echo" <link rel='stylesheet' href='" . $site_url . "/contents/themes/tutorstarte
             </div>
         </div>
 </body>
+
 <script>
     let runTimesNumber = 0;
     window.SampletestCases = [];
@@ -794,6 +781,7 @@ editor.setValue("");
 var code;
 run.addEventListener("click", async function () {
     async function submitTest() {
+        processAfterSubmit();
         showCompileAndResultTab();
         const code = {
             code: editor.getValue(),
@@ -968,10 +956,25 @@ async function runTestCase() {
         body: JSON.stringify(code)
     });
     var d = await sampleTestCase.json();
+    // Gán kết quả vào SampletestCases để hiển thị sau
+    if (d.results && Array.isArray(d.results)) {
+        d.results.forEach((res, i) => {
+            if (window.SampletestCases[i]) {
+                window.SampletestCases[i].user_code_output = res.user_code_output;
+                window.SampletestCases[i].passed = res.passed;
+            }
+        });
+        // Thêm dòng này để cập nhật hiển thị ngay lập tức
+        displayTestCase(window.SampletestCases[currentTestCaseIndex]);
+    }
+
+
     output.value = d.output;
     runTimesNumber = runTimesNumber + 1;
+    
 }
 
+let currentTestCaseIndex = 0;
 
 async function renderTestCases() {
     await checkValidHistory();
@@ -1058,7 +1061,8 @@ function checkValidHistory(){
 
         // Clear and set code block
         userCodeContainer.innerHTML = `
-            <div class="code-header">Language: ${dataHistory.language}</div>
+            <h3>Your code:</h3>
+            <div class="code-header">Language: ${dataHistory.language}</div><br>
             <pre><code class="code-block">${escapeHtml(dataHistory.user_code)}</code></pre>
         `;
 
@@ -1075,6 +1079,7 @@ function checkValidHistory(){
 
 
 function switchTestCase(index, cases) {
+    currentTestCaseIndex = index; // 
     // Update active tab
     const tabs = document.querySelectorAll('.test-case-tab');
     tabs.forEach((tab, i) => {
@@ -1086,7 +1091,8 @@ function switchTestCase(index, cases) {
     });
     
     // Display selected case
-    displayTestCase(cases[index]);
+    displayTestCase(window.SampletestCases[index]);
+
 }
 
 function markdownToHtml(markdown) {
@@ -1118,13 +1124,13 @@ function displayTestCase(caseData) {
     const contentContainer = document.getElementById('test-case-content');
     let html = '';
 
-    // Format JSON input nicely
     let inputStr = "";
     if (typeof caseData.input === "object" && caseData.input !== null) {
         inputStr = Object.values(caseData.input).join("<br>");
     } else {
         inputStr = caseData.input;
     }
+
     const outputJson = JSON.stringify(caseData.expected_output);
 
     html += `<div class="test-case-param">
@@ -1142,15 +1148,25 @@ function displayTestCase(caseData) {
                 <pre class="test-case-param-value">${outputJson}</pre>
              </div>`;
 
-    html += `<div class="test-case-param" id = "resultTestCase">
-                <span class="test-case-param-name">Your output</span>
-                <pre class="test-case-param-value">${outputJson}</pre>
-                <span id = "checkTestCaseRes" style = "color: red">Wrong</span>
-             </div>`;
-  
+    if ('user_code_output' in caseData) {
+        let icon = caseData.passed
+            ? '<span style="color:green">✔️ Passed</span>'
+            : '<span style="color:red">❌ Failed</span>';
+
+        html += `<div class="test-case-param">
+                    <span class="test-case-param-name">Your Output</span>
+                    <pre class="test-case-param-value">${caseData.user_code_output}</pre>
+                </div>
+                <div class="test-case-param">
+                    <span class="test-case-param-name">Result</span>
+                    <span class="test-case-param-value">${icon}</span>
+                </div>`;
+    }
+
 
     contentContainer.innerHTML = html;
 }
+
 
     function renderPagination(current, total) {
         let html = '';
@@ -1226,6 +1242,17 @@ function displayTestCase(caseData) {
         compileButton.classList.remove('active');
         guideButton.classList.remove('active');
     }
+    function processAfterSubmit(){
+        document.getElementById("retryButton").style.display = "block";
+        document.getElementById("run").style.display = "none";
+
+    }
+    const retryButton = document.getElementById('retryButton');
+    retryButton.addEventListener('click', () => {      
+
+        window.location.href = `${siteUrl}/code/practice/id/${currentTestId}/${sessionIDforAnotherTest}`;
+    });
+
 
     function showCompileAndResultTab(){
         deactivateAllButtons();
@@ -1446,6 +1473,64 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('difficulty').addEventListener('change', () => fetchData(1));
     window.onload = () => fetchData();renderProblem();
 </script>
+<script>
+const translateAPI = async (text) => {
+    const res = await fetch('http://localhost:5000/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            text: text,
+            source: 'en',
+            target: 'vi'
+        })
+    });
+    const data = await res.json();
+    return data.translatedText;
+};
+
+// Đề thi
+const problemBtn = document.getElementById('translate-problem-btn');
+const problemContentDiv = document.querySelector('#problemContent .problem-content');
+let problemOriginalHTML = '';
+
+problemBtn.addEventListener('click', async () => {
+    if (problemBtn.innerText === 'Dịch đề thi') {
+        problemOriginalHTML = problemContentDiv.innerHTML;
+        problemBtn.disabled = true;
+        problemBtn.innerText = 'Đang dịch...';
+
+        const translated = await translateAPI(problemOriginalHTML);
+        problemContentDiv.innerHTML = translated;
+        problemBtn.innerText = 'Hiển thị đề thi gốc';
+        problemBtn.disabled = false;
+    } else {
+        problemContentDiv.innerHTML = problemOriginalHTML;
+        problemBtn.innerText = 'Dịch đề thi';
+    }
+});
+
+// Lời giải
+const solutionBtn = document.getElementById('translate-solution-btn');
+const analysisDiv = document.getElementById('problem-analysis');
+let solutionOriginalHTML = '';
+
+solutionBtn.addEventListener('click', async () => {
+    if (solutionBtn.innerText === 'Dịch lời giải') {
+        solutionOriginalHTML = analysisDiv.innerHTML;
+        solutionBtn.disabled = true;
+        solutionBtn.innerText = 'Đang dịch...';
+
+        const translated = await translateAPI(solutionOriginalHTML);
+        analysisDiv.innerHTML = translated;
+        solutionBtn.innerText = 'Hiển thị lời giải gốc';
+        solutionBtn.disabled = false;
+    } else {
+        analysisDiv.innerHTML = solutionOriginalHTML;
+        solutionBtn.innerText = 'Dịch lời giải';
+    }
+});
+</script>
+
 </html>
 <?php
 }

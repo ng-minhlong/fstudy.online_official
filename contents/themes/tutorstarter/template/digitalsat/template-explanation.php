@@ -387,14 +387,23 @@ $new_skip_ans = 0;
 
         $user_answer_string = $result->useranswer;
     
-        // Remove the prefix and split answers
-        preg_match_all('/Question (\d+)\. ([A-D])/', $user_answer_string, $matches, PREG_SET_ORDER);
-        
-        // Map user answers to question numbers
+        // Decode JSON-based useranswer string
         $user_answers_map = [];
-        foreach ($matches as $match) {
-            $user_answers_map[(int)$match[1]] = trim($match[2]);
+        $decoded_answers = json_decode($user_answer_string, true);
+        if (is_array($decoded_answers)) {
+            foreach ($decoded_answers as $question_label => $answer_data) {
+                if (isset($answer_data['user_answer'])) {
+                    // Extract question number from 'Question 1', 'Question 2', ...
+                    preg_match('/Question (\d+)/', $question_label, $num_match);
+                    if (isset($num_match[1])) {
+                        $question_num = (int)$num_match[1];
+                        $user_answers_map[$question_num] = trim($answer_data['user_answer']);
+                    }
+                }
+            }
         }
+
+
       
     
         $incorrectOrSkippedQuestions = [];

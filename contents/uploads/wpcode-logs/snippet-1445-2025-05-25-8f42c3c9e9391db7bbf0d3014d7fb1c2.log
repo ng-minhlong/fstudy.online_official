@@ -1,0 +1,23 @@
+2025-05-25T02:13:39+00:00 Uncaught TypeError: Cannot access offset of type string on string in C:\xampp\htdocs\fstudy\contents\themes\tutorstarter\template\thptqg\template-get-mark-thptqg.php:263
+Stack trace:
+#0 C:\xampp\htdocs\fstudy\contents\plugins\insert-headers-and-footers\includes\class-wpcode-snippet-execute.php(419) : eval()'d code(2237): include()
+#1 C:\xampp\htdocs\fstudy\wp-includes\class-wp-hook.php(324): WPCode_Snippet_Execute->{closure}('')
+#2 C:\xampp\htdocs\fstudy\wp-includes\class-wp-hook.php(348): WP_Hook->apply_filters(NULL, Array)
+#3 C:\xampp\htdocs\fstudy\wp-includes\plugin.php(517): WP_Hook->do_action(Array)
+#4 C:\xampp\htdocs\fstudy\wp-includes\template-loader.php(13): do_action('template_redire...')
+#5 C:\xampp\htdocs\fstudy\wp-blog-header.php(19): require_once('C:\\xampp\\htdocs...')
+#6 C:\xampp\htdocs\fstudy\index.php(17): require('C:\\xampp\\htdocs...')
+#7 {main}
+  thrown
+2025-05-25T02:18:07+00:00 Uncaught TypeError: Cannot access offset of type string on string in C:\xampp\htdocs\fstudy\contents\themes\tutorstarter\template\thptqg\thptqg-result.php:263
+Stack trace:
+#0 C:\xampp\htdocs\fstudy\contents\plugins\insert-headers-and-footers\includes\class-wpcode-snippet-execute.php(419) : eval()'d code(2237): include()
+#1 C:\xampp\htdocs\fstudy\wp-includes\class-wp-hook.php(324): WPCode_Snippet_Execute->{closure}('')
+#2 C:\xampp\htdocs\fstudy\wp-includes\class-wp-hook.php(348): WP_Hook->apply_filters(NULL, Array)
+#3 C:\xampp\htdocs\fstudy\wp-includes\plugin.php(517): WP_Hook->do_action(Array)
+#4 C:\xampp\htdocs\fstudy\wp-includes\template-loader.php(13): do_action('template_redire...')
+#5 C:\xampp\htdocs\fstudy\wp-blog-header.php(19): require_once('C:\\xampp\\htdocs...')
+#6 C:\xampp\htdocs\fstudy\index.php(17): require('C:\\xampp\\htdocs...')
+#7 {main}
+  thrown
+2025-05-25T17:12:01+00:00 require_once(C:\xampp\htdocs\fstudy/contents/themes/tutorstarter/template/custom-api/service/translate.php): Failed to open stream: No such file or directory

@@ -3,16 +3,8 @@
  * Template Name: Digital SAT Question Bank DATABASE
  */
 
- $wp_load_paths = [
-    $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php', 
-];
+require_once(__DIR__ . '/../../../config-custom.php');
 
-foreach ($wp_load_paths as $path) {
-    if (file_exists($path)) {
-        require_once $path;
-        break;
-    }
-}
 
 // Kiểm tra nếu chưa load được WordPress
 if (!defined('DB_HOST')) {
@@ -224,6 +216,10 @@ $result = $conn->query($sql);
                     Text Structure and Purpose (verbal1575 - verbal1599)
                     Transition (verbal1600 - verbal1641)
                     Words in context (verbal1642  - verbal1692)
+
+
+                    <h3>Real test</h3>
+                    - 2024年5月美国A卷 Module 1: verbal2075 - verbal2101; Module 2: verbal2102 - verbal2128
 
                     <b>Sample Img</b>: /contents/themes/tutorstarter/template/media_img_intest/digital_sat/verbal1143.png
 
@@ -552,7 +548,7 @@ $result = $conn->query($sql);
 // Open the edit modal and populate it with data
 function openEditModal(number) {
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/digitalsat/question-bank-verbal/get_question.php', // Fetch the question details
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/digitalsat/question-bank-verbal/get_question.php', // Fetch the question details
         type: 'POST',
         data: { number: number },
         success: function(response) {
@@ -578,6 +574,16 @@ function openEditModal(number) {
 
 function openAddModal() {
     $('#addForm')[0].reset(); // Clear form data
+
+    $.ajax({
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/digitalsat/question-bank-verbal/get_latest_id.php',
+        type: 'GET',
+        success: function(response) {
+            $('#add_id_question').val(response);
+        }
+    });
+
+    
     $('#addModal').modal('show'); // Show the modal
 }
 
@@ -614,7 +620,7 @@ function saveEdit() {
     $('#edit_explanation').val(formatTextWithLineBreaks(explanation));
 
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/digitalsat/question-bank-verbal/update_question.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/digitalsat/question-bank-verbal/update_question.php',
         type: 'POST',
         data: $('#editForm').serialize(),
         success: function(response) {
@@ -651,7 +657,7 @@ function saveNew() {
     $('#add_explanation').val(formatTextWithLineBreaks(explanation));
 
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/digitalsat/question-bank-verbal/add_question.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/digitalsat/question-bank-verbal/add_question.php',
         type: 'POST',
         data: $('#addForm').serialize(),
         success: function(response) {
@@ -666,7 +672,7 @@ function saveNew() {
 function deleteRecord(number) {
     if (confirm('Are you sure you want to delete this question?')) {
         $.ajax({
-            url: 'http://localhost/contents/themes/tutorstarter/template/digitalsat/question-bank-verbal/delete_question.php',
+            url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/digitalsat/question-bank-verbal/delete_question.php',
             type: 'POST',
             data: { number: number },
             success: function(response) {

@@ -389,11 +389,13 @@ $new_skip_ans = 0;
 
         // Split the user answers based on the string format
         // Example format: "Kết quả lưu:Question 1. AQuestion 2. BQuestion 3. C..."
-        $user_answer_string = $result->useranswer;
-        
+        $user_answer_raw = $result->useranswer;
+
+        $user_answer_data = json_decode($user_answer_raw, true); // Cố gắng giải mã JSON
+        $is_json_format = is_array($user_answer_data);
+
         // Remove the prefix and split based on "Question"
-        $answers_array = preg_split('/Question /', $user_answer_string);
-        array_shift($answers_array); // Remove first empty element if present
+        
 
         // Counter for question numbering
         $question_number = 1;
@@ -432,13 +434,17 @@ $new_skip_ans = 0;
 
                 // User's answer for the current question
                 // Extract user's answer from the answers_array based on question_number
-                $user_answer = isset($answers_array[$question_number - 1]) ? trim($answers_array[$question_number - 1]) : '';
-
-                // Remove anything after the first space if the answer includes it
-                if (strpos($user_answer, '.') !== false) {
-                    $user_answer = substr($user_answer, strpos($user_answer, '.') + 1);
+                if ($is_json_format) {
+                    $question_key = "Question " . $question_number;
+                    $user_answer = isset($user_answer_data[$question_key]["user_answer"]) ? trim($user_answer_data[$question_key]["user_answer"]) : "";
+                } else {
+                    $user_answer = isset($answers_array[$question_number - 1]) ? trim($answers_array[$question_number - 1]) : "";
+                    if (strpos($user_answer, '.') !== false) {
+                        $user_answer = substr($user_answer, strpos($user_answer, '.') + 1);
+                    }
+                    $user_answer = trim($user_answer);
                 }
-                $user_answer = trim($user_answer); // Trim any extra spaces
+
 
           
                 // Determine if the answer is correct or incorrect

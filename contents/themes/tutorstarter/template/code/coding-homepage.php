@@ -133,7 +133,7 @@ if (!defined("ABSPATH")) {
             pointer-events: none;
         }
         .code-content{
-            height: 620px;
+            height: auto;
         }
 
         @keyframes ripple {

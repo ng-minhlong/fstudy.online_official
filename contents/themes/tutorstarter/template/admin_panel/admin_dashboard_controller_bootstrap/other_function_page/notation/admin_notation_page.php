@@ -2,16 +2,8 @@
 /*
  * Template Name: Notation System
  */
-$wp_load_paths = [
-    $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php', // Local (có thư mục wordpress)
-];
+require_once(__DIR__ . '/../../../config-custom.php');
 
-foreach ($wp_load_paths as $path) {
-    if (file_exists($path)) {
-        require_once $path;
-        break;
-    }
-}
 
 // Kiểm tra nếu chưa load được WordPress
 if (!defined('DB_HOST')) {
@@ -337,7 +329,7 @@ $result = $conn->query($sql);
 function openEditModal(number) {
   
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/notation/database/get_notation.php', 
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/notation/database/get_notation.php', 
         type: 'POST',
         data: { number: number },
         success: function(response) {
@@ -359,7 +351,7 @@ function openEditModal(number) {
 function saveEdit() {
   
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/notation/database/update_notation.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/notation/database/update_notation.php',
         type: 'POST',
         data: $('#editForm').serialize(),
         success: function(response) {
@@ -377,7 +369,7 @@ function saveNew() {
  
 
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/notation/database/add_notation.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/notation/database/add_notation.php',
         type: 'POST',
         data: $('#addForm').serialize(),
         success: function(response) {
@@ -390,7 +382,7 @@ function saveNew() {
 function deleteRecord(number) {
     if (confirm('Are you sure you want to delete this notation?')) {
         $.ajax({
-            url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/notation/database/delete_notation.php',
+            url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/notation/database/delete_notation.php',
             type: 'POST',
             data: { number: number },
             success: function(response) {

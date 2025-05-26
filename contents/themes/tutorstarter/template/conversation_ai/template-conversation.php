@@ -102,7 +102,7 @@ if ($result_test->num_rows > 0) {
     $topic =  $data['topic'];
     $ai_role =  $data['ai_role'];
     $user_role =  $data['user_role'];
-    $sentence_limit =  $data['sentence_limit'];
+    $sentence_limit =  15;
     $cover_image =  $data['cover_image'];
     echo '
     <script>
@@ -201,9 +201,9 @@ if ($result_test->num_rows > 0) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Talk With Edward </title>
-    <script src="/contents/themes/tutorstarter/scan-device/system_check_.js"></script>
-    <script src="/contents/themes/tutorstarter/scan-device/location_ip_.js"></script>
-    <script src="/contents/themes/tutorstarter/scan-device/browser_check.js"></script>
+    <script src="/fstudy/contents/themes/tutorstarter/scan-device/system_check_.js"></script>
+    <script src="/fstudy/contents/themes/tutorstarter/scan-device/location_ip_.js"></script>
+    <script src="/fstudy/contents/themes/tutorstarter/scan-device/browser_check.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const systemInfo = {
@@ -518,26 +518,112 @@ audio {
 }
 
   </style>
+
+<style>
+    .personalize-container {
+        max-width: 500px;
+        margin: 20px auto;
+        padding: 20px;
+        border: 2px solid #ddd;
+        border-radius: 12px;
+        background-color: #f9f9f9;
+        font-family: Arial, sans-serif;
+    }
+    .personalize-container h3 {
+        text-align: center;
+        color: #333;
+    }
+    select, .senerio-opt, .user-level {
+        width: 100%;
+        margin: 10px 0;
+    }
+    select {
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+    }
+    .senerio-opt label, .user-level label {
+        display: block;
+        margin-bottom: 5px;
+        cursor: pointer;
+    }
+    .senerio-opt input[type="checkbox"] {
+        margin-right: 8px;
+    }
+    button {
+        padding: 10px;
+        margin-top: 15px;
+        border: none;
+        border-radius: 6px;
+        background-color: #aaa;
+        color: white;
+        cursor: not-allowed;
+        transition: background-color 0.3s;
+    }
+    .button-personalize {
+        width: 100%;
+        padding: 10px;
+        margin-top: 15px;
+        border: none;
+        border-radius: 6px;
+        background-color: #aaa;
+        color: white;
+        cursor: not-allowed;
+        transition: background-color 0.3s;
+    }
+    .button-personalize.enabled {
+        background-color: #28a745;
+        cursor: pointer;
+    }
+    option::before {
+        margin-right: 5px;
+    }
+</style>
 </head>
 <body onload = "main()">
+    <div id="personalize" class="personalize-container">
+        <h3>Cá nhân hóa bài luyện tập của bạn</h3>
 
-<!-- Thêm div thông báo trình duyệt không hỗ trợ (ban đầu ẩn đi) -->
-<div id="browserWarning" class="browser-warning" style="display: none;">
-  <h2>Trình duyệt không được hỗ trợ</h2>
-  <p>Xin lỗi, hệ thống của chúng tôi hiện không hỗ trợ trình duyệt Opera.</p>
-  <p>Vui lòng sử dụng một trong các trình duyệt sau để tiếp tục:</p>
-  
-  <div class="supported-browsers">
-    <p>✓ Google Chrome</p>
-    <p>✓ Microsoft Edge</p>
-    <p>✓ Mozilla Firefox</p>
-    <p>✓ Safari (trên Mac/iOS)</p>
-    <p>✓ Cốc Cốc</p>
-  </div>
-</div>
+        <!-- Language Options -->
+        <div class="language-opt">
+            <select id="languageSelect">
+                <option value="">🌐 Chọn ngôn ngữ</option>
+                <option value="en">🇬🇧 English</option>
+                <option value="fr">🇫🇷 Français</option>
+                <option value="vi">🇻🇳 Tiếng Việt</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="ko">🇰🇷 한국인</option>
+                <option value="ja">🇯🇵 日本語</option>
+            </select>
+        </div>
+
+        <!-- Scenario Options -->
+        <div class="senerio-opt" id="scenarioOptions">
+            <label><input type="checkbox" value="daily"> Giao tiếp ngữ cảnh hằng ngày</label>
+            <label><input type="checkbox" value="vocab"> Giao tiếp để học từ vựng</label>
+            <label><input type="checkbox" value="idioms"> Giao tiếp để học thành ngữ mới</label>
+        </div>
+
+        <!-- User Level -->
+        <div class="user-level">
+            <select id="userLevel">
+                <option value="">📘 Chọn trình độ</option>
+                <option value="A1">A1 – Sơ cấp</option>
+                <option value="A2">A2 – Sơ trung cấp</option>
+                <option value="B1">B1 – Trung cấp</option>
+                <option value="B2">B2 – Trung cao</option>
+                <option value="C1">C1 – Cao cấp</option>
+                <option value="C2">C2 – Thành thạo</option>
+            </select>
+        </div>
+
+        <b>Bài luyện tập sẽ được cá nhân hóa phù hợp với trình độ, văn phong mà bạn muốn</b>
+        <button id="startBtn" class = "button-personalize" disabled onclick="processingPersonalize()">Bắt đầu luyện tập</button>
+    </div>
 
 
-<div id = "test-prepare">
+
+    <div id = "test-prepare" style = "display:none">
         <div class="loader"></div>
         <h3>Your test will begin shortly</h3>
         <div id = "checkpoint" class = "checkpoint">
@@ -569,8 +655,7 @@ audio {
 
     </div>
 
- <div  id = "test_screen" style="display: none;">
-    <div>
+    <div  id = "test_screen" style="display: none;"><div>
      
 
     <div class="container-content">
@@ -611,45 +696,7 @@ audio {
                 <button id="submitButton" class="btn btn-primary">Submit All</button>
 
 
-                <!-- giấu form send kết quả bài thi -->
-                    <span id="message"></span>
-                    <form id="saveConversationAI"  >
-                                <div class="card">
-                                    <div class="card-header">Form lưu kết quả</div>
-                                    <div class="card-body" >
-                            
-                                    <div class = "form-group">
-                                        <input type="text" id="dateform" name="dateform" placeholder="Ngày"  class="form-control form_data"  />
-                                        <span id="date_error" class="text-danger" ></span>
-                                    </div>
-                                
-                                    <div class = "form-group">
-                                        <input type="text" id="idtest" name="idtest" placeholder="Id test"  class="form-control form_data" />
-                                        <span id="idtest_error" class="text-danger" ></span>
-                                    </div>
-                    
-                                    <div class = "form-group">
-                                        <input type="text"  id="testname" name="testname" placeholder="Test Name"  class="form-control form_data" />
-                                        <span id="testname_error" class="text-danger"></span>
-                                    </div>
-                                    <div class = "form-group">
-                                        <textarea type="text"  id="conversation" name="conversation" placeholder="User Answer"  class="form-control form_data"></textarea>
-                                        <span id="conversation_error" class="text-danger"></span>
-                                    </div>
-
-                                    <div class = "form-group"   >
-                                        <input type="text"  id="testsavenumber" name="testsavenumber" placeholder="Result Number"  class="form-control form_data" />
-                                        <span id="testsavenumber_error" class="text-danger"></span>  
-                                    </div>
-                        
-                                    <div class="card-footer">
-                                        <td><input type="submit" id="submit" name="submit"/></td> 
-                                    </div>
-                                
-                                </div>
-                        <div id="result_msg" ></div>
-                    </form>
-                <!-- kết thúc send form -->
+               
 
 
             </div>
@@ -717,7 +764,7 @@ audio {
         });
 
 </script>
-<script src="/contents/themes/tutorstarter/conversation_ai_toolkit/script5.js"></script>
+<script src="/fstudy/contents/themes/tutorstarter/conversation_ai_toolkit/script6.js"></script>
 </body>
 </html>
 

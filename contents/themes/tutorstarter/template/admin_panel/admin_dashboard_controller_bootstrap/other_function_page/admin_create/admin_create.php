@@ -2,16 +2,8 @@
 /*
  * Template Name: Token System
  */
-$wp_load_paths = [
-    $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php', // Local (có thư mục wordpress)
-];
+require_once(__DIR__ . '/../../../config-custom.php');
 
-foreach ($wp_load_paths as $path) {
-    if (file_exists($path)) {
-        require_once $path;
-        break;
-    }
-}
 
 // Kiểm tra nếu chưa load được WordPress
 if (!defined('DB_HOST')) {
@@ -377,7 +369,7 @@ function formatTextWithLineBreaks(text) {
 function openEditModal(number) {
   
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/admin_panel/admin_create/get.php', // Fetch the question details
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/admin_create/get.php', // Fetch the question details
         type: 'POST',
         data: { number: number },
         success: function(response) {
@@ -410,7 +402,7 @@ function saveEdit() {
     $('#edit_note_token').val(formatTextWithLineBreaks(noteToken));
    
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/admin_panel/admin_create/update.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/admin_create/update.php',
         type: 'POST',
         data: $('#editForm').serialize(),
         success: function(response) {
@@ -434,7 +426,7 @@ function saveNew() {
  
 
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/admin_panel/admin_create/add.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/admin_create/add.php',
         type: 'POST',
         data: $('#addForm').serialize(),
         success: function(response) {
@@ -447,7 +439,7 @@ function saveNew() {
 function deleteRecord(number) {
     if (confirm('Are you sure you want to delete this question?')) {
         $.ajax({
-            url: 'http://localhost/contents/themes/tutorstarter/template/admin_panel/admin_create/delete.php',
+            url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/admin_create/delete.php',
             type: 'POST',
             data: { number: number },
             success: function(response) {

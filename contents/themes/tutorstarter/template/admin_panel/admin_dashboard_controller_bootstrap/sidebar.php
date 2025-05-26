@@ -1,7 +1,5 @@
 <?php
-define('MAIN_PATH', '/contents/themes/tutorstarter/template/admin_panel/admin_dashboard_controller_bootstrap/');
-require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php');
-
+require_once(__DIR__ . '/../config-custom.php');
 ?>
 
 <!-- Sidebar -->

@@ -1,6 +1,6 @@
 <?php
 // Include WordPress functions
-require_once('C:\xampp\htdocs\wp-load.php'); // Adjust the path as necessary
+require_once(__DIR__ . '/../../admin_panel/config-custom.php');
 
 global $wpdb;
 
@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $subject = wp_kses_post($_POST['subject']);
     $year = wp_kses_post($_POST['year']);
     $testname = wp_kses_post($_POST['testname']);
-    $link_file = wp_kses_post($_POST['link_file']);
+    $answer = wp_unslash(wp_kses_post($_POST['answer']));
     $time = wp_kses_post($_POST['time']);
     $number_question = wp_kses_post($_POST['number_question']);
     $testcode = wp_unslash(wp_kses_post($_POST['testcode']));
@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'subject' => $subject,
         'year' => $year,
         'testname' => $testname,
-        'link_file' => $link_file,
+        'answer' => $answer,
         'time' => $time,
         'number_question' => $number_question,
         'testcode' => $testcode,

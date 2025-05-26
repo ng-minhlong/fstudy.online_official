@@ -4,16 +4,7 @@
  */
 
 
- $wp_load_paths = [
-    $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php', // Local (có thư mục wordpress)
-];
-
-foreach ($wp_load_paths as $path) {
-    if (file_exists($path)) {
-        require_once $path;
-        break;
-    }
-}
+ require_once(__DIR__ . '/../../../config-custom.php');
 
 // Kiểm tra nếu chưa load được WordPress
 if (!defined('DB_HOST')) {
@@ -162,7 +153,7 @@ $result = $conn->query($sql);
                         <td>{$row['number']}</td>
                         <td>
                             
-                                <a href='http://localhost/wordpress/test/ielts/l/{$row['id_test']}' target='_blank'> {$row['id_test']}</a> 
+                                <a href='http://localhost/fstudy/test/ielts/l/{$row['id_test']}' target='_blank'> {$row['id_test']}</a> 
                           
                         </td>
                         <td>{$row['testname']}</td>
@@ -173,7 +164,7 @@ $result = $conn->query($sql);
                 $questions = explode(',', $row['question_choose']); // Tách các số trong question_choose
                 foreach ($questions as $index => $question) {
                     $templatePart = 'add_ielts_listening_part_' . ($index + 1) . '.php';
-                    echo "<a href='http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/admin_dashboard_controller_bootstrap/exam_questions_database/ielts_listening/$templatePart?id_part_filter=$question' target='_blank'>$question</a>";
+                    echo "<a href='http://localhost/fstudy/contents/themes/tutorstarter/template/admin_panel/admin_dashboard_controller_bootstrap/exam_questions_database/ielts_listening/$templatePart?id_part_filter=$question' target='_blank'>$question</a>";
                     if ($index < count($questions) - 1) {
                         echo ", "; // Thêm dấu phẩy nếu chưa đến số cuối
                     }
@@ -380,7 +371,7 @@ $result = $conn->query($sql);
 // Open the edit modal and populate it with data
 function openEditModal(number) {
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/ielts/ieltslisteningtest/test-list/get_question.php', // Fetch the question details
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/ielts/ieltslisteningtest/test-list/get_question.php', // Fetch the question details
         type: 'POST',
         data: { number: number },
         success: function(response) {
@@ -403,7 +394,7 @@ function openEditModal(number) {
 // Save the edited data
 function saveEdit() {
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/ielts/ieltslisteningtest/test-list/update_question.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/ielts/ieltslisteningtest/test-list/update_question.php',
         type: 'POST',
         data: $('#editForm').serialize(),
         success: function(response) {
@@ -420,7 +411,7 @@ function openAddModal() {
 // Save the new question
 function saveNew() {
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/ielts/ieltslisteningtest/test-list/add_question.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/ielts/ieltslisteningtest/test-list/add_question.php',
         type: 'POST',
         data: $('#addForm').serialize(),
         success: function(response) {
@@ -433,7 +424,7 @@ function saveNew() {
 function deleteRecord(number) {
     if (confirm('Are you sure you want to delete this question?')) {
         $.ajax({
-            url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/ielts/ieltslisteningtest/test-list/delete_question.php',
+            url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/ielts/ieltslisteningtest/test-list/delete_question.php',
             type: 'POST',
             data: { number: number },
             success: function(response) {

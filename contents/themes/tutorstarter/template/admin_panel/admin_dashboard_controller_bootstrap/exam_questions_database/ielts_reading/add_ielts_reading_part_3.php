@@ -3,16 +3,8 @@
  * Template Name: Reading Question DATABASE
  */
 
- $wp_load_paths = [
-    $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php', // Local (có thư mục wordpress)
-];
+require_once(__DIR__ . '/../../../config-custom.php');
 
-foreach ($wp_load_paths as $path) {
-    if (file_exists($path)) {
-        require_once $path;
-        break;
-    }
-}
 
 // Kiểm tra nếu chưa load được WordPress
 if (!defined('DB_HOST')) {
@@ -403,7 +395,7 @@ async function openPreviewModal(idPart) {
     
     try {
         // Gửi yêu cầu AJAX để lấy dữ liệu
-        const response = await fetch(`http://localhost/contents/themes/tutorstarter/template/ielts/ieltsreadingtest/reading-part-3-database-template/get_question_data.php?id_part=${idPart}`);
+        const response = await fetch(`<?php echo get_site_url()?>/contents/themes/tutorstarter/template/ielts/ieltsreadingtest/reading-part-3-database-template/get_question_data.php?id_part=${idPart}`);
         const data = await response.json();
         
         // Cập nhật dữ liệu cho quizData
@@ -512,7 +504,7 @@ function generateRangeFields(context) {
 // Open the edit modal and populate it with data
 function openEditModal(number) {
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/ielts/ieltsreadingtest/reading-part-3-database-template/get_question.php', // Fetch the question details
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/ielts/ieltsreadingtest/reading-part-3-database-template/get_question.php', // Fetch the question details
         type: 'POST',
         data: { number: number },
         success: function(response) {
@@ -552,7 +544,7 @@ function saveEdit() {
 
 
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/ielts/ieltsreadingtest/reading-part-3-database-template/update_question.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/ielts/ieltsreadingtest/reading-part-3-database-template/update_question.php',
         type: 'POST',
         data: formData,
         processData: false, // Required for FormData
@@ -588,7 +580,7 @@ function saveNew() {
 
 
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/ielts/ieltsreadingtest/reading-part-3-database-template/add_question.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/ielts/ieltsreadingtest/reading-part-3-database-template/add_question.php',
         type: 'POST',
         data: formData,
         processData: false, // Required for FormData
@@ -603,7 +595,7 @@ function saveNew() {
 function deleteRecord(number) {
     if (confirm('Are you sure you want to delete this question?')) {
         $.ajax({
-            url: 'http://localhost/contents/themes/tutorstarter/template/ielts/ieltsreadingtest/reading-part-3-database-template/delete_question.php',
+            url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/ielts/ieltsreadingtest/reading-part-3-database-template/delete_question.php',
             type: 'POST',
             data: { number: number },
             success: function(response) {

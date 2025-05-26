@@ -81,6 +81,8 @@ if (is_user_logged_in()) {
 
         ['table' => 'save_user_result_thptqg', 'base_url' => $siteurl . '/thptqg/', 'result_column' => 'overallband', 'type' => 'thptqg'],
 
+        ['table' => 'save_code_problems_history', 'base_url' => $siteurl . '/code/', 'result_column' => 'result', 'type' => 'code'],
+
     ];
 
     $all_results = [];
@@ -130,6 +132,7 @@ if (is_user_logged_in()) {
     <button class="tab" data-filter="topik_listening">Topik Listening</button>
 
     <button class="tab" data-filter="thptqg">THPT Quốc Gia</button>
+    <button class="tab" data-filter="code">Luyện code</button>
 
 </div>
 

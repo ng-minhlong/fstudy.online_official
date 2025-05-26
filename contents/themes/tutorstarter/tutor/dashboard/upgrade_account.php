@@ -66,7 +66,7 @@ $siteurl = get_site_url();
 <div id="account-packages" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; padding: 20px;"></div>
 <!-- CSS tùy chỉnh cơ bản -->
 
-  <?php require_once($_SERVER['DOCUMENT_ROOT'] . "/contents/checkout_gateway/upgrade_account/vnpay_php/config.php"); ?>             
+  <?php require_once($_SERVER['DOCUMENT_ROOT'] . "/fstudy/contents/checkout_gateway/upgrade_account/vnpay_php/config.php"); ?>             
 
   <div class="container" id="card-container"></div>
 

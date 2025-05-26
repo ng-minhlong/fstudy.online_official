@@ -21,10 +21,13 @@ add_filter('document_title_parts', function ($title) {
     }
 $sessionId = generate_uuid_v4();
 
-
+$current_user = wp_get_current_user();
+$current_username = $current_user->user_login;
+$username = $current_username;
 get_header();
 $site_url = get_site_url();
 echo "<script>
+    var Currentusername = '" . $username . "';
     var siteUrl = '" . $site_url . "';
     var sessionId = '" . $sessionId ."';
 </script>";
@@ -77,6 +80,7 @@ echo "<script>
                 <th>Content</th>
                 <th>Difficulty</th>
                 <th>Acceptance Rate</th>
+                <th>Status</th>
                 <th>Do Practice</th>
             </tr>
         </thead>
@@ -86,69 +90,117 @@ echo "<script>
     <div id="pagination"></div>
 
     <script>
-    let currentPage = 1;
+let currentPage = 1;
+let completionData = []; // Store completion data globally
 
-    function showLoading(show = true) {
-        document.getElementById('loading').style.display = show ? 'block' : 'none';
+function showLoading(show = true) {
+    document.getElementById('loading').style.display = show ? 'block' : 'none';
+}
+
+function renderPagination(current, total) {
+    let html = '';
+
+    if (current > 1) {
+        html += `<button onclick="fetchData(${current - 1})">Previous</button>`;
     }
 
-    function renderPagination(current, total) {
-        let html = '';
-
-        if (current > 1) {
-            html += `<button onclick="fetchData(${current - 1})">Previous</button>`;
+    const range = 2;
+    for (let i = 1; i <= total; i++) {
+        if (i === 1 || i === total || (i >= current - range && i <= current + range)) {
+            html += `<button onclick="fetchData(${i})" ${i === current ? 'disabled' : ''}>${i}</button>`;
+        } else if (
+            i === current - range - 1 ||
+            i === current + range + 1
+        ) {
+            html += `<span>...</span>`;
         }
-
-        const range = 2;
-        for (let i = 1; i <= total; i++) {
-            if (i === 1 || i === total || (i >= current - range && i <= current + range)) {
-                html += `<button onclick="fetchData(${i})" ${i === current ? 'disabled' : ''}>${i}</button>`;
-            } else if (
-                i === current - range - 1 ||
-                i === current + range + 1
-            ) {
-                html += `<span>...</span>`;
-            }
-        }
-
-        if (current < total) {
-            html += `<button onclick="fetchData(${current + 1})">Next</button>`;
-        }
-
-        document.getElementById('pagination').innerHTML = html;
     }
 
-    function fetchData(page = 1) {
-        showLoading(true);
-        const difficulty = document.getElementById('difficulty').value;
+    if (current < total) {
+        html += `<button onclick="fetchData(${current + 1})">Next</button>`;
+    }
+
+    document.getElementById('pagination').innerHTML = html;
+}
+
+function fetchCompletionStatus() {
+    const username = Currentusername; // Make sure this variable is defined
+    
+    return fetch(`${siteUrl}/api/get/all-result/code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return res.json();
+    })
+    .then(data => {
+        // Store the completion data for later use
+        if (data.success && Array.isArray(data.data)) {
+            completionData = data.data;
+        }
+        return completionData;
+    })
+    .catch(error => {
+        console.error('Error fetching completion status:', error);
+        return [];
+    });
+}
+
+function checkIfCompleted(practiceId) {
+    // Check if this practice ID exists in completion data
+    return completionData.some(item => 
+        item.id_problems === practiceId.toString()  
+    );
+}
+
+function fetchData(page = 1) {
+    showLoading(true);
+    const difficulty = document.getElementById('difficulty').value;
+    
+    // First fetch completion status, then fetch practice data
+    Promise.all([
+        fetchCompletionStatus(),
         fetch(`${siteUrl}/api/tests/practice/code/all`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ difficulty, page })
-        })
-        .then(res => res.json())
-        .then(json => {
-            const tbody = document.querySelector('#practiceTable tbody');
-            tbody.innerHTML = '';
-            json.data.forEach(row => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${row.id}</td>
-                        <td>${row.title}</td>
-                        <td>${row.content.slice(0, 200)}...</td>
-                        <td>${row.difficulty}</td>
-                        <td>${row.acceptance_rate}</td>
-                        <td><button onclick="window.location.href='${siteUrl}/code/practice/id/${row.id}/${sessionId}'">Do Practice</button></td>
-                    </tr>`;
-            });
-            const totalPages = Math.ceil(json.total / json.limit);
-            renderPagination(page, totalPages);
-            currentPage = page;
-            showLoading(false);
+        }).then(res => res.json())
+    ])
+    .then(([completionData, json]) => {
+        const tbody = document.querySelector('#practiceTable tbody');
+        tbody.innerHTML = '';
+        
+        json.data.forEach(row => {
+            const isCompleted = checkIfCompleted(row.id);
+            
+            tbody.innerHTML += 
+                `<tr>
+                    <td>${row.id}</td>
+                    <td>${row.title}</td>
+                    <td>${row.content.slice(0, 200)}...</td>
+                    <td>${row.difficulty}</td>
+                    <td>${row.acceptance_rate}%</td>
+                    <td>${isCompleted ? '✅ Hoàn thành' : '❌ Chưa hoàn thành'}</td>
+                    <td><button onclick="window.location.href='${siteUrl}/code/practice/id/${row.id}/${sessionId}'">Do Practice</button></td>
+                </tr>`;
         });
-    }
+        
+        const totalPages = Math.ceil(json.total / json.limit);
+        renderPagination(page, totalPages);
+        currentPage = page;
+        showLoading(false);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showLoading(false);
+    });
+}
 
-    document.getElementById('difficulty').addEventListener('change', () => fetchData(1));
-    window.onload = () => fetchData();
-    </script>
+document.getElementById('difficulty').addEventListener('change', () => fetchData(1));
+window.onload = () => fetchData();
+</script>
 </body>

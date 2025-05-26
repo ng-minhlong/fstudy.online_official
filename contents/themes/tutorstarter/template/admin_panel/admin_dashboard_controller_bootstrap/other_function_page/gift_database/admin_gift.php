@@ -3,16 +3,8 @@
  * Template Name: Gift Sys
  */
 
-$wp_load_paths = [
-    $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php', // Local (có thư mục wordpress)
-];
+require_once(__DIR__ . '/../../../config-custom.php');
 
-foreach ($wp_load_paths as $path) {
-    if (file_exists($path)) {
-        require_once $path;
-        break;
-    }
-}
 
 // Kiểm tra nếu chưa load được WordPress
 if (!defined('DB_HOST')) {
@@ -326,7 +318,7 @@ $result = $conn->query($sql);
 // Open the edit modal and populate it with data
 function openEditModal(number) {
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/gift_database/database-template/get_gift.php', // Fetch the question details
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/gift_database/database-template/get_gift.php', // Fetch the question details
         type: 'POST',
         data: { number: number },
         success: function(response) {
@@ -350,7 +342,7 @@ function saveEdit() {
 
 
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/gift_database/database-template/update_gift.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/gift_database/database-template/update_gift.php',
         type: 'POST',
         data: $('#editForm').serialize(),
         success: function(response) {
@@ -372,7 +364,7 @@ function saveNew() {
 
 
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/gift_database/database-template/add_gift.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/gift_database/database-template/add_gift.php',
         type: 'POST',
         data: $('#addForm').serialize(),
         success: function(response) {
@@ -385,7 +377,7 @@ function saveNew() {
 function deleteRecord(number) {
     if (confirm('Are you sure you want to delete this gift?')) {
         $.ajax({
-            url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/gift_database/database-template/delete_gift.php',
+            url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/gift_database/database-template/delete_gift.php',
             type: 'POST',
             data: { number: number },
             success: function(response) {

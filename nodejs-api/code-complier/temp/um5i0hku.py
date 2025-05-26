@@ -1,0 +1,1 @@
+print("nigga 7 chọ 10 gió ")

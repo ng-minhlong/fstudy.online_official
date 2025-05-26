@@ -1,5 +1,5 @@
 <?php
-require_once('C:\xampp\htdocs\wordpress\wp-load.php');
+require_once(__DIR__ . '/../../../admin_panel/config-custom.php');
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     global $wpdb;

@@ -2,16 +2,8 @@
 /*
  * Template Name: Notification System
  */
-$wp_load_paths = [
-    $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php', // Local (có thư mục wordpress)
-];
+require_once(__DIR__ . '/../../../config-custom.php');
 
-foreach ($wp_load_paths as $path) {
-    if (file_exists($path)) {
-        require_once $path;
-        break;
-    }
-}
 
 // Kiểm tra nếu chưa load được WordPress
 if (!defined('DB_HOST')) {
@@ -416,7 +408,7 @@ function openEditModal(number) {
     renderRoleCheckboxes("#editModal", selectedRoles); // Gọi hàm để render checkbox cho modal
 
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/notification/database/get_notification.php', // Fetch the question details
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/notification/database/get_notification.php', // Fetch the question details
         type: 'POST',
         data: { number: number },
         success: function(response) {
@@ -442,7 +434,7 @@ function saveEdit() {
     console.log(selectedRoles); // Thực hiện logic lưu role
 
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/notification/database/update_notification.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/notification/database/update_notification.php',
         type: 'POST',
         data: $('#editForm').serialize(),
         success: function(response) {
@@ -468,7 +460,7 @@ function saveNew() {
 
 
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/notification/database/add_notification.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/notification/database/add_notification.php',
         type: 'POST',
         data: $('#addForm').serialize(),
         success: function(response) {
@@ -481,7 +473,7 @@ function saveNew() {
 function deleteRecord(number) {
     if (confirm('Are you sure you want to delete this question?')) {
         $.ajax({
-            url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/notification/database/delete_notification.php',
+            url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/notification/database/delete_notification.php',
             type: 'POST',
             data: { number: number },
             success: function(response) {

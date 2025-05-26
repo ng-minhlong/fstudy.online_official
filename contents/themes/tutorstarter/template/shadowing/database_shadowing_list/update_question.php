@@ -1,5 +1,5 @@
 <?php
-    require_once('C:\xampp\htdocs\wp-load.php'); // Adjust the path as necessary
+require_once(__DIR__ . '/../../admin_panel/config-custom.php');
 
     global $wpdb;
 

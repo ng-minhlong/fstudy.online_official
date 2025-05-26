@@ -312,102 +312,102 @@ $conn->close();
 
     
   
-     <span id="message"  ></span>
-     <form id="saveTopikReadingResult"  >
-                <div class="card">
-                    <div class="card-header">Form lưu kết quả</div>
-                    <div class="card-body" >
-        
-                <div class = "form-group" >
-                    <input   type="text" id="overallband" name="overallband" placeholder="Kết quả"  class="form-control form_data" />
-                    <span id="result_error" class="text-danger" ></span>
-            
-                </div>
-            
-            
-                <div class = "form-group">
-                    <input type="text" id="dateform" name="dateform" placeholder="Ngày"  class="form-control form_data"  />
-                    <span id="date_error" class="text-danger" ></span>
-                </div>
-            
+            <span id="message"  ></span>
+            <form id="saveTopikReadingResult"  >
+                        <div class="card">
+                            <div class="card-header">Form lưu kết quả</div>
+                            <div class="card-body" >
                 
-            
-                <div class = "form-group"  >
-                    <input type="text" id="timedotest" name="timedotest" placeholder="Thời gian làm bài"  class="form-control form_data" />
-                    <span id="time_error" class="text-danger"></span>
-                </div>
-            
-                <div class = "form-group" >
-                    <input type="text" id="idtest" name="idtest" placeholder="Id test"  class="form-control form_data" />
-                    <span id="idtest_error" class="text-danger" ></span>
-                </div>
+                        <div class = "form-group" >
+                            <input   type="text" id="overallband" name="overallband" placeholder="Kết quả"  class="form-control form_data" />
+                            <span id="result_error" class="text-danger" ></span>
+                    
+                        </div>
+                    
+                    
+                        <div class = "form-group">
+                            <input type="text" id="dateform" name="dateform" placeholder="Ngày"  class="form-control form_data"  />
+                            <span id="date_error" class="text-danger" ></span>
+                        </div>
+                    
+                        
+                    
+                        <div class = "form-group"  >
+                            <input type="text" id="timedotest" name="timedotest" placeholder="Thời gian làm bài"  class="form-control form_data" />
+                            <span id="time_error" class="text-danger"></span>
+                        </div>
+                    
+                        <div class = "form-group" >
+                            <input type="text" id="idtest" name="idtest" placeholder="Id test"  class="form-control form_data" />
+                            <span id="idtest_error" class="text-danger" ></span>
+                        </div>
 
-                <div class = "form-group" >
-                    <input type="text" id="test_type" name="test_type" placeholder="Type Test"  class="form-control form_data" />
-                    <span id="test_type_error" class="text-danger" ></span>
-                </div>
-            
-                <div class = "form-group" >
-                    <input type="text" id="idcategory" name="idcategory" placeholder="Id category"  class="form-control form_data" />
-                    <span id="idcategory_error" class="text-danger"></span>
-                </div>
-            
-                <div class = "form-group"   >
-                    <input type="text"  id="testname" name="testname" placeholder="Test Name"  class="form-control form_data" />
-                    <span id="testname_error" class="text-danger"></span>
-                </div>
-                <div class = "form-group"   >
-                    <textarea type="text"  id="useranswer" name="useranswer" placeholder="User Answer"  class="form-control form_data"></textarea>
-                    <span id="useranswer_error" class="text-danger"></span>
-            </div>
-            
-            <div class = "form-group"   >
-                    <input type="text"  id="correct_percentage" name="correct_percentage" placeholder="Correct percentage"  class="form-control form_data" />
-                    <span id="correctanswer_error" class="text-danger"></span>  
-                </div>
-          
-
-            <div class = "form-group"   >
-                    <input type="text"  id="total_question_number" name="total_question_number" placeholder="Total Number"  class="form-control form_data" />
-                    <span id="total_question_number_error" class="text-danger"></span>  
-                </div>
-           
-
-            <div class = "form-group"   >
-                    <input type="text"  id="correct_number" name="correct_number" placeholder="Correct Number"  class="form-control form_data" />
-                    <span id="correctanswer_error" class="text-danger"></span>  
-                </div>
-            
-            <div class = "form-group"   >
-                    <input type="text"  id="incorrect_number" name="incorrect_number" placeholder="Incorrect Number"  class="form-control form_data" />
-                    <span id="incorrect_number_error" class="text-danger"></span>  
-                </div>
-        
-
-            <div class = "form-group"   >
-                    <input type="text"  id="skip_number" name="skip_number" placeholder="Skip Number"  class="form-control form_data" />
-                    <span id="skip_number_error" class="text-danger"></span>  
-                </div>
-
-                <div class = "form-group"   >
-                    <input type="text"  id="testsavenumber" name="testsavenumber" placeholder="Result Number"  class="form-control form_data" />
-                    <span id="testsavenumber_error" class="text-danger"></span>  
-                </div>
-           
-           
-        
-        <div class="card-footer">
-            <!--  <button type="button" name="submit" id="submit" class="btn btn-primary" onclick="save_data(); return false;">Save</button>-->
-                            <td><input type="submit" id="submit" name="submit"/></td> 
-    
-            </div>
+                        <div class = "form-group" >
+                            <input type="text" id="test_type" name="test_type" placeholder="Type Test"  class="form-control form_data" />
+                            <span id="test_type_error" class="text-danger" ></span>
+                        </div>
+                    
+                        <div class = "form-group" >
+                            <input type="text" id="idcategory" name="idcategory" placeholder="Id category"  class="form-control form_data" />
+                            <span id="idcategory_error" class="text-danger"></span>
+                        </div>
+                    
+                        <div class = "form-group"   >
+                            <input type="text"  id="testname" name="testname" placeholder="Test Name"  class="form-control form_data" />
+                            <span id="testname_error" class="text-danger"></span>
+                        </div>
+                        <div class = "form-group"   >
+                            <textarea type="text"  id="useranswer" name="useranswer" placeholder="User Answer"  class="form-control form_data"></textarea>
+                            <span id="useranswer_error" class="text-danger"></span>
+                    </div>
+                    
+                    <div class = "form-group"   >
+                            <input type="text"  id="correct_percentage" name="correct_percentage" placeholder="Correct percentage"  class="form-control form_data" />
+                            <span id="correctanswer_error" class="text-danger"></span>  
+                        </div>
                 
-        </div>
-        <div id="result_msg" ></div>
-    </form>
-    <!-- kết thúc send form -->
 
+                    <div class = "form-group"   >
+                            <input type="text"  id="total_question_number" name="total_question_number" placeholder="Total Number"  class="form-control form_data" />
+                            <span id="total_question_number_error" class="text-danger"></span>  
+                        </div>
+                
+
+                    <div class = "form-group"   >
+                            <input type="text"  id="correct_number" name="correct_number" placeholder="Correct Number"  class="form-control form_data" />
+                            <span id="correctanswer_error" class="text-danger"></span>  
+                        </div>
+                    
+                    <div class = "form-group"   >
+                            <input type="text"  id="incorrect_number" name="incorrect_number" placeholder="Incorrect Number"  class="form-control form_data" />
+                            <span id="incorrect_number_error" class="text-danger"></span>  
+                        </div>
+                
+
+                    <div class = "form-group"   >
+                            <input type="text"  id="skip_number" name="skip_number" placeholder="Skip Number"  class="form-control form_data" />
+                            <span id="skip_number_error" class="text-danger"></span>  
+                        </div>
+
+                        <div class = "form-group"   >
+                            <input type="text"  id="testsavenumber" name="testsavenumber" placeholder="Result Number"  class="form-control form_data" />
+                            <span id="testsavenumber_error" class="text-danger"></span>  
+                        </div>
+                
+                
+                
+                <div class="card-footer">
+                    <!--  <button type="button" name="submit" id="submit" class="btn btn-primary" onclick="save_data(); return false;">Save</button>-->
+                                    <td><input type="submit" id="submit" name="submit"/></td> 
+            
+                    </div>
+                        
+                </div>
+                <div id="result_msg" ></div>
+            </form>
+            <!-- kết thúc send form -->
         </div>
+        
     </div>
 
     <script>

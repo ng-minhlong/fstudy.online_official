@@ -4,16 +4,8 @@
  */
 
 
- $wp_load_paths = [
-    $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php', // Local (có thư mục wordpress)
-];
+require_once(__DIR__ . '/../../../config-custom.php');
 
-foreach ($wp_load_paths as $path) {
-    if (file_exists($path)) {
-        require_once $path;
-        break;
-    }
-}
 
 // Kiểm tra nếu chưa load được WordPress
 if (!defined('DB_HOST')) {
@@ -485,7 +477,7 @@ $result_tests = $conn->query($sql2);
 // Open the edit modal and populate it with data
 function openEditModal(number) {
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/result_admin_page/ielts_speaking_results/get_result.php', // Fetch the question details
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/result_admin_page/ielts_speaking_results/get_result.php', // Fetch the question details
         type: 'POST',
         data: { number: number },
         success: function(response) {
@@ -506,7 +498,7 @@ function openEditModal(number) {
 // Save the edited data
 function saveEdit() {
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/result_admin_page/ielts_speaking_results/update_result.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/result_admin_page/ielts_speaking_results/update_result.php',
         type: 'POST',
         data: $('#editForm').serialize(),
         success: function(response) {
@@ -516,7 +508,7 @@ function saveEdit() {
 }
 function openDetailsModal(idTest) {
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/result_admin_page/ielts_speaking_results/get_test_details.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/result_admin_page/ielts_speaking_results/get_test_details.php',
         method: 'POST',
         data: { id_test: idTest },
         success: function(response) {
@@ -540,7 +532,7 @@ function openAddModal() {
 // Save the new question
 function saveNew() {
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/result_admin_page/ielts_speaking_results/add_result.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/result_admin_page/ielts_speaking_results/add_result.php',
         type: 'POST',
         data: $('#addForm').serialize(),
         success: function(response) {
@@ -553,7 +545,7 @@ function saveNew() {
 function deleteRecord(number) {
     if (confirm('Are you sure you want to delete this result?')) {
         $.ajax({
-            url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/result_admin_page/ielts_speaking_results/delete_result.php',
+            url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/result_admin_page/ielts_speaking_results/delete_result.php',
             type: 'POST',
             data: { number: number },
             success: function(response) {

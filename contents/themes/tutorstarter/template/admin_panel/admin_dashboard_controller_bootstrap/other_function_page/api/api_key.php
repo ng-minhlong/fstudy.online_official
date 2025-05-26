@@ -2,12 +2,12 @@
 /*
  * Template Name: Api Key Store
  */
+require_once(__DIR__ . '/../../../config-custom.php');
 
-$servername = "localhost";
-$username = "root";
-$password = ""; // No password by default
-$dbname = "wordpress";
-
+ $servername = DB_HOST;
+ $username = DB_USER;
+ $password = DB_PASSWORD;
+ $dbname = DB_NAME;
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);
 
@@ -68,7 +68,7 @@ $result = $conn->query($sql);
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script src="/wordpress/contents/themes/tutorstarter/ielts-reading-tookit/script_database_1.js"></script>
+    <script src="<?php echo get_site_url()?>/contents/themes/tutorstarter/ielts-reading-tookit/script_database_1.js"></script>
 
     
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
@@ -316,7 +316,7 @@ $result = $conn->query($sql);
 // Open the edit modal and populate it with data
 function openEditModal(number) {
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/api_store/database/get_api.php', // Fetch the question details
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/api_store/database/get_api.php', // Fetch the question details
         type: 'POST',
         data: { number: number },
         success: function(response) {
@@ -338,7 +338,7 @@ function openEditModal(number) {
 // Save the edited data
 function saveEdit() {
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/api_store/database/update_api.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/api_store/database/update_api.php',
         type: 'POST',
         data: $('#editForm').serialize(),
         success: function(response) {
@@ -355,7 +355,7 @@ function openAddModal() {
 // Save the new question
 function saveNew() {
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/api_store/database/add_api.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/api_store/database/add_api.php',
         type: 'POST',
         data: $('#addForm').serialize(),
         success: function(response) {
@@ -368,7 +368,7 @@ function saveNew() {
 function deleteRecord(number) {
     if (confirm('Are you sure you want to delete this question?')) {
         $.ajax({
-            url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/api_store/database/delete_api.php',
+            url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/api_store/database/delete_api.php',
             type: 'POST',
             data: { number: number },
             success: function(response) {

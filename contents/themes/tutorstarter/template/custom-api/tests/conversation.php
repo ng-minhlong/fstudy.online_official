@@ -14,7 +14,9 @@ if (!isset($data['messages']) || !is_array($data['messages']) || !isset($data['i
 global $wpdb;
 $table_name = 'conversation_with_ai_list';
 
-$id_test = (int)$data['id_test'];
+$id_test = $data['id_test'];
+$lang = $data['lang'];
+
 $ai_info = $wpdb->get_row($wpdb->prepare(
     "SELECT ai_role, user_role, testname, target_1, target_2, target_3 FROM $table_name WHERE id_test = %d",
     $id_test
@@ -47,11 +49,26 @@ foreach ($data['messages'] as $message) {
         'content' => sanitize_text_field($message['content'])
     ];
 }
+function mapLangToName($code) {
+    $langMap = [
+        'en' => 'English',
+        'fr' => 'French',
+        'vi' => 'Vietnamese',
+        'de' => 'German',
+        'ko' => 'Korean',
+        'ja' => 'Japanese'
+    ];
+    return $langMap[$code] ?? 'English'; // fallback nếu không có
+}
+
+$langName = mapLangToName($lang);
+
 $system_message_content = sprintf(
-    "You are %s. I am %s in the context of %s. Keep answers short (max 50 words). Ask for details if needed. If the question is irrelevant, respond with {Not relevant}. The user has 3 targets: Target 1: %s; Target 2: %s; Target 3: %s. If a target is completed, return {Target_number}.",
+    "You are %s. I am %s in the context of %s. Keep answers short (max 50 words) and answer in language %s. Ask for details if needed. If the question is irrelevant, respond with {Not relevant}. The user has 3 targets: Target 1: %s; Target 2: %s; Target 3: %s. If a target is completed, return {Target_number}.",
     $ai_info->ai_role,
     $ai_info->user_role,
     $ai_info->testname,
+    $lang,
     $ai_info->target_1,
     $ai_info->target_2,
     $ai_info->target_3

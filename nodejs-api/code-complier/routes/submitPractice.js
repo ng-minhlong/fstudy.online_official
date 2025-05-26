@@ -86,12 +86,13 @@ router.post("/submit", async (req, res) => {
                 const testFinishTime = `${Date.now() - testStartTime}ms`;
 
                 if (!data.output) {
+                    const errorMessage = data.error || "No output from compiler";
                     results.push({
                         test_case_input_detail: inputData,
                         test_case: test.test_case,
                         user_code_output: "error",
                         passed: false,
-                        message: "No output from compiler",
+                        message: errorMessage,
                         task_finish_time: testFinishTime,
                     });
                     return resolve();

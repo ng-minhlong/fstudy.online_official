@@ -184,7 +184,7 @@ $siteurl = get_site_url();
   </div>
   
   <div id="coint-shop" class="coint-shop"></div>
-  <?php require_once($_SERVER['DOCUMENT_ROOT'] . "/contents/checkout_gateway/token/vnpay_php/config.php"); ?>             
+  <?php require_once($_SERVER['DOCUMENT_ROOT'] . "/fstudy/contents/checkout_gateway/token/vnpay_php/config.php"); ?>             
 
   <div class="container" id="card-container"></div>
 

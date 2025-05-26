@@ -3,17 +3,7 @@
  * Template Name: Test LIST Ielts Writing
  */
 
-
- $wp_load_paths = [
-    $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php', // Local (có thư mục wordpress)
-];
-
-foreach ($wp_load_paths as $path) {
-    if (file_exists($path)) {
-        require_once $path;
-        break;
-    }
-}
+require_once(__DIR__ . '/../../../config-custom.php');
 
 // Kiểm tra nếu chưa load được WordPress
 if (!defined('DB_HOST')) {
@@ -379,7 +369,7 @@ $result = $conn->query($sql);
 // Open the edit modal and populate it with data
 function openEditModal(number) {
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/ielts/ieltswritingtest/test-list/get_question.php', // Fetch the question details
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/ielts/ieltswritingtest/test-list/get_question.php', // Fetch the question details
         type: 'POST',
         data: { number: number },
         success: function(response) {
@@ -405,7 +395,7 @@ function openEditModal(number) {
 // Save the edited data
 function saveEdit() {
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/ielts/ieltswritingtest/test-list/update_question.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/ielts/ieltswritingtest/test-list/update_question.php',
         type: 'POST',
         data: $('#editForm').serialize(),
         success: function(response) {
@@ -422,7 +412,7 @@ function openAddModal() {
 // Save the new question
 function saveNew() {
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/ielts/ieltswritingtest/test-list/add_question.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/ielts/ieltswritingtest/test-list/add_question.php',
         type: 'POST',
         data: $('#addForm').serialize(),
         success: function(response) {
@@ -435,7 +425,7 @@ function saveNew() {
 function deleteRecord(number) {
     if (confirm('Are you sure you want to delete this question?')) {
         $.ajax({
-            url: 'http://localhost/contents/themes/tutorstarter/template/ielts/ieltswritingtest/test-list/delete_question.php',
+            url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/ielts/ieltswritingtest/test-list/delete_question.php',
             type: 'POST',
             data: { number: number },
             success: function(response) {

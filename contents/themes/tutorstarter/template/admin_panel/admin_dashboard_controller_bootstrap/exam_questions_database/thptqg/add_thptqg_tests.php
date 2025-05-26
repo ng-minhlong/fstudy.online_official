@@ -4,16 +4,8 @@
  */
 
 
- $wp_load_paths = [
-    $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php',
-];
+require_once(__DIR__ . '/../../../config-custom.php');
 
-foreach ($wp_load_paths as $path) {
-    if (file_exists($path)) {
-        require_once $path;
-        break;
-    }
-}
 
 // Kiểm tra nếu chưa load được WordPress
 if (!defined('DB_HOST')) {
@@ -80,6 +72,8 @@ $result = $conn->query($sql);
 
     <meta charset="UTF-8">
     <title>THPTQG Questions Database</title>
+    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
@@ -102,7 +96,72 @@ $result = $conn->query($sql);
         }
        
     </style>
+<style>
+        /* Ẩn popup mặc định */
+        #popup-note {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            max-width: 90%;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease-in-out;
+        }
 
+        /* Hiệu ứng mở popup */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -55%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        /* Overlay làm mờ nền */
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 999;
+        }
+
+        /* Nút đóng */
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .close-btn:hover {
+            color: red;
+        }
+
+        /* Nút mở popup */
+        #open-popup {
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #open-popup:hover {
+            background: #0056b3;
+        }
+    </style>
 </head>
 
 
@@ -125,6 +184,57 @@ $result = $conn->query($sql);
                 <div class="container-fluid">
 
                 <h1>THPTQG Questions Database</h1>
+                <div id="overlay"></div>
+
+                <div id="popup-note">
+                    <button class="close-btn" onclick="closePopup()">✖</button>
+                    <pre>
+import json
+# Dữ liệu đầu vào
+raw_input = """
+1B
+2D
+3A
+4C
+5B
+6A
+7B
+8A
+9D
+10C
+11D
+12C
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+"""
+
+# Xử lý dữ liệu
+answers = {}
+for line in raw_input.strip().splitlines():
+    line = line.strip()
+    if line:
+        number = ''.join(filter(str.isdigit, line))
+        answer = ''.join(filter(str.isalpha, line)).upper() or None
+        answers[f"Question {number}"] = answer
+
+# In ra JSON
+print(json.dumps(answers, indent=2, ensure_ascii=False))
+
+                    </pre>
+                    
+                    
+
+                    
+                </div>
+    
 
 <!-- Filter form -->
 <form method="GET" action="">
@@ -135,7 +245,7 @@ $result = $conn->query($sql);
         <button type="submit" class="btn btn-primary">Filter</button>
         <a href="?" class="btn btn-secondary">Clear Filter</a>
     </form>
-
+<button id="open-popup">Xem ghi chú các câu/ các loại</button>
 <!-- Display the data from the database -->
 <table class="table table-bordered">
     <tr>
@@ -144,10 +254,10 @@ $result = $conn->query($sql);
         <th>Subject</th>
         <th>Year</th>
         <th>Test Name</th>
-        <th>Link test file</th>
+        <th>Test Code</th>
         <th>Time</th>
         <th>Number Question</th>
-        <th>Test Code (JSON)</th>
+        <th>Answer</th>
         <th>Token Need</th>
         <th>Role Access</th>
         <th>Permissive Management</th>
@@ -174,11 +284,12 @@ $result = $conn->query($sql);
                         <td>{$row['subject']}</td>
                         <td>{$row['year']}</td>
                         <td>{$row['testname']}</td>
-                        <td>{$row['link_file']}</td>
+                        <td>{$question_content_display} $question_content_view_more</td>
+                        
 
                         <td>{$row['time']}</td>
                         <td>{$row['number_question']}</td>
-                        <td>{$question_content_display} $question_content_view_more</td>
+                        <td>{$row['answer']}</td>
                         <td>{$row['token_need']}</td>
                         <td>{$row['role_access']}</td>
                         <td>{$row['permissive_management']}</td>
@@ -277,11 +388,11 @@ $result = $conn->query($sql);
 
                     year: <input type="text" id="edit_year" name="year" class="form-control" required><br>
                     Test name: <textarea id="edit_testname" name="testname" class="form-control" required></textarea><br>
-                    Link file: <textarea id="edit_link_file" name="link_file" class="form-control" required></textarea><br>
+                    Test Code: <textarea  id="edit_testcode" name="testcode" class="form-control" required></textarea> <br>
+                    Answer: <textarea id="edit_answer" name="answer" class="form-control" required></textarea><br>
 
                     Time: <input type = "number" id="edit_time" name="time" class="form-control"><br>
                     Number Question: <textarea id="edit_number_question" name="number_question" class="form-control"></textarea><br>
-                    Test Code json: <textarea  id="edit_testcode" name="testcode" class="form-control" required></textarea> <br>
                     Token Need: <input type = "number" id="edit_token_need" name="token_need" class="form-control" required><br>
                     Role Access: <textarea  id="edit_role_access" name="role_access" class="form-control" required></textarea> <br>
                     Time Allow: <input type = "number"  id="edit_time_allow" name="time_allow" class="form-control" required> <br>
@@ -332,11 +443,12 @@ $result = $conn->query($sql);
                         </select><br>                    
                     Year: <input type="text" id="add_year" name="year" class="form-control" required><br>
                     Test Name: <textarea id="add_testname" name="testname" class="form-control" required></textarea><br>
-                    Link file: <textarea id="add_link_file" name="link_file" class="form-control" required></textarea><br>
+                    Test Code: <textarea  id="add_testcode" name="testcode" class="form-control" required></textarea> <br>
+                    Answer: <textarea id="add_answer" name="answer" class="form-control" required></textarea><br>
+
 
                     Time: <textarea id="add_time" name="time" class="form-control"></textarea><br>
                     Number Question: <textarea id="add_number_question" name="number_question" class="form-control"></textarea><br>
-                    Test Code: <textarea  id="add_testcode" name="testcode" class="form-control" required></textarea> <br>
 
                     Token Need: <input type = "number" id="add_token_need" name="token_need" class="form-control" required><br>
                     Role Access: <textarea  id="add_role_access" name="role_access" class="form-control" required></textarea> <br>
@@ -387,6 +499,18 @@ $result = $conn->query($sql);
 
 <!-- jQuery and JavaScript for AJAX -->
 <script>
+     function openPopup() {
+            document.getElementById("popup-note").style.display = "block";
+            document.getElementById("overlay").style.display = "block";
+        }
+
+        function closePopup() {
+            document.getElementById("popup-note").style.display = "none";
+            document.getElementById("overlay").style.display = "none";
+        }
+
+        document.getElementById("open-popup").addEventListener("click", openPopup);
+        document.getElementById("overlay").addEventListener("click", closePopup);
     document.getElementById("generate_id_btn").addEventListener("click", function() {
         let now = new Date();
         let timestamp = `${now.getSeconds()}${now.getMinutes()}${now.getHours()}${now.getDate()}${now.getMonth() + 1}`;
@@ -398,7 +522,7 @@ $result = $conn->query($sql);
 // Open the edit modal and populate it with data
 function openEditModal(number) {
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/thptqg/database-template/get_question.php', // Fetch the question details
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/thptqg/database-template/get_question.php', // Fetch the question details
         type: 'POST',
         data: { number: number },
         success: function(response) {
@@ -408,7 +532,7 @@ function openEditModal(number) {
             $('#edit_subject').val(data.subject);
             $('#edit_year').val(data.year);
             $('#edit_testname').val(data.testname);
-            $('#edit_link_file').val(data.link_file);
+            $('#edit_answer').val(data.answer);
             $('#edit_time').val(data.time);
             $('#edit_number_question').val(data.number_question);
             $('#edit_testcode').val(data.testcode);
@@ -423,7 +547,7 @@ function openEditModal(number) {
 // Save the edited data
 function saveEdit() {
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/thptqg/database-template/update_question.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/thptqg/database-template/update_question.php',
         type: 'POST',
         data: $('#editForm').serialize(),
         success: function(response) {
@@ -440,7 +564,7 @@ function openAddModal() {
 // Save the new question
 function saveNew() {
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/thptqg/database-template/add_question.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/thptqg/database-template/add_question.php',
         type: 'POST',
         data: $('#addForm').serialize(),
         success: function(response) {
@@ -453,7 +577,7 @@ function saveNew() {
 function deleteRecord(number) {
     if (confirm('Are you sure you want to delete this question?')) {
         $.ajax({
-            url: 'http://localhost/contents/themes/tutorstarter/template/thptqg/database-template/delete_question.php',
+            url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/thptqg/database-template/delete_question.php',
             type: 'POST',
             data: { number: number },
             success: function(response) {

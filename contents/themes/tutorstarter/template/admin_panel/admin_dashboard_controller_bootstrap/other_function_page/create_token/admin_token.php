@@ -2,17 +2,8 @@
 /*
  * Template Name: Token System
  */
-$wp_load_paths = [
-    $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php', // Local (có thư mục wordpress)
-];
-
-foreach ($wp_load_paths as $path) {
-    if (file_exists($path)) {
-        require_once $path;
-        break;
-    }
-}
-
+require_once(__DIR__ . '/../../../config-custom.php');
+ 
 // Kiểm tra nếu chưa load được WordPress
 if (!defined('DB_HOST')) {
     die("Error: Unable to load WordPress configuration.");
@@ -299,7 +290,7 @@ $result = $conn->query($sql);
 function openEditModal(number) {
   
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/token_all_site/database/get_token.php', // Fetch the question details
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/token_all_site/database/get_token.php', // Fetch the question details
         type: 'POST',
         data: { number: number },
         success: function(response) {
@@ -317,7 +308,7 @@ function openEditModal(number) {
 function saveEdit() {
    
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/token_all_site/database/update_token.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/token_all_site/database/update_token.php',
         type: 'POST',
         data: $('#editForm').serialize(),
         success: function(response) {
@@ -336,7 +327,7 @@ function saveNew() {
  
 
     $.ajax({
-        url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/token_all_site/database/add_token.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/token_all_site/database/add_token.php',
         type: 'POST',
         data: $('#addForm').serialize(),
         success: function(response) {
@@ -349,7 +340,7 @@ function saveNew() {
 function deleteRecord(number) {
     if (confirm('Are you sure you want to delete this question?')) {
         $.ajax({
-            url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/token_all_site/database/delete_token.php',
+            url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/token_all_site/database/delete_token.php',
             type: 'POST',
             data: { number: number },
             success: function(response) {

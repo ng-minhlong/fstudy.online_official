@@ -1,6 +1,6 @@
 <?php
 // Include WordPress functions
-require_once('C:\xampp\htdocs\wordpress\wp-load.php'); // Adjust the path as necessary
+require_once(__DIR__ . '/../../admin_panel/config-custom.php');
 
 global $wpdb;
 

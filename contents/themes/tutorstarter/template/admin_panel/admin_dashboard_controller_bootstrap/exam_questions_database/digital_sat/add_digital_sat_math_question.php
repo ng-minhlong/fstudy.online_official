@@ -2,16 +2,7 @@
 /*
  * Template Name: Digital SAT Math Question Bank DATABASE
  */
-$wp_load_paths = [
-    $_SERVER['DOCUMENT_ROOT'] . '/wp-load.php', 
-];
-
-foreach ($wp_load_paths as $path) {
-    if (file_exists($path)) {
-        require_once $path;
-        break;
-    }
-}
+require_once(__DIR__ . '/../../../config-custom.php');
 
 // Kiểm tra nếu chưa load được WordPress
 if (!defined('DB_HOST')) {
@@ -81,7 +72,7 @@ $result = $conn->query($sql);
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script src="/contents/themes/tutorstarter/ielts-reading-tookit/script_database_1.js"></script>
+    <script src="<?php echo get_site_url()?>/contents/themes/tutorstarter/ielts-reading-tookit/script_database_1.js"></script>
 
     
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
@@ -567,7 +558,7 @@ $('#edit_type_question').change(function() {
 });
 function openEditModal(number) {
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/digitalsat/question-bank-math/get_question.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/digitalsat/question-bank-math/get_question.php',
         type: 'POST',
         data: { number: number },
         success: function(response) {
@@ -606,7 +597,7 @@ function openAddModal() {
 
     // Gọi API để lấy ID mới nhất
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/digitalsat/question-bank-math/get_latest_id.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/digitalsat/question-bank-math/get_latest_id.php',
         type: 'GET',
         success: function(response) {
             $('#add_id_question').val(response);
@@ -650,7 +641,7 @@ function saveEdit() {
     $('#edit_explanation').val(formatTextWithLineBreaks(explanation));
 
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/digitalsat/question-bank-math/update_question.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/digitalsat/question-bank-math/update_question.php',
         type: 'POST',
         data: $('#editForm').serialize(),
         success: function(response) {
@@ -687,7 +678,7 @@ function saveNew() {
     $('#add_explanation').val(formatTextWithLineBreaks(explanation));
 
     $.ajax({
-        url: 'http://localhost/contents/themes/tutorstarter/template/digitalsat/question-bank-math/add_question.php',
+        url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/digitalsat/question-bank-math/add_question.php',
         type: 'POST',
         data: $('#addForm').serialize(),
         success: function(response) {
@@ -702,7 +693,7 @@ function saveNew() {
 function deleteRecord(number) {
     if (confirm('Are you sure you want to delete this question?')) {
         $.ajax({
-            url: 'http://localhost/contents/themes/tutorstarter/template/digitalsat/question-bank-math/delete_question.php',
+            url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/digitalsat/question-bank-math/delete_question.php',
             type: 'POST',
             data: { number: number },
             success: function(response) {

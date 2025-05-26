@@ -1,6 +1,6 @@
 <?php
 
-include($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php');
+include($_SERVER['DOCUMENT_ROOT'] . '/fstudy/wp-load.php');
     define('SITE_URL', home_url('/', is_ssl() ? 'https' : 'http'));
 
     echo "<script>const siteurl = '" . SITE_URL . "';</script>";

@@ -22,11 +22,9 @@ if (is_user_logged_in()) {
     $username = $current_username;
     $current_user_id = $current_user->ID;
     echo '
-    <script>
-           
-    var CurrentuserID = "' . $user_id . '";
+    <script>   
+        var CurrentuserID = "' . $user_id . '";
         var Currentusername = "' . $username . '";
-    
     </script>
     ';
 
@@ -329,7 +327,7 @@ if ($result->num_rows > 0) {
                     echo "\"question\": " . json_encode($question_data["question_content"]) . ",";
 
                     if (!empty($question_data["image_link"])) {
-                        $custom_image_path = "/contents/themes/tutorstarter/template/media_img_intest/digital_sat/" . $question_data["id_question"] . ".png";
+                        $custom_image_path = "/fstudy/contents/themes/tutorstarter/template/media_img_intest/digital_sat/" . $question_data["id_question"] . ".png";
                         echo "'image': " . json_encode($custom_image_path) . ",";
                     } else {
                         echo "'image': " . json_encode(""),
@@ -389,7 +387,7 @@ if ($result->num_rows > 0) {
                         ",";
                         */
                     if (!empty($question_data["image_link"])) {
-                        $custom_image_path = "/contents/themes/tutorstarter/template/media_img_intest/digital_sat/" . $question_data["id_question"] . ".png";
+                        $custom_image_path = "/fstudy/contents/themes/tutorstarter/template/media_img_intest/digital_sat/" . $question_data["id_question"] . ".png";
                         echo "'image': " . json_encode($custom_image_path) . ",";
                     } else {
                         echo "'image': " . json_encode(""),
@@ -1459,9 +1457,8 @@ if ($result->num_rows > 0) {
                 <button id="start-test"  style="display:none" onclick="showLoadingPopup()">Bắt đầu làm bài</button>
                 <h1 style="display: none;" id="final-result"></h1>
                 <h5 style="display: none;" id="time-result"></h5>
-                <h5  style="display: none;" id ="useranswerdiv"></h5>
-                        <h5   style="display: none;" id ="correctanswerdiv"></h5>
-
+                <h5 style="display: none;" id ="useranswerdiv"></h5>
+                <h5 style="display: none;" id ="correctanswerdiv"></h5>
                 <h3 style="display: none;" id="final-review-result"></h3>
                 <div style="display: none;" id="date" style="visibility:hidden;"></div>
                 <div style="display: none;" id ="header-table-test-result">
@@ -2402,7 +2399,40 @@ for (let i = 0; i < quizData.questions.length; i++) {
 
 
 //var current_module_element;
+let resultJson = {};
+var formattedTimeUsed;
 
+function submit_Test() {
+    fetch(`${siteUrl}/api/cham-diem/digitalsat/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            id_test: id_test,
+            testname: <?php echo json_encode($testname); ?>,
+            username: <?php echo json_encode($current_username); ?>,
+            result_id: <?php echo json_encode($result_id); ?>,
+            saveSpecificTime: saveSpecificTime,
+            timedotest: formattedTimeUsed,
+            type_test: quizData.test_type,
+            user_answer: resultJson
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const result = data.result;
+            console.log("Kết quả chấm điểm:", result);
+        } else {
+            alert('Chấm điểm thất bại.');
+        }
+    })
+    .catch(error => {
+        console.error('Lỗi khi gửi dữ liệu:', error);
+        alert('Đã xảy ra lỗi khi gửi yêu cầu.');
+    });
+}
 
 function ChangeQuestion(questionNumber)
         {
@@ -2441,7 +2471,7 @@ function purple_highlight(spanId) {
 
 <?php
 echo'
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/main__sat_10.js"></script>
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/main__sat_11.js"></script>
 
 <script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/translate.js"></script>
 <script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/zoom-text.js"></script>
@@ -2450,7 +2480,7 @@ echo'
 <script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/report-error.js"></script>
 <script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/note-sidebar.js"></script>
 
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/submit_answer_6.js"></script>
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/submit_answer_9.js"></script>
 <!--<script type="module" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/check_dev_tool.js"></script>
     -->
 <script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/highlight_text_4.js"></script>
@@ -2458,7 +2488,7 @@ echo'
 <script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/format-time-3.js"></script>
 <script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/draft-popup.js"></script>
 <script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/start-digital-sat-Test-7.js"></script>
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/checkbox_and_remember_4.js"></script>
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/checkboxAndRemember.js"></script>
 
 <script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/reload-test.js"></script>
 <script type ="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/change-mode.js"></script> 

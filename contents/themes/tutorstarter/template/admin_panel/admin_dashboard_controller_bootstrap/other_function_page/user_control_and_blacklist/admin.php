@@ -2,7 +2,7 @@
 /*
 Template Name: User List and Role Editor
 */
-include('C:\xampp\htdocs\wordpress\wp-load.php'); // Adjust the path as necessary
+require_once(__DIR__ . '/../../../config-custom.php');
 
 if (!current_user_can('administrator')) {
     wp_die('You do not have permission to access this page.');
@@ -295,7 +295,7 @@ function openEditModal(number) {
  renderRoleCheckboxes("#editModal", selectedRoles); // Gọi hàm để render checkbox cho modal
 
  $.ajax({
-     url: 'http://localhost/wordpress/contents/themes/tutorstarter/template/admin_panel/notification/database/get_notification.php', // Fetch the question details
+     url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/admin_panel/notification/database/get_notification.php', // Fetch the question details
      type: 'POST',
      data: { number: number },
      success: function(response) {

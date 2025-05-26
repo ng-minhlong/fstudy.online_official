@@ -604,6 +604,7 @@ $results_by_domain = [
 
 $results_by_category = [];
 $graph_data = []; // Array to store data for the graph
+$user_answers_json = json_decode($result->useranswer, true);
 
 // Loop through all question IDs in the questions array
 foreach ($questions as $question_id) {
@@ -649,11 +650,9 @@ foreach ($questions as $question_id) {
         }
 
         // User's answer for the current question
-        $user_answer = isset($answers_array[$question_number - 1]) ? trim($answers_array[$question_number - 1]) : '';
-        if (strpos($user_answer, '.') !== false) {
-            $user_answer = substr($user_answer, strpos($user_answer, '.') + 1);
-        }
-        $user_answer = trim($user_answer);
+        $question_key = "Question " . $question_number;
+        $user_answer = isset($user_answers_json[$question_key]['user_answer']) ? trim($user_answers_json[$question_key]['user_answer']) : '';
+
 
         // Determine if the answer is correct or incorrect
         if ($user_answer == "") {

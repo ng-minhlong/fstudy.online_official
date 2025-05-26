@@ -1,5 +1,5 @@
 <?php
-include('C:\xampp\htdocs\wp-load.php'); // Adjust the path as necessary
+require_once($_SERVER['DOCUMENT_ROOT'] . '/fstudy/wp-load.php');
 
 $current_user = wp_get_current_user();
 $user_id = $current_user->ID;
