@@ -19,7 +19,7 @@ $testsavenumber = get_query_var('testsavetopikreading');
 
 $results = $wpdb->get_results(
     $wpdb->prepare(
-        "SELECT * FROM save_user_result_topik_reading WHERE testsavenumber = %d",
+        "SELECT * FROM save_user_result_topik_reading WHERE testsavenumber = %s",
         $testsavenumber
     )
 );
@@ -1141,7 +1141,7 @@ if (!empty($results)) {
 
     </body>
 <script>
-
+hidePreloader();
 function redirectToTest(){
     
     window.location.href = `${linkTestMain}`;

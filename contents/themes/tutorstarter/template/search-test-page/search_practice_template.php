@@ -391,6 +391,7 @@ fetch(`${siteUrl}/wp-json/api/v1/get-target?username=${currentUsername}`)
     const targetData = JSON.parse(data.target); // Parse JSON nếu backend trả về chuỗi
     console.log('Target:', targetData);
     renderTargetList(targetData);
+    hidePreloader();
   })
   .catch(error => console.error(error));
 
@@ -436,7 +437,6 @@ function renderTargetList(targetData) {
     targetList.appendChild(targetCard);
   });
 }
-
 
 
 </script>

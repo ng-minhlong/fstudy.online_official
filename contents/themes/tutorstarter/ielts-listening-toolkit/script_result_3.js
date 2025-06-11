@@ -3,9 +3,7 @@ let currentPartIndex = 0;
 function loadPart(partIndex) {
     const part = quizData.part[partIndex];
 
-    // Display the paragraph
-    document.getElementById('paragraph-container').innerHTML = `<p>${part.paragraph}</p>`;
-
+    
     // Display the question range
     const questionRange = getQuestionRange(partIndex);
 
@@ -154,20 +152,7 @@ function getQuestionRange(partIndex) {
 }
 
 
-// Navigation buttons
-document.getElementById('prev-btn').addEventListener('click', () => {
-    if (currentPartIndex > 0) {
-        currentPartIndex--;
-        loadPart(currentPartIndex);
-    }
-});
 
-document.getElementById('next-btn').addEventListener('click', () => {
-    if (currentPartIndex < quizData.part.length - 1) {
-        currentPartIndex++;
-        loadPart(currentPartIndex);
-    }
-});
 // Load the part buttons dynamically
 const partNavigation = document.getElementById('part-navigation');
 quizData.part.forEach((part, index) => {
@@ -394,7 +379,7 @@ function logUserAnswers(partIndex) {
             else if (group.type_group_question === "multiple-choice") {
                 questionNumber = `${currentQuestionNumber}`;
                 const savedAnswerIndex = question.answers.findIndex((answer, answerIndex) => isAnswerSelected(partIndex, groupIndex, questionIndex, answerIndex));
-                //userAnswer = savedAnswerIndex !== -1 ? question.answers[savedAnswerIndex][0] : "Not answered";
+                userAnswer = savedAnswerIndex !== -1 ? question.answers[savedAnswerIndex][0] : "Not answered";
                 
                 const correctAnswerIndex = question.answers.findIndex(answer => answer[1] === true); // Find the correct answer
                 correctAnswer = correctAnswerIndex !== -1 ? question.answers[correctAnswerIndex][0] : "Not available";
@@ -889,7 +874,11 @@ function coppyShareContentBtn() {
     });
 }
 
+function redirectToTest(){
+    
+    window.location.href = `${linkTest}`;
 
+}
 
 document.addEventListener("DOMContentLoaded", function () {
     const updatePermission = document.getElementById("updatePermission");
@@ -908,7 +897,7 @@ function togglePermission(checkbox) {
     // Gửi yêu cầu AJAX để cập nhật trạng thái
     const data = {
         action: "update_permission_link",
-        type_test: "ielts_reading",
+        type_test: "ielts_listening",
         testsavenumber: testsavenumber, // Giá trị testsavenumber từ server
         permission_link: newPermission
     };
@@ -1047,7 +1036,7 @@ document.getElementById("saveNewBtn").addEventListener("click", function () {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-            action: 'update_ielts_reading_results',
+            action: 'update_ielts_listening_results',
             testsavenumber: testSaveNumber,
             correct_number: newCorrectAnsNumber,
             incorrect_number: newIncorrectAnsNumber,
@@ -1085,6 +1074,6 @@ function main(){
     updateCorrectAnswers();
     loadPart(currentPartIndex);
     filterAnswerForEachType();
- 
+    hidePreloader();
 }
 

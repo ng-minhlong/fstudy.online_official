@@ -1231,9 +1231,10 @@ img{
             let highlights = {}; // Object để lưu trữ các highlight
 
     </script>
-     <script src="\contents\themes\tutorstarter\ielts-listening-toolkit\script__listening_2.js"></script>  
-     <script src="\contents\themes\tutorstarter\ielts-listening-toolkit\highlight_text.js"></script>
-
+    <?php echo'
+     <script src="'.$site_url.'\contents\themes\tutorstarter\ielts-listening-toolkit\script__listening_3.js"></script>  
+     <script src="'.$site_url.'\contents\themes\tutorstarter\ielts-listening-toolkit\highlight_text.js"></script>'
+?>
 </body>
 
 <script>

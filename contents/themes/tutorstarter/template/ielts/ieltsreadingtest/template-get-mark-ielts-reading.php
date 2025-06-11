@@ -19,7 +19,7 @@ $testsavenumber = get_query_var('testsavereadingnumber');
 
 $results = $wpdb->get_results(
     $wpdb->prepare(
-        "SELECT * FROM save_user_result_ielts_reading WHERE testsavenumber = %d",
+        "SELECT * FROM save_user_result_ielts_reading WHERE testsavenumber = %s",
         $testsavenumber
     )
 );
@@ -116,7 +116,7 @@ if ($result_test->num_rows > 0) {
             die('Lỗi MySQL prepare: ' . $conn->error);
         }
 
-        $stmt_part->bind_param("s", $id_part);
+        $stmt_part->bind_param("i", $id_part);
         $stmt_part->execute();
         $result_part = $stmt_part->get_result();
 
@@ -1033,7 +1033,11 @@ function redirectToTest(){
 
 }
 </script>
-    <script src="/contents/themes/tutorstarter/ielts-reading-tookit/script_result_4.js"></script>
+<?php
+echo'
+    <script src="'. $site_url .'/contents/themes/tutorstarter/ielts-reading-tookit/script_result__.js"></script>'
+    ?>
+
 <script>
         var ajaxUrl = <?php echo json_encode(admin_url("admin-ajax.php")); ?>;
         const oldCorrectNumber = <?php echo json_encode(esc_html($result->correct_number)); ?>;

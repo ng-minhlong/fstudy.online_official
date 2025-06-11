@@ -383,7 +383,8 @@ $conn->close();
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://smtpjs.com/v3/smtp.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-    <script type="text/javascript" src="http://localhost/wordpress/contents/themes/tutorstarter/ielts-writing-toolkit/function/handwriting/handwriting.js"></script>
+    <?php echo '<script type="text/javascript" src="'.$site_url.'/contents/themes/tutorstarter/ielts-writing-toolkit/function/handwriting/handwriting.js"></script>';?>
+    <?php echo '<link rel="stylesheet" href="'.$site_url.'/contents/themes/tutorstarter/ielts-writing-toolkit/style/style1.css">';?>
 
   
     
@@ -391,7 +392,6 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ielts Writing Tests</title>
-    <link rel="stylesheet" href="http://localhost/wordpress/contents/themes/tutorstarter/ielts-writing-toolkit/style/style1.css">
     
 </head>
 <style>
@@ -1216,7 +1216,7 @@ function main() {
         document.getElementById("start_test").style.display="block";
         
         document.getElementById("welcome").style.display="block";
-
+        hidePreloader();
     }, 1000);
     
     
@@ -1792,25 +1792,20 @@ The given table compares different means of transportation in terms of the annua
     
 
 
-
-    <script src="http://localhost/wordpress/contents/themes/tutorstarter/ielts-writing-toolkit/function/description/mark_description.js"></script> 
-
-
+<?php echo'
+    <script src="'.$site_url.'/contents/themes/tutorstarter/ielts-writing-toolkit/function/description/mark_description.js"></script> 
 
 
-    <script src="http://localhost/wordpress/contents/themes/tutorstarter/ielts-writing-toolkit/function/full_overall_chart/full_band_chart.js"></script>
-    <script  src="http://localhost/wordpress/contents/themes/tutorstarter/ielts-writing-toolkit/function/process11.js"></script>
-    
 
 
-    <script  src="http://localhost/wordpress/contents/themes/tutorstarter/ielts-writing-toolkit/function/right_bar_feature/reload-test.js"></script>
-    <script  src="http://localhost/wordpress/contents/themes/tutorstarter/ielts-writing-toolkit/function/right_bar_feature/fullscreen.js"></script>
-    <script  src="http://localhost/wordpress/contents/themes/tutorstarter/ielts-writing-toolkit/function/right_bar_feature/report-error.js"></script>
-    <script  src="http://localhost/wordpress/contents/themes/tutorstarter/ielts-writing-toolkit/function/right_bar_feature/change-mode.js"></script>
-
-
-  <script src="http://localhost/wordpress/contents/themes/tutorstarter/ielts-writing-toolkit/submitTest9.js"></script>
-
+    <script src="'.$site_url.'/contents/themes/tutorstarter/ielts-writing-toolkit/function/full_overall_chart/full_band_chart.js"></script>
+    <script  src="'.$site_url.'/contents/themes/tutorstarter/ielts-writing-toolkit/function/process11.js"></script>
+    <script  src="'.$site_url.'/contents/themes/tutorstarter/ielts-writing-toolkit/function/right_bar_feature/reload-test.js"></script>
+    <script  src="'.$site_url.'/contents/themes/tutorstarter/ielts-writing-toolkit/function/right_bar_feature/fullscreen.js"></script>
+    <script  src="'.$site_url.'/contents/themes/tutorstarter/ielts-writing-toolkit/function/right_bar_feature/report-error.js"></script>
+    <script  src="'.$site_url.'/contents/themes/tutorstarter/ielts-writing-toolkit/function/right_bar_feature/change-mode.js"></script>
+  <script src="'.$site_url.'/contents/themes/tutorstarter/ielts-writing-toolkit/submitTest9.js"></script>
+'?>
 
 
 

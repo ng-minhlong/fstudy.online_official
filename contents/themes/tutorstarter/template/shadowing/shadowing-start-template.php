@@ -371,21 +371,19 @@ body {
   margin: auto;
   padding: 10px;
   position: relative;
-  display: flex;
   flex-direction: row;
 }
 
-.left-side, .right-side {
-  width: 100%;
-  padding: 10px;
-  overflow: auto; /* Add this to make sides scrollable independently */
+.content-side {
   display:none;
 }
 
 
-
-.right-side {
-  overflow: auto; /* Allow right side to scroll */
+.video-div{
+}
+.app-div{
+  text-align: center;
+  justify-content: center;
 }
 
 #before-content {
@@ -1131,26 +1129,123 @@ border: 3px solid transparent;
         font-size: 20px;
         font-weight: bold;
     }
+    #colophon.site-footer { display: none !important; }
+
+.word-correct {
+    color: green;
+}
+.word-incorrect {
+    color: red;
+}
+.pronunciation-display {
+    font-family: monospace;
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #f5f5f5;
+    border-radius: 5px;
+}
+.speed-display {
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+/* Custom Audio Player Styling */
+#audioPlayback {
+    width: 100%;
+    max-width: 500px;
+    height: 50px;
+    margin: 20px auto;
+    border-radius: 30px;
+    background: #f0f0f0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+#audioPlayback::-webkit-media-controls-panel {
+    background: linear-gradient(145deg, #f0f0f0, #ffffff);
+    border-radius: 30px;
+}
+
+#audioPlayback::-webkit-media-controls-current-time-display,
+#audioPlayback::-webkit-media-controls-time-remaining-display {
+    color: #333;
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+}
+
+#audioPlayback::-webkit-media-controls-play-button {
+    background-color: #4CAF50;
+    border-radius: 50%;
+    transform: scale(1.5);
+}
+
+#audioPlayback::-webkit-media-controls-play-button:hover {
+    background-color: #45a049;
+}
+
+#audioPlayback::-webkit-media-controls-timeline {
+    background-color: #ddd;
+    border-radius: 10px;
+    margin: 0 15px;
+}
+
+#audioPlayback::-webkit-media-controls-volume-slider {
+    background-color: #ddd;
+    border-radius: 10px;
+    padding: 0 5px;
+}
+
+#audioPlayback::-webkit-media-controls-mute-button {
+    transform: scale(1.2);
+}
+
+#audioPlayback::-webkit-media-controls-volume-slider-container {
+    width: 100px;
+}
+
+#audioPlayback::-webkit-media-controls-seek-back-button,
+#audioPlayback::-webkit-media-controls-seek-forward-button {
+    display: none;
+}
+
+#audioPlayback::-webkit-media-controls-timeline::-webkit-slider-thumb {
+    background-color: #4CAF50;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+}
+
+#audioPlayback::-webkit-media-controls-volume-slider::-webkit-slider-thumb {
+    background-color: #4CAF50;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+}
+
+/* Audio player container styling */
+.audio-player-container {
+    background: #ffffff;
+    padding: 15px;
+    border-radius: 35px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    margin: 20px auto;
+    max-width: 550px;
+    transition: all 0.3s ease;
+}
+
+.audio-player-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
 </style>
 </head>
 <body onload = "main()">
 
 
-<!-- Thêm div thông báo trình duyệt không hỗ trợ (ban đầu ẩn đi) -->
-<div id="browserWarning" class="browser-warning" style="display: none;">
-    <h2>Trình duyệt không được hỗ trợ</h2>
-    <p>Xin lỗi, hệ thống của chúng tôi hiện không hỗ trợ trình duyệt Opera.</p>
-    <p>Vui lòng sử dụng một trong các trình duyệt sau để tiếp tục:</p>
-    
-    <div class="supported-browsers">
-      <p>✓ Google Chrome</p>
-      <p>✓ Microsoft Edge</p>
-      <p>✓ Mozilla Firefox</p>
-      <p>✓ Safari (trên Mac/iOS)</p>
-      <p>✓ Cốc Cốc</p>
-    </div>
-</div>
- 
 
 <div class="container1">
    
@@ -1200,7 +1295,7 @@ border: 3px solid transparent;
                 </div>
 
 
-        <div id = 'left-side' class="left-side">
+        <div id = 'content-side' class="content-side">
 
 
         <div id = "checkpoint" class = "checkpoint">
@@ -1216,76 +1311,77 @@ border: 3px solid transparent;
                         ?>
         </div>    
        
+        <div class = "video-div">
+            <div id ="start-dictation" style="display: none;">
+                <div id="video-container">
+                  <image id="hide-player" class = "hide-player" src = "http://localhost/contents/uploads/2025/01/StudyAI.com_-1.png"></image>
+                  <div id="player" class = "player"></div>
+                </div>
 
-    <div id ="start-dictation" style="display: none;">
-        <div id="video-container">
-          <image id="hide-player" class = "hide-player" src = "http://localhost/contents/uploads/2025/01/StudyAI.com_-1.png"></image>
-          <div id="player" class = "player"></div>
+              <div class ="opt-player">
+                <select name="video-width" id="video-width">
+                  <option value="small">Video Size: Small</option>
+                  <option value="normal" selected>Video Size: Normal</option>
+                  <option value="large">Video Size: Large</option>
+                  <option value="extra-large">Video Size: Extra Large</option>
+                </select>
+                <br>
+                <button id="toggle-video-btn">Hide Video</button>
+            </div>
+            
+          </div>
+      </div>
+
+      <div class="app-div">
+        <div id="transcript"></div>
+        <div class = "result">
+          <div id= "checkSpeed">Tốc độ</div>
+          <div id = "checkPronunciation"></div>
         </div>
+          <div class = "bf-content-setting-class" >
+                  <svg id="previous"  xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+                  </svg>
+                  <div class="question-number" id="question-number"></div>
+                  <svg id="next" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/>
+                  </svg>
+          </div>
+                <button id="listenAgain" class="button-4" role="button"><i class="fa-solid fa-play"></i> Listen Again</button><br>
+                <button id="saveProgress" class="button-4" role="button" onclick = "saveProgress()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg> Save Progress</button><br>
 
-      <div class ="opt-player">
-        <select name="video-width" id="video-width">
-          <option value="small">Video Size: Small</option>
-          <option value="normal" selected>Video Size: Normal</option>
-          <option value="large">Video Size: Large</option>
-          <option value="extra-large">Video Size: Extra Large</option>
-        </select>
-        <br>
-        <button id="toggle-video-btn">Hide Video</button>
-    </div>
-      <div id="transcript"></div>
+                <textarea class = "textarea" type="text" id="userInput" style = "display:none" placeholder="Enter transcript text here"></textarea>
+
+                
+              <div class="controls">
+                <button id="checkAnswer" class="button-10" role="button" style = "display:none" >Check Answer</button>
+                <button id="listenAgain" class="button-11" role="button"  style = "display:none" >Listen Again</button>
+            </div>
+
+            <div class="record-controls">
+              <button id="startRecord"><svg  class="icon" version="1.1" id="Uploaded to svgrepo.com" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 32" xml:space="preserve" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <style type="text/css"> .isometric_zeven{fill:#FF7344;} .isometric_tien{fill:#7BD6C4;} .isometric_elf{fill:#72C0AB;} .isometric_twaalf{fill:#569080;} .isometric_dertien{fill:#225B49;} .st0{fill:#F28103;} .st1{fill:#BE1E2D;} .st2{fill:#F05A28;} .st3{fill:#F29227;} .st4{fill:#F8F7C5;} .st5{fill:#F5DF89;} .st6{fill:#AD9A74;} .st7{fill:none;} .st8{fill:#F2D76C;} .st9{fill:#72C0AB;} .st10{fill:#7BD6C4;} .st11{fill:#569080;} </style> <g> <path class="isometric_dertien" d="M21.496,11.298l-3.174-3.174l-2.161-2.161c-1.562-1.562-4.095-1.562-5.657,0 c-1.562,1.562-1.562,4.095,0,5.657l2.179,2.179l3.156,3.156c1.562,1.562,4.095,1.562,5.657,0 C23.058,15.392,23.058,12.86,21.496,11.298z"></path> <path class="isometric_tien" d="M18.987,20.926c-2.306-0.004-3.994,1.11-3.987,2.302c0.016,3.027,8.016,3.036,8,0.014 C22.993,22.053,21.307,20.931,18.987,20.926z"></path> <path class="isometric_twaalf" d="M20.83,11.727c-0.29-0.186-0.84-0.471-0.991-0.555c-0.703-0.391-2.563,0.833-2.563,2.75 c0,0.469,0.137,0.801,0.374,0.968c0.168,0.118,0.771,0.425,0.995,0.558c0.263,0.216,0.664,0.21,1.15-0.07 c0.933-0.539,1.513-1.616,1.513-2.607C21.308,12.221,21.131,11.862,20.83,11.727z"></path> <path class="isometric_elf" d="M18.308,14.503c0-1.019,0.63-2.098,1.513-2.608c0.883-0.51,1.487-0.143,1.487,0.876 c0,0.991-0.58,2.068-1.513,2.607C18.913,15.887,18.308,15.494,18.308,14.503z M19.044,10.439c-0.085,0.323-0.218,0.648-0.387,0.965 c0.451-0.29,0.906-0.386,1.183-0.232c0.109,0.061,0.43,0.228,0.708,0.386c0.101-0.624-0.016-1.131-0.286-1.496l-1.436-1.436 C19.139,9.052,19.246,9.668,19.044,10.439z M17.65,14.891c-0.237-0.167-0.374-0.499-0.374-0.968c0-0.316,0.051-0.612,0.138-0.886 c-0.707,0.688-1.554,1.225-2.396,1.455c-0.775,0.212-1.4,0.117-1.833-0.19l1.436,1.436c0.432,0.307,1.058,0.402,1.833,0.19 c0.546-0.149,1.089-0.436,1.597-0.805C17.88,15.03,17.724,14.942,17.65,14.891z"></path> <path class="st11" d="M19.011,22.448v-0.056C19.01,22.4,19,22.407,19,22.415C19,22.426,19.009,22.437,19.011,22.448z"></path> <path class="isometric_twaalf" d="M23,23.243v1.388h-0.011c0.171,3.089-8.085,3.106-7.98,0H15v-1.403 C15.016,26.257,23.016,26.263,23,23.243z M18.048,22.241v0.509c-0.038,1.128,2.962,1.121,2.9,0l0.004-0.504 C20.958,23.343,18.054,23.34,18.048,22.241z M21.896,14.185l-1.913-1.111c-0.299,0.044-0.62,0.49-0.525,0.852l1.434,0.833 c-0.005,1,0.235,4.641-2.121,4.641c-1.682,0-3.461-1.943-4.45-3.963c-1.066-1.066-1.293-1.293-1.706-1.706 c0.981,3.574,3.638,6.67,6.156,6.67c0.082,0,0.162-0.003,0.24-0.009v2c0,0.448,1.044,0.403,0.988,0.003v-2.241 C22.06,19.206,21.888,15.78,21.896,14.185z"></path> <path class="isometric_zeven" d="M16.44,23.728c-0.28-0.28-0.195-0.591,0.19-0.694c0.385-0.103,0.925,0.04,1.205,0.321 c0.28,0.28,0.195,0.591-0.19,0.694C17.259,24.152,16.72,24.008,16.44,23.728z"></path> </g> </g></svg>Start Record</button>
+              <button id="stopRecord" disabled> <svg  class="icon" viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M512 1024C229.7 1024 0 794.3 0 512S229.7 0 512 0s512 229.7 512 512-229.7 512-512 512z m0-938.7C276.7 85.3 85.3 276.7 85.3 512S276.7 938.7 512 938.7 938.7 747.3 938.7 512 747.3 85.3 512 85.3z" fill="#3688FF"></path><path d="M640 682.7H384c-23.6 0-42.7-19.1-42.7-42.7V384c0-23.6 19.1-42.7 42.7-42.7h256c23.6 0 42.7 19.1 42.7 42.7v256c0 23.6-19.1 42.7-42.7 42.7z m-213.3-85.4h170.7V426.7H426.7v170.6z" fill="#5F6379"></path></g></svg>Stop Record</button>
+            </div>
+            <div id="recordedText"></div>
+            <div id="resultFeedback"></div>
+
+            <div id="confidentialLevel"></div>
+            <div class="audio-player-container">
+                <audio id="audioPlayback" controls></audio>
+            </div>
 
 
-        
-    </div>
-</div>
-<div id = "right-side" class = "right-side" >
 
 
-<div class = "bf-content-setting-class" >
-        <svg id="previous"  xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
-            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
-        </svg>
-        <div class="question-number" id="question-number"></div>
-        <svg id="next" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
-            <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/>
-        </svg>
-</div>
+
+            
+              <button id="hintButton"  style = "display:none" >Show Hint</button>
+              <div id="hint"  style = "display:none" ></div>
 
 
-      <button id="listenAgain" class="button-4" role="button"><i class="fa-solid fa-play"></i> Listen Again</button><br>
-      <button id="saveProgress" class="button-4" role="button" onclick = "saveProgress()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg> Save Progress</button><br>
-
-      <textarea class = "textarea" type="text" id="userInput" style = "display:none" placeholder="Enter transcript text here"></textarea>
-
-      
-    <div class="controls">
-      <button id="checkAnswer" class="button-10" role="button" style = "display:none" >Check Answer</button>
-      <button id="listenAgain" class="button-11" role="button"  style = "display:none" >Listen Again</button>
+          </div>
+      </div>
   </div>
-
-  <div class="record-controls">
-    <button id="startRecord"><svg  class="icon" version="1.1" id="Uploaded to svgrepo.com" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 32" xml:space="preserve" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <style type="text/css"> .isometric_zeven{fill:#FF7344;} .isometric_tien{fill:#7BD6C4;} .isometric_elf{fill:#72C0AB;} .isometric_twaalf{fill:#569080;} .isometric_dertien{fill:#225B49;} .st0{fill:#F28103;} .st1{fill:#BE1E2D;} .st2{fill:#F05A28;} .st3{fill:#F29227;} .st4{fill:#F8F7C5;} .st5{fill:#F5DF89;} .st6{fill:#AD9A74;} .st7{fill:none;} .st8{fill:#F2D76C;} .st9{fill:#72C0AB;} .st10{fill:#7BD6C4;} .st11{fill:#569080;} </style> <g> <path class="isometric_dertien" d="M21.496,11.298l-3.174-3.174l-2.161-2.161c-1.562-1.562-4.095-1.562-5.657,0 c-1.562,1.562-1.562,4.095,0,5.657l2.179,2.179l3.156,3.156c1.562,1.562,4.095,1.562,5.657,0 C23.058,15.392,23.058,12.86,21.496,11.298z"></path> <path class="isometric_tien" d="M18.987,20.926c-2.306-0.004-3.994,1.11-3.987,2.302c0.016,3.027,8.016,3.036,8,0.014 C22.993,22.053,21.307,20.931,18.987,20.926z"></path> <path class="isometric_twaalf" d="M20.83,11.727c-0.29-0.186-0.84-0.471-0.991-0.555c-0.703-0.391-2.563,0.833-2.563,2.75 c0,0.469,0.137,0.801,0.374,0.968c0.168,0.118,0.771,0.425,0.995,0.558c0.263,0.216,0.664,0.21,1.15-0.07 c0.933-0.539,1.513-1.616,1.513-2.607C21.308,12.221,21.131,11.862,20.83,11.727z"></path> <path class="isometric_elf" d="M18.308,14.503c0-1.019,0.63-2.098,1.513-2.608c0.883-0.51,1.487-0.143,1.487,0.876 c0,0.991-0.58,2.068-1.513,2.607C18.913,15.887,18.308,15.494,18.308,14.503z M19.044,10.439c-0.085,0.323-0.218,0.648-0.387,0.965 c0.451-0.29,0.906-0.386,1.183-0.232c0.109,0.061,0.43,0.228,0.708,0.386c0.101-0.624-0.016-1.131-0.286-1.496l-1.436-1.436 C19.139,9.052,19.246,9.668,19.044,10.439z M17.65,14.891c-0.237-0.167-0.374-0.499-0.374-0.968c0-0.316,0.051-0.612,0.138-0.886 c-0.707,0.688-1.554,1.225-2.396,1.455c-0.775,0.212-1.4,0.117-1.833-0.19l1.436,1.436c0.432,0.307,1.058,0.402,1.833,0.19 c0.546-0.149,1.089-0.436,1.597-0.805C17.88,15.03,17.724,14.942,17.65,14.891z"></path> <path class="st11" d="M19.011,22.448v-0.056C19.01,22.4,19,22.407,19,22.415C19,22.426,19.009,22.437,19.011,22.448z"></path> <path class="isometric_twaalf" d="M23,23.243v1.388h-0.011c0.171,3.089-8.085,3.106-7.98,0H15v-1.403 C15.016,26.257,23.016,26.263,23,23.243z M18.048,22.241v0.509c-0.038,1.128,2.962,1.121,2.9,0l0.004-0.504 C20.958,23.343,18.054,23.34,18.048,22.241z M21.896,14.185l-1.913-1.111c-0.299,0.044-0.62,0.49-0.525,0.852l1.434,0.833 c-0.005,1,0.235,4.641-2.121,4.641c-1.682,0-3.461-1.943-4.45-3.963c-1.066-1.066-1.293-1.293-1.706-1.706 c0.981,3.574,3.638,6.67,6.156,6.67c0.082,0,0.162-0.003,0.24-0.009v2c0,0.448,1.044,0.403,0.988,0.003v-2.241 C22.06,19.206,21.888,15.78,21.896,14.185z"></path> <path class="isometric_zeven" d="M16.44,23.728c-0.28-0.28-0.195-0.591,0.19-0.694c0.385-0.103,0.925,0.04,1.205,0.321 c0.28,0.28,0.195,0.591-0.19,0.694C17.259,24.152,16.72,24.008,16.44,23.728z"></path> </g> </g></svg>Start Record</button>
-    <button id="stopRecord" disabled> <svg  class="icon" viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M512 1024C229.7 1024 0 794.3 0 512S229.7 0 512 0s512 229.7 512 512-229.7 512-512 512z m0-938.7C276.7 85.3 85.3 276.7 85.3 512S276.7 938.7 512 938.7 938.7 747.3 938.7 512 747.3 85.3 512 85.3z" fill="#3688FF"></path><path d="M640 682.7H384c-23.6 0-42.7-19.1-42.7-42.7V384c0-23.6 19.1-42.7 42.7-42.7h256c23.6 0 42.7 19.1 42.7 42.7v256c0 23.6-19.1 42.7-42.7 42.7z m-213.3-85.4h170.7V426.7H426.7v170.6z" fill="#5F6379"></path></g></svg>Stop Record</button>
-  </div>
-  <div id="recordedText"></div>
-  <div id="resultFeedback"></div>
-
-  <div id="confidentialLevel"></div>
-  <audio id="audioPlayback" controls style="display: none;"></audio>
-
-
-
-
-
-  
-    <button id="hintButton"  style = "display:none" >Show Hint</button>
-    <div id="hint"  style = "display:none" ></div>
-
-
-</div>
-
-</div>
 
 <!--<div id ="ads" style="display:  flex;justify-content: center; align-items: center;">
     DEV TAG: Powered by Nguyen Minh Long
@@ -1542,22 +1638,14 @@ function isOperaBrowser() {
 
 
 
-    function main() {
-      /*if (isOperaBrowser()) {
-        // Hiển thị cảnh báo và ẩn toàn bộ nội dung test
-        document.getElementById("browserWarning").style.display = "block";
-        document.getElementById("test-prepare").style.display = "none";
-        return; // Dừng thực thi nếu là Opera
-    }*/
-    
-    // Nếu không phải Opera, tiếp tục hiển thị test như bình thường
-    document.getElementById("browserWarning").style.display = "none";
+  function main() {  
     document.getElementById("test-prepare").style.display = "block";
 
         console.log("Passed Main");
         
         setTimeout(function() {
             console.log("Show Test!");
+            hidePreloader();
             document.getElementById("start_test").style.display = "block";
             document.getElementById("welcome").style.display = "block";
         }, 1000);
@@ -1599,8 +1687,7 @@ function isOperaBrowser() {
 
     function getStart() {    
         document.getElementById("test-prepare").style.display = "none";
-        document.getElementById("left-side").style.display = "block";
-        document.getElementById("right-side").style.display = "block";
+        document.getElementById("content-side").style.display = "block";
         document.getElementById("start-dictation").style.display = "block";
         navigateTranscript(0);
     }
@@ -1728,19 +1815,22 @@ function isOperaBrowser() {
         mediaRecorder.onstop = async () => {
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
             const audioURL = URL.createObjectURL(audioBlob);
+            const recordingStartTime = Date.now();
 
             const audioElement = document.getElementById('audioPlayback');
             audioElement.src = audioURL;
             audioElement.style.display = 'block';
+            const transcriptData = document.getElementById("transcript").innerText;
 
             // Send to STT API
             const formData = new FormData();
             formData.append("audio", audioBlob, "recording.webm");
             formData.append("lang", "en");
+            formData.append("text", `${transcriptData}`);
 
             try {
                 document.getElementById('recordedText').textContent = "Processing...";
-                const response = await fetch("http://127.0.0.1:5000/stt", {
+                const response = await fetch("http://127.0.0.1:5000/shadowingResult", {
                     method: "POST",
                     body: formData,
                 });
@@ -1748,28 +1838,51 @@ function isOperaBrowser() {
                 const result = await response.json();
                 console.log("Speech-to-text result:", result);
                 
-                if (result.text) {
-                    document.getElementById('recordedText').textContent = result.text;
+                if (result.pronunciation_analysis) {
+                    // Calculate speaking rate
+                    const recordingEndTime = Date.now();
+                    const durationInSeconds = (recordingEndTime - recordingStartTime) / 1000;
+                    const totalCharacters = result.input_text.replace(/[^a-zA-Z]/g, '').length;
+                    const speakingRate = (totalCharacters / durationInSeconds).toFixed(2);
                     
-                    // Automatically check the answer
-                    const spokenText = result.text;
-                    const currentItem = transcript[currentTranscriptIndex];
-                    
-                    if (spokenText && currentItem) {
-                        const sanitizedSpoken = sanitizeInput(spokenText);
-                        const sanitizedCorrect = sanitizeInput(currentItem.text);
+                    // Display speaking rate
+                    document.getElementById('checkSpeed').innerHTML = `
+                        <div class="speed-display">
+                            Speaking Rate: ${speakingRate} characters per second
+                        </div>
+                    `;
+
+                    // Process pronunciation analysis
+                    const words = result.pronunciation_analysis.words;
+                    let transcriptHtml = '';
+                    let pronunciationHtml = '';
+
+                    words.forEach(word => {
+                        const isWordCorrect = word.comparison.every(phone => phone.match);
+                        const wordClass = isWordCorrect ? 'word-correct' : 'word-incorrect';
+                        transcriptHtml += `<span class="${wordClass}">${word.word}</span> `;
                         
-                        const resultDiv = document.getElementById('resultFeedback');
-                        if (sanitizedSpoken === sanitizedCorrect) {
-                            resultDiv.textContent = "Correct!";
-                            resultDiv.style.color = "green";
-                        } else {
-                            resultDiv.textContent = "Incorrect. The correct answer is: " + currentItem.text;
-                            resultDiv.style.color = "red";
-                        }
-                    }
+                        // Add pronunciation for each word
+                        pronunciationHtml += `<span class="${wordClass}">[${word.user_phones.join(' ')}]</span> `;
+                    });
+
+                    // Update transcript with colored words
+                    document.getElementById('transcript').innerHTML = transcriptHtml;
+                    
+                    // Display pronunciation
+                    document.getElementById('checkPronunciation').innerHTML = `
+                        <div class="pronunciation-display">
+                            Pronunciation: ${pronunciationHtml}
+                        </div>
+                    `;
+
+                    // Display recognized text
+                    document.getElementById('recordedText').textContent = `Recognized: ${result.recognized_text}`;
+                    
+                    // Display confidence score
+                    document.getElementById('confidentialLevel').textContent = `Confidence: ${(result.confidence * 100).toFixed(2)}%`;
                 } else {
-                    document.getElementById('recordedText').textContent = "Could not understand speech";
+                    document.getElementById('recordedText').textContent = "Could not analyze pronunciation";
                 }
             } catch (error) {
                 console.error('Error with STT API:', error);
@@ -1987,3 +2100,4 @@ else{
     echo "<p>Please log in to submit your answer.</p>";
 
 }
+get_footer();

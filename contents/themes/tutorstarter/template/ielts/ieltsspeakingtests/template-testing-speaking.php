@@ -279,9 +279,13 @@ $conn->close();
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <title>Speaking Ielts Simulation</title>
-    <script src="/contents/themes/tutorstarter/scan-device/system_check_.js"></script>
-    <script src="/contents/themes/tutorstarter/scan-device/location_ip_.js"></script>
-    <script src="/contents/themes/tutorstarter/scan-device/browser_check.js"></script>
+    <?php echo '
+    <script src="'.$site_url.'/contents/themes/tutorstarter/scan-device/system_check_.js"></script>
+    <script src="'.$site_url.'/contents/themes/tutorstarter/scan-device/location_ip_.js"></script>
+    <script src="'.$site_url.'/contents/themes/tutorstarter/scan-device/browser_check.js"></script>'
+    ?>
+
+
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const systemInfo = {
@@ -296,7 +300,7 @@ $conn->close();
     });
     </script>
 
-    <link rel="stylesheet" href="\contents\themes\tutorstarter\ielts-speaking-toolkit\style\style1.css">
+    <?php echo '<link rel="stylesheet" href="'.$site_url.'/contents/themes/tutorstarter/ielts-speaking-toolkit/style/style1.css">';?>
 
     <style>
         .browser-warning {
@@ -499,7 +503,7 @@ $conn->close();
             <div class="column0" > 
                 <div class="video-container-intro">
                     <video id="examinerVideo_homepage" class="video-background" autoplay playsinline style="pointer-events: none;">
-                        <source src="\contents\themes\tutorstarter\ielts-speaking-toolkit\examiner.mp4" type="video/mp4">
+                        <source src="<?php echo $site_url ?>\contents\themes\tutorstarter\ielts-speaking-toolkit\examiner.mp4" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
                 </div>
@@ -596,7 +600,7 @@ $conn->close();
             <div class="parent-container">
                 <div class="video-container-2">
                     <video id="examinerVideo" class="video-background" autoplay playsinline style="pointer-events: none;">
-                        <source src="\contents\themes\tutorstarter\ielts-speaking-toolkit\examiner.mp4" type="video/mp4">
+                        <source src="<?php echo $site_url ?>\contents\themes\tutorstarter\ielts-speaking-toolkit\examiner.mp4" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
                 </div>
@@ -855,9 +859,9 @@ console.log(dateElement.innerHTML)
 
     // Array of video options
     const videoOptions = [
-        { name: 'Examiner 1', src: '\contents\themes\tutorstarter\ielts-speaking-toolkit\examiner.mp4' },
-        { name: 'Examiner 2', src: '\contents\themes\tutorstarter\ielts-speaking-toolkit\examiner1.mp4' },
-        { name: 'Examiner 3', src: '\contents\themes\tutorstarter\ielts-speaking-toolkit\examiner2.mp4' }
+        { name: 'Examiner 1', src: '<?php echo $site_url ?>\contents\themes\tutorstarter\ielts-speaking-toolkit\examiner.mp4' },
+        { name: 'Examiner 2', src: '<?php echo $site_url ?>\contents\themes\tutorstarter\ielts-speaking-toolkit\examiner1.mp4' },
+        { name: 'Examiner 3', src: '<?php echo $site_url ?>\contents\themes\tutorstarter\ielts-speaking-toolkit\examiner2.mp4' }
     ];
 
 
@@ -1980,7 +1984,9 @@ function recordWord(expectedWord, buttonElement) {
             
 </script>
 
-<script src = "\contents\themes\tutorstarter\ielts-speaking-toolkit\function5.js"></script>
+<?php echo '<script src = "'.$site_url.'/contents/themes/tutorstarter/ielts-speaking-toolkit/function5.js"></script>';?>
+
+ 
 <!--
 <script src = "function\analysis\speaking-part-1\criteria\fluency_and_coherence.js"></script>
 <script src = "function\analysis\speaking-part-1\criteria\lexical_resource.js"></script>

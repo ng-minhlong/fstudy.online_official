@@ -32,7 +32,7 @@ $testsavenumber = get_query_var('testsaveieltswriting');
 
     $results = $wpdb->get_results(
         $wpdb->prepare(
-            "SELECT * FROM save_user_result_ielts_writing WHERE testsavenumber = %d",
+            "SELECT * FROM save_user_result_ielts_writing WHERE testsavenumber = %s",
             $testsavenumber
         )
     );

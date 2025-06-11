@@ -1,0 +1,92 @@
+def format_question(question):
+    # Thay \n bằng <br> và escape dấu nháy đơn '
+    return question.strip().replace('\n', '<br>').replace("'", "''")
+
+
+def generate_insert_statements(part_number, id_test, number_start, topic, questions_data, stt_start):
+    statements = []
+    number = number_start
+    stt = stt_start
+
+    table_map = {
+        1: "ielts_speaking_part_1_question",
+        2: "ielts_speaking_part_2_question",
+        3: "ielts_speaking_part_3_question"
+    }
+    table_name = table_map[part_number]
+
+    for question in questions_data:
+        formatted_question = format_question(question)
+
+        if part_number == 2:
+            sql = f"""INSERT INTO `{table_name}`(`number`, `id_test`, `topic`, `question_content`, `sample`, `important_add`, `speaking_part`) 
+VALUES ('{number}','{id_test}','{topic}','{formatted_question}','','','{part_number}');"""
+        else:
+            sql = f"""INSERT INTO `{table_name}`(`number`, `id_test`, `topic`, `stt`, `question_content`, `sample`, `important_add`, `speaking_part`) 
+VALUES ('{number}','{id_test}','{topic}','{stt}','{formatted_question}','','','{part_number}');"""
+
+        statements.append(sql)
+        number += 1
+        if part_number != 2:
+            stt += 1
+
+    return statements, stt if part_number != 2 else None
+
+
+
+# ===================== NHẬP DỮ LIỆU ===================== #
+
+# Part 1
+part_1_questions = [
+    "What sorts of food do you like eating most? [Why?]",
+    "Who normally does the cooking in your home? [Why/Why not?]",
+    "Do you watch cookery programmes on TV? [Why/Why not?]",
+    "In general, do you prefer eating out or eating at home? [Why?]",
+]
+part_1_sql, _ = generate_insert_statements(1, 1046, 270, "Food and cooking", part_1_questions, 1)
+
+# Part 2
+part_2_questions = [
+    """
+    Describe a house/apartment that someone you know lives in.
+
+You should say:
+
+whose house/apartment this is
+where the house/apartment is
+what it looks like inside
+and explain what you like or dislike about this person's house/apartment.
+    """
+]
+part_2_sql, _ = generate_insert_statements(2, 20079, 53, "House/ Apartment", part_2_questions, 1)
+# Part 3
+part_3_sql = []
+
+# Topic 1
+topic_1_questions = [
+    "What kinds of home are most popular in your country? Why is this?",
+    "What do you think are the advantages of living in a house rather than an apartment?",
+    "Do you think that everyone would like to live in a larger home? Why is that?",
+]
+
+start_number = 252
+start_stt = 1
+sql_topic1, next_stt = generate_insert_statements(3, 3042, start_number, "Different types of home", topic_1_questions, start_stt)
+part_3_sql.extend(sql_topic1)
+
+
+# Topic 2
+topic_2_questions  = [
+    "How easy is it to find a place to live in your country?",
+    "Do you think it's better to rent or to buy a place to live in? Why?",
+    "Do you agree that there is a right age for young adults to stop living with their parents? Why is that?",
+]
+
+next_number = start_number + len(topic_1_questions)
+sql_topic2, next_stt = generate_insert_statements(3, 3042, next_number, "Finding a place to live", topic_2_questions, next_stt)
+part_3_sql.extend(sql_topic2)
+
+# ===================== IN KẾT QUẢ ===================== #
+
+for stmt in part_1_sql + part_2_sql + part_3_sql:
+    print(stmt)

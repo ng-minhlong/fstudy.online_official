@@ -243,6 +243,9 @@
     </div>
     <?php endif; ?>
 </div>
+<script>
+    hidePreloader();
+</script>
 
 <?php 
     $conn->close();

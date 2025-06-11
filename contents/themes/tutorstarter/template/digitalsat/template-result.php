@@ -1389,6 +1389,7 @@ function opensharePermission() {
     // Tạo QR code
     generateQRCode(currentUrl);
 }
+hidePreloader();
 </script>
 
 <?php

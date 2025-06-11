@@ -20,7 +20,7 @@ echo "<script>console.log('Custom Number doing template: " . esc_js($testsavenum
 
 $results = $wpdb->get_results(
     $wpdb->prepare(
-        "SELECT * FROM save_user_result_thptqg WHERE testsavenumber = %d",
+        "SELECT * FROM save_user_result_thptqg WHERE testsavenumber = %s",
         $testsavenumber
     )
 );
@@ -1139,7 +1139,7 @@ function detailsAns(){
   window.location.href = currentLink + "/detail";
 
 }
-
+hidePreloader();
 
 </script>
 </html>

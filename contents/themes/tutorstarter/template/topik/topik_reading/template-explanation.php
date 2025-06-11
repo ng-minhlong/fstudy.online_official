@@ -19,7 +19,7 @@ if (is_user_logged_in()) {
         
     $results = $wpdb->get_results(
         $wpdb->prepare(
-            "SELECT * FROM save_user_result_topik_reading WHERE testsavenumber = %d",
+            "SELECT * FROM save_user_result_topik_reading WHERE testsavenumber = %s",
             $testsavenumber
         )
     );

@@ -19,7 +19,7 @@ if (is_user_logged_in()) {
 
     $results = $wpdb->get_results(
         $wpdb->prepare(
-            "SELECT * FROM save_user_result_ielts_reading WHERE testsavenumber = %d",
+            "SELECT * FROM save_user_result_ielts_reading WHERE testsavenumber = %s",
             $testsavenumber
         )
     );
@@ -1004,10 +1004,12 @@ html {
             let highlights = {}; // Object để lưu trữ các highlight
 
     </script>
+    <?php echo'
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://smtpjs.com/v3/smtp.js"></script>
-    <script src="/contents/themes/tutorstarter/ielts-reading-tookit/script_reading_practice_4.js"></script>
-    <script src="/contents/themes/tutorstarter/ielts-reading-tookit/highlight-text.js"></script>
+    <script src="'.$site_url.'/contents/themes/tutorstarter/ielts-reading-tookit/script_reading_practice_5.js"></script>
+    <script src="'.$site_url.'/contents/themes/tutorstarter/ielts-reading-tookit/highlight-text.js"></script>'
+    ?>
 
 </body>
 <script>

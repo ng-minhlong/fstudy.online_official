@@ -1,0 +1,22 @@
+2025-05-30T03:11:23+00:00 Uncaught Error: Undefined constant "site_url" in C:\xampp\htdocs\fstudy\contents\themes\tutorstarter\template\conversation_ai\template-conversation.php:205
+Stack trace:
+#0 C:\xampp\htdocs\fstudy\contents\plugins\insert-headers-and-footers\includes\class-wpcode-snippet-execute.php(419) : eval()'d code(2135): include()
+#1 C:\xampp\htdocs\fstudy\wp-includes\class-wp-hook.php(324): WPCode_Snippet_Execute->{closure}('')
+#2 C:\xampp\htdocs\fstudy\wp-includes\class-wp-hook.php(348): WP_Hook->apply_filters(NULL, Array)
+#3 C:\xampp\htdocs\fstudy\wp-includes\plugin.php(517): WP_Hook->do_action(Array)
+#4 C:\xampp\htdocs\fstudy\wp-includes\template-loader.php(13): do_action('template_redire...')
+#5 C:\xampp\htdocs\fstudy\wp-blog-header.php(19): require_once('C:\\xampp\\htdocs...')
+#6 C:\xampp\htdocs\fstudy\index.php(17): require('C:\\xampp\\htdocs...')
+#7 {main}
+  thrown
+2025-05-30T03:14:52+00:00 Uncaught Error: Undefined constant "site_url" in C:\xampp\htdocs\fstudy\contents\themes\tutorstarter\template\conversation_ai\template-conversation.php:205
+Stack trace:
+#0 C:\xampp\htdocs\fstudy\contents\plugins\insert-headers-and-footers\includes\class-wpcode-snippet-execute.php(419) : eval()'d code(2135): include()
+#1 C:\xampp\htdocs\fstudy\wp-includes\class-wp-hook.php(324): WPCode_Snippet_Execute->{closure}('')
+#2 C:\xampp\htdocs\fstudy\wp-includes\class-wp-hook.php(348): WP_Hook->apply_filters(NULL, Array)
+#3 C:\xampp\htdocs\fstudy\wp-includes\plugin.php(517): WP_Hook->do_action(Array)
+#4 C:\xampp\htdocs\fstudy\wp-includes\template-loader.php(13): do_action('template_redire...')
+#5 C:\xampp\htdocs\fstudy\wp-blog-header.php(19): require_once('C:\\xampp\\htdocs...')
+#6 C:\xampp\htdocs\fstudy\index.php(17): require('C:\\xampp\\htdocs...')
+#7 {main}
+  thrown

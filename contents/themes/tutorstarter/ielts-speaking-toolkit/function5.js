@@ -762,4 +762,5 @@ function main(){
     // Nếu không phải Opera, tiếp tục hiển thị test như bình thường
     document.getElementById("browserWarning").style.display = "none";
     document.getElementById("container1").style.display = "block";
+    hidePreloader();
 }

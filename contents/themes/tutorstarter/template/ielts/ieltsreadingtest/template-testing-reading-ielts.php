@@ -1182,10 +1182,13 @@ html {
         let highlights = {}; // Object để lưu trữ các highlight
     </script>
 
+<?php
+echo'
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://smtpjs.com/v3/smtp.js"></script>
-    <script src="/contents/themes/tutorstarter/ielts-reading-tookit/script_reading_7.js"></script>
-    <script src="/contents/themes/tutorstarter/ielts-reading-tookit/highlight-text-1.js"></script>
+    <script src="'. $site_url .'/contents/themes/tutorstarter/ielts-reading-tookit/script_reading_8.js"></script>
+    <script src="'. $site_url .'/contents/themes/tutorstarter/ielts-reading-tookit/highlight-text-1.js"></script>'
+    ?>
 
 </body>
 <script>

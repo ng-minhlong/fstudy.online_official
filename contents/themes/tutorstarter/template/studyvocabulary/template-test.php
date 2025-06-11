@@ -520,6 +520,7 @@ table th {
                 window.location.href = `${siteUrl}/practice/vocabulary/package/${packageId}/${currentIdTest}/flashcard/`;
             });
         });
+        hidePreloader();
         </script>
 
 <?php echo'

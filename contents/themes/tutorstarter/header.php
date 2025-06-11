@@ -28,6 +28,12 @@ $trans_header_toggle = ( ! empty( $page_meta['header_trans_toggle'] ) ? $page_me
 </head>
 
 <body <?php body_class(); ?>>
+
+	<div id="preloader">
+	<div class="spinner"></div>
+	</div>
+
+
 <?php 
 wp_body_open(); 
 

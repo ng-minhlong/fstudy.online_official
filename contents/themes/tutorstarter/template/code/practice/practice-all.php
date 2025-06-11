@@ -53,10 +53,7 @@ echo "<script>
         background-color: #aaa;
         cursor: default;
     }
-    #loading {
-        display: none;
-        margin-top: 10px;
-    }
+   
 </style>
 </head>
 
@@ -70,7 +67,6 @@ echo "<script>
         </select>
     </label>
 
-    <div id="loading">Loading...</div>
 
     <table id="practiceTable">
         <thead>
@@ -93,9 +89,7 @@ echo "<script>
 let currentPage = 1;
 let completionData = []; // Store completion data globally
 
-function showLoading(show = true) {
-    document.getElementById('loading').style.display = show ? 'block' : 'none';
-}
+
 
 function renderPagination(current, total) {
     let html = '';
@@ -158,47 +152,47 @@ function checkIfCompleted(practiceId) {
 }
 
 function fetchData(page = 1) {
-    showLoading(true);
     const difficulty = document.getElementById('difficulty').value;
-    
-    // First fetch completion status, then fetch practice data
-    Promise.all([
-        fetchCompletionStatus(),
-        fetch(`${siteUrl}/api/tests/practice/code/all`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ difficulty, page })
-        }).then(res => res.json())
-    ])
-    .then(([completionData, json]) => {
+
+    fetch(`${siteUrl}/api/tests/practice/code/all`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ difficulty, page })
+    })
+    .then(res => res.json())
+    .then(json => {
         const tbody = document.querySelector('#practiceTable tbody');
-        tbody.innerHTML = '';
-        
+        let html = '';
+
         json.data.forEach(row => {
             const isCompleted = checkIfCompleted(row.id);
-            
-            tbody.innerHTML += 
-                `<tr>
-                    <td>${row.id}</td>
-                    <td>${row.title}</td>
-                    <td>${row.content.slice(0, 200)}...</td>
-                    <td>${row.difficulty}</td>
-                    <td>${row.acceptance_rate}%</td>
-                    <td>${isCompleted ? '✅ Hoàn thành' : '❌ Chưa hoàn thành'}</td>
-                    <td><button onclick="window.location.href='${siteUrl}/code/practice/id/${row.id}/${sessionId}'">Do Practice</button></td>
-                </tr>`;
+
+            html += `<tr>
+                <td>${row.id}</td>
+                <td>${row.title}</td>
+                <td>${(row.content || '').slice(0, 200)}...</td>
+                <td>${row.difficulty}</td>
+                <td>${row.acceptance_rate}%</td>
+                <td>${isCompleted ? '✅ Hoàn thành' : '❌ Chưa hoàn thành'}</td>
+                <td><button onclick="window.location.href='${siteUrl}/code/practice/id/${row.id}/${sessionId}'">Do Practice</button></td>
+            </tr>`;
         });
-        
+
+        tbody.innerHTML = html;
+
         const totalPages = Math.ceil(json.total / json.limit);
         renderPagination(page, totalPages);
         currentPage = page;
-        showLoading(false);
+
+        // ⬇️ Tắt preloader sau khi render xong
+        hidePreloader();
     })
     .catch(error => {
         console.error('Error:', error);
-        showLoading(false);
     });
+
 }
+
 
 document.getElementById('difficulty').addEventListener('change', () => fetchData(1));
 window.onload = () => fetchData();

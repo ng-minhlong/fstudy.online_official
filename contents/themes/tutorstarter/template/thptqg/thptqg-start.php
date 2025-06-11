@@ -87,7 +87,7 @@ if ($result_test->num_rows > 0) {
     $answer = $data['answer']; // Fetch the testname field
     $subject = $data['subject']; // Fetch the testname field
     $year = $data['year']; // Fetch the testname field
-    $time = $data['time']; // Fetch the testname field
+    $time = "2"; // Fetch the testname field
     $token_need = $data['token_need'];
     $time_allow = $data['time_allow'];
     $permissive_management = $data['permissive_management'];
@@ -818,6 +818,7 @@ allParts.forEach((part) => {
                 alert('Đã xảy ra lỗi khi gửi yêu cầu.');
             });
         });
+        hidePreloader();
             showQuestion(0);
             logQuestionsInfo();
             createCheckboxes();  // Tạo checkbox tương ứng

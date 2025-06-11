@@ -1000,7 +1000,7 @@ input:checked + .slider:before {
  
 
     </body>
-    <script src="/contents/themes/tutorstarter/ielts-listening-toolkit/script_result_2.js"></script>
+    <script src="/contents/themes/tutorstarter/ielts-listening-toolkit/script_result_3.js"></script>
 <script>
         var ajaxUrl = <?php echo json_encode(admin_url("admin-ajax.php")); ?>;
         const oldCorrectNumber = <?php echo json_encode(esc_html($result->correct_number)); ?>;

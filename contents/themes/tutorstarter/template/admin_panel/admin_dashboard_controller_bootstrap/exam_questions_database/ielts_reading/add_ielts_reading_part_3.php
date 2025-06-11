@@ -151,9 +151,11 @@ $result = $conn->query($sql);
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         // Process "Sample" and "Important Add" columns
+        $question_content_sanitized = htmlspecialchars(json_encode($row['paragraph'], JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8');
         $sample_words = explode(' ', $row['paragraph']);
         $sample_display = count($sample_words) > 20 ? implode(' ', array_slice($sample_words, 0, 20)) . '...' : $row['paragraph'];
-        $sample_view_more = count($sample_words) > 20 ? "<button class='btn btn-link' onclick='showFullContent(\"Sample\", \"" . addslashes($row['paragraph']) . "\")'>View More</button>" : '';
+        $sample_view_more = count($sample_words) > 20 ? "<button class='btn btn-link' onclick='showFullContent(\"Question Content\", $question_content_sanitized)'>View More</button>" : '';
+                 
 
         $important_words = explode(' ', $row['group_question']);
         $important_display = count($important_words) > 20 ? implode(' ', array_slice($important_words, 0, 20)) . '...' : $row['group_question'];

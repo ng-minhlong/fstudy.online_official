@@ -213,6 +213,7 @@ if (!defined("ABSPATH")) {
     </div>
 
     <script>
+        hidePreloader();
         // Ripple effect function
         function createRipple(event) {
             const button = event.currentTarget;

@@ -616,7 +616,6 @@ echo" <link rel='stylesheet' href='" . $site_url . "/contents/themes/tutorstarte
                             <div id = "compileAndResAnnounce">
                                 Submit xong thì kết quả sẽ hiện ở đây
                             </div>
-                            <div id = "loading-render-result">Please wait...</div>
                             <canvas id="resultChart" width="600" height="300"></canvas>
 
                             <div id = "result-content"></div>
@@ -1344,7 +1343,7 @@ function displayTestCase(caseData) {
 
     function renderCompileAndResult(data) {
         
-        document.getElementById("loading-render-result").style.display = "none";
+        hidePreloader();
         const container = document.getElementById("result-content");
         container.innerHTML = ""; // Xóa cũ
 

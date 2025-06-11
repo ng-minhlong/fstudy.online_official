@@ -3,7 +3,9 @@ let currentPartIndex = 0;
 function loadPart(partIndex) {
     const part = quizData.part[partIndex];
 
-    
+    // Display the paragraph
+    document.getElementById('paragraph-container').innerHTML = `<p>${part.paragraph}</p>`;
+
     // Display the question range
     const questionRange = getQuestionRange(partIndex);
 
@@ -152,7 +154,20 @@ function getQuestionRange(partIndex) {
 }
 
 
+// Navigation buttons
+document.getElementById('prev-btn').addEventListener('click', () => {
+    if (currentPartIndex > 0) {
+        currentPartIndex--;
+        loadPart(currentPartIndex);
+    }
+});
 
+document.getElementById('next-btn').addEventListener('click', () => {
+    if (currentPartIndex < quizData.part.length - 1) {
+        currentPartIndex++;
+        loadPart(currentPartIndex);
+    }
+});
 // Load the part buttons dynamically
 const partNavigation = document.getElementById('part-navigation');
 quizData.part.forEach((part, index) => {
@@ -379,7 +394,7 @@ function logUserAnswers(partIndex) {
             else if (group.type_group_question === "multiple-choice") {
                 questionNumber = `${currentQuestionNumber}`;
                 const savedAnswerIndex = question.answers.findIndex((answer, answerIndex) => isAnswerSelected(partIndex, groupIndex, questionIndex, answerIndex));
-                userAnswer = savedAnswerIndex !== -1 ? question.answers[savedAnswerIndex][0] : "Not answered";
+                //userAnswer = savedAnswerIndex !== -1 ? question.answers[savedAnswerIndex][0] : "Not answered";
                 
                 const correctAnswerIndex = question.answers.findIndex(answer => answer[1] === true); // Find the correct answer
                 correctAnswer = correctAnswerIndex !== -1 ? question.answers[correctAnswerIndex][0] : "Not available";
@@ -579,60 +594,62 @@ function consoleAns(partIndex) {
                     // Xử lý trường hợp đáp án đúng là một mảng (có nhiều đáp án)
                     if (Array.isArray(correctAnswer)) {
                         const correctAnswerString = correctAnswer.join(" or ");  // Nối các đáp án đúng với "or"
-                        if (correctAnswer.some(answer => userAnswer.toLowerCase() === answer.toLowerCase())) {
+                        // Kiểm tra xem userAnswer có khớp với bất kỳ đáp án nào trong mảng không
+                        const isCorrect = correctAnswer.some(answer => 
+                            userAnswer && userAnswer.toLowerCase() === answer.toLowerCase()
+                        );
+
+                        if (isCorrect) {
                             correctCount++;
                             console.log(`Question: ${completionNumber}, Part: ${partIndex + 1}, Correct Answer: ${correctAnswerString}, User Ans: ${userAnswer}`);
                             let checkCorrectAnsIcon = document.getElementById(`check-correct-${completionNumber}`);
                             checkCorrectAnsIcon.innerHTML = '<i class="fa-regular fa-circle-check" style="color: #01f905;"></i>';
+                            correct_answer_array.push(completionNumber);
                             result.correct.push(completionNumber);
-
-                        } else if (userAnswer === "") {
+                        } else if (!userAnswer || userAnswer === "") {
                             skipCount++;
                             console.log(`Question: ${completionNumber}, Part: ${partIndex + 1}, Correct Answer: ${correctAnswerString}, User Ans: ${userAnswer}`);
                             let checkCorrectAnsIcon = document.getElementById(`check-correct-${completionNumber}`);
                             checkCorrectAnsIcon.innerHTML = '<i class="fa-regular fa-circle-xmark" style="color: #de1b1b;"></i>';
+                            incorrect_skip_answer_array.push(completionNumber);
                             result.skipped.push(completionNumber);
-
                         } else {
                             incorrectCount++;
                             console.log(`Question: ${completionNumber}, Part: ${partIndex + 1}, Correct Answer: ${correctAnswerString}, User Ans: ${userAnswer}`);
                             let checkCorrectAnsIcon = document.getElementById(`check-correct-${completionNumber}`);
                             checkCorrectAnsIcon.innerHTML = '<i class="fa-regular fa-circle-xmark" style="color: #de1b1b;"></i>';
+                            incorrect_skip_answer_array.push(completionNumber);
                             result.incorrect.push(completionNumber);
-
                         }
                     } else {
                         // Trường hợp chỉ có một đáp án đúng
-                        if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+                        if (userAnswer && userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
                             correctCount++;
                             console.log(`Question: ${completionNumber}, Part: ${partIndex + 1}, Correct Answer: ${correctAnswer}, User Ans: ${userAnswer}`);
                             let checkCorrectAnsIcon = document.getElementById(`check-correct-${completionNumber}`);
                             checkCorrectAnsIcon.innerHTML = '<i class="fa-regular fa-circle-check" style="color: #01f905;"></i>';
-                            correct_answer_array.push(completionNumber); // Add to correct answers
+                            correct_answer_array.push(completionNumber);
                             result.correct.push(completionNumber);
-
-                        } else if (userAnswer === "") {
+                        } else if (!userAnswer || userAnswer === "") {
                             skipCount++;
                             console.log(`Question: ${completionNumber}, Part: ${partIndex + 1}, Correct Answer: ${correctAnswer}, User Ans: ${userAnswer}`);
                             let checkCorrectAnsIcon = document.getElementById(`check-correct-${completionNumber}`);
                             checkCorrectAnsIcon.innerHTML = '<i class="fa-regular fa-circle-xmark" style="color: #de1b1b;"></i>';
-                            incorrect_skip_answer_array.push(completionNumber); // Add to skipped answers
+                            incorrect_skip_answer_array.push(completionNumber);
                             result.skipped.push(completionNumber);
-
                         } else {
                             incorrectCount++;
                             console.log(`Question: ${completionNumber}, Part: ${partIndex + 1}, Correct Answer: ${correctAnswer}, User Ans: ${userAnswer}`);
                             let checkCorrectAnsIcon = document.getElementById(`check-correct-${completionNumber}`);
                             checkCorrectAnsIcon.innerHTML = '<i class="fa-regular fa-circle-xmark" style="color: #de1b1b;"></i>';
-                            incorrect_skip_answer_array.push(completionNumber); // Add to skipped answers
+                            incorrect_skip_answer_array.push(completionNumber);
                             result.incorrect.push(completionNumber);
-
                         }
                     }
             
                     correctAnswersData[completionNumber] = {
                         part: partIndex + 1,
-                        correctAnswer: correctAnswer
+                        correctAnswer: Array.isArray(correctAnswer) ? correctAnswer.join(" or ") : correctAnswer
                     };
                 });
             
@@ -874,11 +891,7 @@ function coppyShareContentBtn() {
     });
 }
 
-function redirectToTest(){
-    
-    window.location.href = `${linkTest}`;
 
-}
 
 document.addEventListener("DOMContentLoaded", function () {
     const updatePermission = document.getElementById("updatePermission");
@@ -897,7 +910,7 @@ function togglePermission(checkbox) {
     // Gửi yêu cầu AJAX để cập nhật trạng thái
     const data = {
         action: "update_permission_link",
-        type_test: "ielts_listening",
+        type_test: "ielts_reading",
         testsavenumber: testsavenumber, // Giá trị testsavenumber từ server
         permission_link: newPermission
     };
@@ -1036,7 +1049,7 @@ document.getElementById("saveNewBtn").addEventListener("click", function () {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-            action: 'update_ielts_listening_results',
+            action: 'update_ielts_reading_results',
             testsavenumber: testSaveNumber,
             correct_number: newCorrectAnsNumber,
             incorrect_number: newIncorrectAnsNumber,
@@ -1069,11 +1082,12 @@ function main(){
     
     for(let i = 0; i < quizData.part.length; i ++){
         consoleAns(i);
-        console.log(quizData.part[1].duration);
+        //console.log(quizData.part[1].duration);
     }
     updateCorrectAnswers();
     loadPart(currentPartIndex);
     filterAnswerForEachType();
+    hidePreloader();
  
 }
 

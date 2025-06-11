@@ -315,6 +315,9 @@ $result = $conn->query($sql);
 
 <!-- jQuery and JavaScript for AJAX -->
 <script>
+    function formatTextWithLineBreaks(text) {
+    return text.replace(/\n/g, '<br>');
+}
 // Open the edit modal and populate it with data
 function openEditModal(number) {
     $.ajax({
@@ -337,6 +340,15 @@ function openEditModal(number) {
 
 // Save the edited data
 function saveEdit() {
+    let questionContent = $('#edit_question_content').val();
+    const sample = $('#edit_sample').val();
+    const importantAdd = $('#edit_important_add').val();
+    $('#edit_question_content').val(formatTextWithLineBreaks(questionContent));
+    $('#edit_sample').val(formatTextWithLineBreaks(sample));
+    $('#edit_important_add').val(formatTextWithLineBreaks(importantAdd));
+
+
+
     $.ajax({
         url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/ielts/ieltsspeakingtests/speaking-part-2-database-template/update_question.php',
         type: 'POST',
@@ -354,6 +366,12 @@ function openAddModal() {
 
 // Save the new question
 function saveNew() {
+    let questionContent = $('#add_question_content').val();
+    const sample = $('#add_sample').val();
+    const importantAdd = $('#add_important_add').val();
+    $('#add_question_content').val(formatTextWithLineBreaks(questionContent));
+    $('#add_sample').val(formatTextWithLineBreaks(sample));
+    $('#add_important_add').val(formatTextWithLineBreaks(importantAdd));
     $.ajax({
         url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/ielts/ieltsspeakingtests/speaking-part-2-database-template/add_question.php',
         type: 'POST',

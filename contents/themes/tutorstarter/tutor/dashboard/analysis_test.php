@@ -30,6 +30,8 @@ echo '
     var siteUrl = "' . $siteurl . '";
     console.log(siteUrl);
 </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 ';
 
 ?>
@@ -60,6 +62,7 @@ echo '
     </style>
 
 <main>
+    
 <?php
 if (is_user_logged_in()) {
     global $wpdb, $current_user;

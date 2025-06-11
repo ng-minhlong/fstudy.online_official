@@ -29,7 +29,7 @@ $testsavenumber = get_query_var('testsaveieltswriting');
 
     $results = $wpdb->get_results(
         $wpdb->prepare(
-            "SELECT * FROM save_user_result_ielts_writing WHERE testsavenumber = %d",
+            "SELECT * FROM save_user_result_ielts_writing WHERE testsavenumber = %s",
             $testsavenumber
         )
     );
@@ -130,7 +130,7 @@ $testsavenumber = get_query_var('testsaveieltswriting');
                     if (isset($user_answer_and_comment['1'])) {
                         $sql_question = "SELECT task, id_test, question_type, question_content, image_link, sample_writing FROM ielts_writing_task_1_question WHERE id_test = ?";
                         $stmt_question = $conn->prepare($sql_question);
-                        $stmt_question->bind_param("s", $question_id);
+                        $stmt_question->bind_param("i", $question_id);
                         $stmt_question->execute();
                         $result_question = $stmt_question->get_result();
         
@@ -143,7 +143,7 @@ $testsavenumber = get_query_var('testsaveieltswriting');
                     if (isset($user_answer_and_comment['2'])) {
                         $sql_question_task2 = "SELECT task, id_test, question_type, question_content, topic, sample_writing FROM ielts_writing_task_2_question WHERE id_test = ?";
                         $stmt_question_task2 = $conn->prepare($sql_question_task2);
-                        $stmt_question_task2->bind_param("s", $question_id);
+                        $stmt_question_task2->bind_param("i", $question_id);
                         $stmt_question_task2->execute();
                         $result_question_task_2 = $stmt_question_task2->get_result();
         
@@ -1360,6 +1360,7 @@ function openTab(tabName) {
 // Set initial active task on page load
 window.onload = function() {
     setActiveTask('overall');
+    hidePreloader();
 };
 </script>
 </body>

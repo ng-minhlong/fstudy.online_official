@@ -1451,6 +1451,7 @@ function startTest()
 
 let count_number_part = 0;
 function main(){
+    
     console.log("Passed Main");
     
     for(let i = 0; i < quizData.part.length; i ++){
@@ -1464,7 +1465,7 @@ function main(){
     setTimeout(function(){
         console.log("Show Test!");
         document.getElementById("start_test").style.display="block";
-        
+        hidePreloader();
         document.getElementById("welcome").style.display="block";
 
     }, 1000);

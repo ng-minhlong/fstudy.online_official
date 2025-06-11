@@ -1,0 +1,4 @@
+2025-05-27T18:07:29+00:00 require_once(C:\xampp\htdocs\fstudy/contents/themes/tutorstarter/template/custom-api/get_specific_user_all_tests_result/code.php): Failed to open stream: No such file or directory
+2025-05-27T18:07:29+00:00 Snippet "api register ( and save and get progress all tests)" (#1445) was automatically deactivated due to a fatal error.
+2025-05-27T18:07:29+00:00 require_once(C:\xampp\htdocs\fstudy/contents/themes/tutorstarter/template/custom-api/get_specific_user_all_tests_result/code.php): Failed to open stream: No such file or directory
+2025-05-27T18:17:30+00:00 Trying to access array offset on value of type bool

@@ -38,7 +38,7 @@ $testsavenumber = get_query_var('testsaveieltsspeaking');
 
     $results = $wpdb->get_results(
         $wpdb->prepare(
-            "SELECT * FROM save_user_result_ielts_speaking WHERE testsavenumber = %d",
+            "SELECT * FROM save_user_result_ielts_speaking WHERE testsavenumber = %s",
             $testsavenumber
         )
     );
@@ -142,7 +142,7 @@ $testsavenumber = get_query_var('testsaveieltsspeaking');
                     if (isset($user_answer_and_comment['1'])) {
                         $sql_question = "SELECT speaking_part, id_test, stt, question_content, sample FROM ielts_speaking_part_1_question WHERE id_test = ?";
                         $stmt_question = $conn->prepare($sql_question);
-                        $stmt_question->bind_param("s", $question_id);
+                        $stmt_question->bind_param("i", $question_id);
                         $stmt_question->execute();
                         $result_question = $stmt_question->get_result();
         
@@ -155,7 +155,7 @@ $testsavenumber = get_query_var('testsaveieltsspeaking');
                     if (isset($user_answer_and_comment['2'])) {
                         $sql_question_task2 = "SELECT speaking_part, id_test, question_content, topic, sample FROM ielts_speaking_part_2_question WHERE id_test = ?";
                         $stmt_question_task2 = $conn->prepare($sql_question_task2);
-                        $stmt_question_task2->bind_param("s", $question_id);
+                        $stmt_question_task2->bind_param("i", $question_id);
                         $stmt_question_task2->execute();
                         $result_question_task_2 = $stmt_question_task2->get_result();
         
@@ -168,7 +168,7 @@ $testsavenumber = get_query_var('testsaveieltsspeaking');
                     if (isset($user_answer_and_comment['3'])) {
                         $sql_question_task3 = "SELECT speaking_part, stt, id_test, question_content, topic, sample FROM ielts_speaking_part_3_question WHERE id_test = ?";
                         $stmt_question_task3 = $conn->prepare($sql_question_task3);
-                        $stmt_question_task3->bind_param("s", $question_id);
+                        $stmt_question_task3->bind_param("i", $question_id);
                         $stmt_question_task3->execute();
                         $result_question_task_3 = $stmt_question_task3->get_result();
         
@@ -1359,6 +1359,7 @@ function openTab(tabName) {
 // Set initial active task on page load
 window.onload = function() {
     setActiveTask('overall');
+    hidePreloader();
 };
 </script>
 </body>

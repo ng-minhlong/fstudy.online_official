@@ -414,6 +414,7 @@ $query = new WP_Query($args);
     document.getElementById("planlist-loader").style.display ='none';
     console.log('Kế hoạch hôm nay:', data.plan_today);
     renderPlanToday(data.plan_today);
+    hidePreloader();
   })
   .catch(error => console.error(error));
 
@@ -475,7 +476,6 @@ function renderTargetList(targetData) {
     targetList.appendChild(targetCard);
   });
 }
-
 
 
 </script>
