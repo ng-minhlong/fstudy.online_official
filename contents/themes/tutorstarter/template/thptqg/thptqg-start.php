@@ -83,11 +83,11 @@ if ($result_test->num_rows > 0) {
     $data = $result_test->fetch_assoc();
 
     $testname = $data['testname']; // Fetch the testname field
-    $testcode = $data['testcode']; // Fetch the testname field
-    $answer = $data['answer']; // Fetch the testname field
-    $subject = $data['subject']; // Fetch the testname field
-    $year = $data['year']; // Fetch the testname field
-    $time = "2"; // Fetch the testname field
+    $testcode = $data['testcode']; // Fetch the testcode field
+    $answer = $data['answer']; // Fetch the answer field
+    $subject = $data['subject']; // Fetch the subject field
+    $year = $data['year']; // Fetch the year field
+    $time = "2"; // Fetch the time field
     $token_need = $data['token_need'];
     $time_allow = $data['time_allow'];
     $permissive_management = $data['permissive_management'];
@@ -243,16 +243,16 @@ $conn->close();
 
             #sidebar1 {
                 flex: 1;
-                padding: 20px;
+                padding: 10px;
                 border-left: 2px solid #ccc;
-                height: 900px;
+                height: 100%;
                 overflow-y: auto;
             }
             #quiz-container1 {
                 overflow-y: auto;
                 flex: 3;
-                padding: 20px;
-                height: 900px;
+                padding-left: 100px;
+                height: 100%;
             }
             .question-wrapper, .context-wrapper {
                 display: none;
@@ -271,11 +271,14 @@ $conn->close();
                 padding: 15px;
             }
             .container-content {
+                height: 500px;
+                padding: 20px 0px 10px 0px;
                 display: flex;
                 flex-direction: row;
                 flex-wrap: wrap;
                 min-height: 100vh;
             }
+
             .container-checkbox {
                 display: flex;
                 flex-wrap: wrap;
@@ -295,20 +298,32 @@ $conn->close();
                 cursor: pointer;
                 user-select: none;
             }
+            .col-md-6{
+                background-color: white !important;
+                border-radius: 10px  !important;
+                border-color: grey !important;
+            }
 
-        </style>
-      <style>
-            #timer {
-                font-weight: bold;
-                font-size: 20px;
-                color: red;
-                margin-bottom: 20px;
+            .selected-choice {
+                background-color: #d4edda !important;
+                border-color: #28a745 !important;
+            }
+            .checkbox-box.answered {
+                background-color: #d4edda;
+                border-color: #28a745;
+                color: #155724;
             }
         </style>
-
+    
    
             <div class="container-content">
 
+                
+
+                
+                <div class="row" id = "quiz-container1">
+                     <?php echo $testcode ?>
+                </div>
                 <div id="sidebar1">
                     <h3>Answers</h3>
                     <div id = "timer"></div>
@@ -316,115 +331,12 @@ $conn->close();
                         style=" padding: 10px 20px;
                             background-color: #007bff; color: white; border: none;
                             border-radius: 4px; cursor: pointer; z-index: 1000;">
-                        Xem kết quả
+                        Nộp bài
                     </button>
                     <div id="boxanswers"></div>
                     <div class = "container-checkbox" id = "container-checkbox"></div>
-                    <!-- giấu form send kết quả bài thi -->
-
-
-            
-        
-                    <span id="message"  style =" display:none"></span>
-                    <form id="saveTopikReadingResult"  style =" display:none" >
-                                <div class="card">
-                                    <div class="card-header">Form lưu kết quả</div>
-                                    <div class="card-body" >
-                        
-                                <div class = "form-group" >
-                                    <input   type="text" id="overallband" name="overallband" placeholder="Kết quả"  class="form-control form_data" />
-                                    <span id="result_error" class="text-danger" ></span>
-                            
-                                </div>
-                            
-                            
-                                <div class = "form-group">
-                                    <input type="text" id="dateform" name="dateform" placeholder="Ngày"  class="form-control form_data"  />
-                                    <span id="date_error" class="text-danger" ></span>
-                                </div>
-                            
-                                
-                            
-                                <div class = "form-group"  >
-                                    <input type="text" id="timedotest" name="timedotest" placeholder="Thời gian làm bài"  class="form-control form_data" />
-                                    <span id="time_error" class="text-danger"></span>
-                                </div>
-                            
-                                <div class = "form-group" >
-                                    <input type="text" id="idtest" name="idtest" placeholder="Id test"  class="form-control form_data" />
-                                    <span id="idtest_error" class="text-danger" ></span>
-                                </div>
-
-                                <div class = "form-group" >
-                                    <input type="text" id="test_type" name="test_type" placeholder="Type Test"  class="form-control form_data" />
-                                    <span id="test_type_error" class="text-danger" ></span>
-                                </div>
-                            
-                                <div class = "form-group" >
-                                    <input type="text" id="idcategory" name="idcategory" placeholder="Id category"  class="form-control form_data" />
-                                    <span id="idcategory_error" class="text-danger"></span>
-                                </div>
-                            
-                                <div class = "form-group"   >
-                                    <input type="text"  id="testname" name="testname" placeholder="Test Name"  class="form-control form_data" />
-                                    <span id="testname_error" class="text-danger"></span>
-                                </div>
-                                <div class = "form-group"   >
-                                    <textarea type="text"  id="useranswer" name="useranswer" placeholder="User Answer"  class="form-control form_data"></textarea>
-                                    <span id="useranswer_error" class="text-danger"></span>
-                            </div>
-                            
-                            <div class = "form-group"   >
-                                    <input type="text"  id="correct_percentage" name="correct_percentage" placeholder="Correct percentage"  class="form-control form_data" />
-                                    <span id="correctanswer_error" class="text-danger"></span>  
-                                </div>
-                        
-
-                            <div class = "form-group"   >
-                                    <input type="text"  id="total_question_number" name="total_question_number" placeholder="Total Number"  class="form-control form_data" />
-                                    <span id="total_question_number_error" class="text-danger"></span>  
-                                </div>
-                        
-
-                            <div class = "form-group"   >
-                                    <input type="text"  id="correct_number" name="correct_number" placeholder="Correct Number"  class="form-control form_data" />
-                                    <span id="correctanswer_error" class="text-danger"></span>  
-                                </div>
-                            
-                            <div class = "form-group"   >
-                                    <input type="text"  id="incorrect_number" name="incorrect_number" placeholder="Incorrect Number"  class="form-control form_data" />
-                                    <span id="incorrect_number_error" class="text-danger"></span>  
-                                </div>
-                        
-
-                            <div class = "form-group"   >
-                                    <input type="text"  id="skip_number" name="skip_number" placeholder="Skip Number"  class="form-control form_data" />
-                                    <span id="skip_number_error" class="text-danger"></span>  
-                                </div>
-
-                                <div class = "form-group"   >
-                                    <input type="text"  id="testsavenumber" name="testsavenumber" placeholder="Result Number"  class="form-control form_data" />
-                                    <span id="testsavenumber_error" class="text-danger"></span>  
-                                </div>
-                        
-                        
-                        
-                        <div class="card-footer">
-                            <!--  <button type="button" name="submit" id="submit" class="btn btn-primary" onclick="save_data(); return false;">Save</button>-->
-                                            <td><input type="submit" id="submit" name="submit"/></td> 
-                    
-                            </div>
-                                
-                        </div>
-                        <div id="result_msg" ></div>
-                    </form>
-                    <!-- kết thúc send form -->
-                </div>
-
-                </div>
-                <div class="row" id = "quiz-container1">
-                     <?php echo $testcode ?>
-                </div>
+                   
+                </div></div>
                         
             </div>
         
@@ -456,8 +368,12 @@ function createCheckboxes() {
         box.textContent = id;
 
         box.addEventListener('click', () => {
-            window.location.hash = `#qid=${id}`;
+            const targetQuestion = document.querySelector(`.question[q-id="${id}"]`);
+            if (targetQuestion) {
+                targetQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         });
+
 
         container.appendChild(box);
     });
@@ -506,8 +422,8 @@ function createCheckboxes() {
             viewModeBtn.style.cursor = 'pointer';
             
             // Add buttons to header
-            headerControls.appendChild(toggleAllBtn);
-            headerControls.appendChild(viewModeBtn);
+            //headerControls.appendChild(toggleAllBtn);
+            //headerControls.appendChild(viewModeBtn);
             
             // Insert header controls before the first question
             document.querySelector('#main-answer').prepend(headerControls);
@@ -536,6 +452,31 @@ function createCheckboxes() {
             
             // Insert navigation controls after the first question
             questions[0].parentNode.insertBefore(navControls, questions[0].nextSibling);
+
+            function updateCheckboxState(qid) {
+                const checkbox = document.querySelector(`.checkbox-box:nth-child(${qid})`);
+                if (!checkbox) return;
+
+                let isAnswered = false;
+
+                const key = `q${qid}`;
+
+                if (userChoices.part1.hasOwnProperty(key)) {
+                    isAnswered = userChoices.part1[key] !== null;
+                }
+
+                if (userChoices.part2.hasOwnProperty(key)) {
+                    const answers = Object.values(userChoices.part2[key]);
+                    isAnswered = answers.length === 4 && answers.every(val => val === 'true' || val === 'false');
+                }
+
+                if (userChoices.part3.hasOwnProperty(key)) {
+                    isAnswered = userChoices.part3[key].trim() !== '';
+                }
+
+                checkbox.classList.toggle('answered', isAnswered);
+            }
+
             
             // Function to show a specific question
             function showQuestion(index) {
@@ -670,13 +611,16 @@ allParts.forEach((part) => {
                         c.style.borderColor = '#ddd';
                     });
 
-                    choice.style.backgroundColor = '#d4edda';
-                    choice.style.borderColor = '#c3e6cb';
+                    choices.forEach(c => c.classList.remove('selected-choice'));
+                    choice.classList.add('selected-choice');
+
 
                     const option = String.fromCharCode(65 + cIndex);
                     userChoices.part1[`q${qid}`] = option;
+                    updateCheckboxState(qid);
 
                 });
+                
         
         });
     } else if (currentPartIndex === 1) {
@@ -727,7 +671,9 @@ allParts.forEach((part) => {
                         userChoices.part2[`q${qid}`] = {};  // Sửa qIndex thành qid
                     }
                     userChoices.part2[`q${qid}`][String.fromCharCode(97 + i)] = e.target.value;  // Sửa qIndex thành qid
+                    updateCheckboxState(qid);
                 });
+                
 
                 optionDiv.appendChild(label);
                 optionDiv.appendChild(select);
@@ -763,8 +709,9 @@ allParts.forEach((part) => {
 
             input.addEventListener('input', (e) => {
                 userChoices.part3[`q${qid}`] = e.target.value;
+                updateCheckboxState(qid);
             });
-
+           
             inputContainer.appendChild(input);
             askDiv.appendChild(inputContainer);
     
@@ -826,19 +773,21 @@ allParts.forEach((part) => {
     });
    
     const totalMinutes = <?php echo $time; ?>;
-    let timeLeft = totalMinutes * 60; // đổi phút sang giây
+    let timeLeft = 3600; // đổi phút sang giây
     const timerDisplay = document.getElementById('timer');
+
+    
 
     function updateTimer() {
         const minutes = Math.floor(timeLeft / 60);
         const seconds = timeLeft % 60;
-        timerDisplay.textContent = `Thời gian còn lại: ${minutes} phút ${seconds < 10 ? '0' : ''}${seconds} giây`;
+        timerDisplay.innerHTML = `<div class = "time-control"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ebe8e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> ${minutes}: ${seconds < 10 ? '0' : ''}${seconds} </div>`;
 
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
             // Tự động nộp bài
             if (typeof logButton !== 'undefined') {
-                logButton.click();
+                //logButton.click();
             } else {
                 alert("Không tìm thấy nút nộp bài!");
             }
@@ -848,7 +797,7 @@ allParts.forEach((part) => {
     }
 
     const timerInterval = setInterval(updateTimer, 1000);
-    updateTimer();
+    //updateTimer();
 
         </script>
         

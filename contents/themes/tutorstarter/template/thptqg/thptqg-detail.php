@@ -10,16 +10,16 @@ if (is_user_logged_in()) {
     $post_id = get_the_ID();
     $user_id = get_current_user_id();
 
-    $custom_number = get_query_var('id_test');
+    $resultID =  get_query_var('testsavethptqg');
     $current_user = wp_get_current_user();
     $current_username = $current_user->user_login;
     $username = $current_username;
 
-  // Database credentials
-  $servername = DB_HOST;
-  $username = DB_USER;
-  $password = DB_PASSWORD;
-  $dbname = DB_NAME;
+    // Database credentials
+    $servername = DB_HOST;
+    $username = DB_USER;
+    $password = DB_PASSWORD;
+    $dbname = DB_NAME;
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);
@@ -37,24 +37,11 @@ if ($conn->connect_error) {
  $second = date('s'); // Giây
 
 
- function generate_uuid_v4() {
-    return sprintf(
-        '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-        mt_rand(0, 0xffff), mt_rand(0, 0xffff),         // 32 bits
-        mt_rand(0, 0xffff),                             // 16 bits
-        mt_rand(0, 0x0fff) | 0x4000,                    // 16 bits, version 4
-        mt_rand(0, 0x3fff) | 0x8000,                    // 16 bits, variant
-        mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)  // 48 bits
-    );
-}
-
-$result_id = generate_uuid_v4();
 $site_url = get_site_url();
 
 
 
 echo "<script> 
-var resultId = '" . $result_id ."';
 var siteUrl = '" .$site_url . "';
 var id_test = '" . $id_test . "';
 console.log('Result ID: ' + resultId);
@@ -83,11 +70,11 @@ if ($result_test->num_rows > 0) {
     $data = $result_test->fetch_assoc();
 
     $testname = $data['testname']; // Fetch the testname field
-    $testcode = $data['testcode']; // Fetch the testname field
-    $answer = $data['answer']; // Fetch the testname field
-    $subject = $data['subject']; // Fetch the testname field
-    $year = $data['year']; // Fetch the testname field
-    $time = $data['time']; // Fetch the testname field
+    $testcode = $data['testcode']; // Fetch the testcode field
+    $answer = $data['answer']; // Fetch the answer field
+    $subject = $data['subject']; // Fetch the subject field
+    $year = $data['year']; // Fetch the year field
+    $time = "2"; // Fetch the time field
     $token_need = $data['token_need'];
     $time_allow = $data['time_allow'];
     $permissive_management = $data['permissive_management'];
@@ -243,16 +230,16 @@ $conn->close();
 
             #sidebar1 {
                 flex: 1;
-                padding: 20px;
+                padding: 10px;
                 border-left: 2px solid #ccc;
-                height: auto;
+                height: 100%;
                 overflow-y: auto;
             }
             #quiz-container1 {
                 overflow-y: auto;
                 flex: 3;
-                padding: 20px;
-                max-height: 900px;
+                padding-left: 100px;
+                height: 100%;
             }
             .question-wrapper, .context-wrapper {
                 display: none;
@@ -271,16 +258,19 @@ $conn->close();
                 padding: 15px;
             }
             .container-content {
+                height: 500px;
+                padding: 20px 0px 10px 0px;
                 display: flex;
                 flex-direction: row;
                 flex-wrap: wrap;
                 min-height: 100vh;
             }
+
             .container-checkbox {
                 display: flex;
                 flex-wrap: wrap;
                 gap: 10px;
-                max-width: 600px;
+                max-width: 200px;
                 margin-top: 20px;
             }
 
@@ -295,28 +285,40 @@ $conn->close();
                 cursor: pointer;
                 user-select: none;
             }
+            .col-md-6{
+                background-color: white !important;
+                border-radius: 10px  !important;
+                border-color: grey !important;
+            }
 
+            .selected-choice {
+                background-color: #d4edda !important;
+                border-color: #28a745 !important;
+            }
+            .checkbox-box.answered {
+                background-color: #d4edda;
+                border-color: #28a745;
+                color: #155724;
+            }
         </style>
-      
+    
    
             <div class="container-content">
 
-                <div id="sidebar1">
-                    <h3>Answers</h3>
-                    <div id="boxanswers"></div>
-                    <button id="logBtn">Submit Answers</button>
-                    <div class = "container-checkbox" id = "container-checkbox"></div>
+                
 
-
-            
-        
-                    
-                </div>
-
-                </div>
+                
                 <div class="row" id = "quiz-container1">
                      <?php echo $testcode ?>
                 </div>
+                <div id="sidebar1">
+                    <h3>Answers</h3>
+                    <div id = "timer"></div>
+                    
+                    <div id="boxanswers"></div>
+                    <div class = "container-checkbox" id = "container-checkbox"></div>
+                   
+                </div></div>
                         
             </div>
         
@@ -348,8 +350,12 @@ function createCheckboxes() {
         box.textContent = id;
 
         box.addEventListener('click', () => {
-            window.location.hash = `#qid=${id}`;
+            const targetQuestion = document.querySelector(`.question[q-id="${id}"]`);
+            if (targetQuestion) {
+                targetQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         });
+
 
         container.appendChild(box);
     });
@@ -398,8 +404,8 @@ function createCheckboxes() {
             viewModeBtn.style.cursor = 'pointer';
             
             // Add buttons to header
-            headerControls.appendChild(toggleAllBtn);
-            headerControls.appendChild(viewModeBtn);
+            //headerControls.appendChild(toggleAllBtn);
+            //headerControls.appendChild(viewModeBtn);
             
             // Insert header controls before the first question
             document.querySelector('#main-answer').prepend(headerControls);
@@ -428,6 +434,31 @@ function createCheckboxes() {
             
             // Insert navigation controls after the first question
             questions[0].parentNode.insertBefore(navControls, questions[0].nextSibling);
+
+            function updateCheckboxState(qid) {
+                const checkbox = document.querySelector(`.checkbox-box:nth-child(${qid})`);
+                if (!checkbox) return;
+
+                let isAnswered = false;
+
+                const key = `q${qid}`;
+
+                if (userChoices.part1.hasOwnProperty(key)) {
+                    isAnswered = userChoices.part1[key] !== null;
+                }
+
+                if (userChoices.part2.hasOwnProperty(key)) {
+                    const answers = Object.values(userChoices.part2[key]);
+                    isAnswered = answers.length === 4 && answers.every(val => val === 'true' || val === 'false');
+                }
+
+                if (userChoices.part3.hasOwnProperty(key)) {
+                    isAnswered = userChoices.part3[key].trim() !== '';
+                }
+
+                checkbox.classList.toggle('answered', isAnswered);
+            }
+
             
             // Function to show a specific question
             function showQuestion(index) {
@@ -497,9 +528,9 @@ function createCheckboxes() {
             
             
             // Hide all answers initially
-            /*document.querySelectorAll('.answer').forEach(answer => {
+            document.querySelectorAll('.answer').forEach(answer => {
                 answer.style.display = 'none';
-            });*/
+            });
             const allParts = document.querySelectorAll('.question-part');
 
 //let currentPartIndex = -1;
@@ -562,13 +593,16 @@ allParts.forEach((part) => {
                         c.style.borderColor = '#ddd';
                     });
 
-                    choice.style.backgroundColor = '#d4edda';
-                    choice.style.borderColor = '#c3e6cb';
+                    choices.forEach(c => c.classList.remove('selected-choice'));
+                    choice.classList.add('selected-choice');
+
 
                     const option = String.fromCharCode(65 + cIndex);
                     userChoices.part1[`q${qid}`] = option;
+                    updateCheckboxState(qid);
 
                 });
+                
         
         });
     } else if (currentPartIndex === 1) {
@@ -619,7 +653,9 @@ allParts.forEach((part) => {
                         userChoices.part2[`q${qid}`] = {};  // Sửa qIndex thành qid
                     }
                     userChoices.part2[`q${qid}`][String.fromCharCode(97 + i)] = e.target.value;  // Sửa qIndex thành qid
+                    updateCheckboxState(qid);
                 });
+                
 
                 optionDiv.appendChild(label);
                 optionDiv.appendChild(select);
@@ -655,8 +691,9 @@ allParts.forEach((part) => {
 
             input.addEventListener('input', (e) => {
                 userChoices.part3[`q${qid}`] = e.target.value;
+                updateCheckboxState(qid);
             });
-
+           
             inputContainer.appendChild(input);
             askDiv.appendChild(inputContainer);
     
@@ -664,71 +701,18 @@ allParts.forEach((part) => {
 });
 });
 // Create log button
-            const logButton = document.createElement('button');
-            logButton.textContent = 'Xem kết quả';
-            logButton.style.position = 'fixed';
-            logButton.style.bottom = '20px';
-            logButton.style.right = '20px';
-            logButton.style.padding = '10px 20px';
-            logButton.style.backgroundColor = '#007bff';
-            logButton.style.color = 'white';
-            logButton.style.border = 'none';
-            logButton.style.borderRadius = '4px';
-            logButton.style.cursor = 'pointer';
-            logButton.style.zIndex = '1000';
-            
-            logButton.addEventListener('click', () => {
-            console.log('--- Tất cả lựa chọn ---');
-            console.log(JSON.stringify(userChoices, null, 2));
-
-            console.log('--- Theo từng phần ---');
-            console.log('PHẦN I (Trắc nghiệm):', JSON.stringify(userChoices.part1, null, 2));
-            console.log('PHẦN II (Đúng/Sai):', JSON.stringify(userChoices.part2, null, 2));
-            console.log('PHẦN III (Tự luận):', JSON.stringify(userChoices.part3, null, 2));
-
-            fetch(`${siteUrl}/api/cham-diem/thptqg/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    id_test: id_test, // Thay bằng ID bài test thực tế
-                    testname: <?php echo "'$testname'"?>,
-                    username: <?php echo "'$current_username'"?>, // Thay bằng username thực tế
-                    subject: subject, // Ví dụ: 'Toán', 'Văn', 'Anh'
-                    result_id: <?php echo "'$result_id '"?>,
-                    user_answer: userChoices
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const result = data.data;
-                    alert(
-                        `Kết quả:\n` +
-                        `- Tổng điểm: ${result.total_score}/10\n` +
-                        `- Đúng: ${result.correct_count}\n` +
-                        `- Sai: ${result.wrong_count}\n` +
-                        `- Bỏ qua: ${result.skipped_count}\n` +
-                        `- Điểm phần I: ${result.part_scores.part1}\n` +
-                        `- Điểm phần II: ${result.part_scores.part2}\n` +
-                        `- Điểm phần III: ${result.part_scores.part3}`
-                    );
-                } else {
-                    alert('Chấm điểm thất bại.');
-                }
-            })
-            .catch(error => {
-                console.error('Lỗi khi gửi dữ liệu:', error);
-                alert('Đã xảy ra lỗi khi gửi yêu cầu.');
-            });
-        });
-        document.body.appendChild(logButton);
-            showQuestion(0);
-            logQuestionsInfo();
-            createCheckboxes();  // Tạo checkbox tương ứng
+           
+        hidePreloader();
+        showQuestion(0);
+        logQuestionsInfo();
+        createCheckboxes();  // Tạo checkbox tương ứng
 
     });
+   
+
+    
+
+
         </script>
         
     </body>
