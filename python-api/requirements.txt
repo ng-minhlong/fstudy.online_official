@@ -1,0 +1,8 @@
+Flask
+Flask-Cors
+SpeechRecognition
+pydub
+nltk
+requests
+gTTS
+googletrans==4.0.0rc1
