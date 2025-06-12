@@ -79,7 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 
-
 function prepareAIRoute() {
     $site_url = get_site_url();
     $api_url = $site_url . '/wp-json/api/v1/extract_current_and_prepare_ai_route';
