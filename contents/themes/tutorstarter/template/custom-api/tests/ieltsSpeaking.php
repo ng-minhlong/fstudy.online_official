@@ -225,7 +225,7 @@ function overallPronounciation($data) {
         ];
 
         // Initialize cURL session
-        $ch = curl_init('http://127.0.0.1:5000/analyze_sentence');
+        $ch = curl_init(URL_PYTHON_API .'/analyze_sentence');
         
         // Set cURL options
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

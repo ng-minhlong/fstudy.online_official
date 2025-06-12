@@ -1830,7 +1830,7 @@ function isOperaBrowser() {
 
             try {
                 document.getElementById('recordedText').textContent = "Processing...";
-                const response = await fetch("http://127.0.0.1:5000/shadowingResult", {
+                const response = await fetch("<?php echo URL_PYTHON_API; ?>/shadowingResult", {
                     method: "POST",
                     body: formData,
                 });

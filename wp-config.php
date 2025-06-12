@@ -22,17 +22,30 @@
 // ** Database settings - You can get this info from your web host ** //
 /** The name of the database for WordPress */
 define('WP_CACHE', true);
+
+
 define( 'WPCACHEHOME', 'C:\xampp\htdocs\fstudy\contents\plugins\wp-super-cache/' );
-define( 'DB_NAME', 'wordpress' );
+// Load environment variables from .env
+require_once __DIR__ . '/vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
 
-/** Database username */
-define( 'DB_USER', 'root' );
 
-/** Database password */
-define( 'DB_PASSWORD', '' );
+define('DB_NAME', $_ENV['DB_NAME']);
+define('DB_USER', $_ENV['DB_USER']);
+define('DB_PASSWORD', $_ENV['DB_PASSWORD']);
+define('DB_HOST', $_ENV['DB_HOST']);
 
-/** Database hostname */
-define( 'DB_HOST', 'localhost' );
+define('WP_HOME', $_ENV['WP_HOME']);
+define('WP_SITEURL', $_ENV['WP_SITEURL']);
+
+define('WP_CONTENT_FOLDERNAME', $_ENV['WP_CONTENT_FOLDERNAME']);
+define('WP_CONTENT_DIR', ABSPATH . WP_CONTENT_FOLDERNAME);
+define('WP_CONTENT_URL', $_ENV['WP_HOME'] . '/' . WP_CONTENT_FOLDERNAME);
+define('URL_NODE_API', $_ENV['URL_NODE_API']);
+define('URL_PYTHON_API', $_ENV['URL_PYTHON_API']);
+
+
 
 /** Database charset to use in creating database tables. */
 define( 'DB_CHARSET', 'utf8mb4' );
@@ -97,15 +110,6 @@ define('WP_DEBUG_DISPLAY', false);
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', __DIR__ . '/' );
 }
-
-define('WP_HOME', 'http://localhost/fstudy');
-define('WP_SITEURL', 'http://localhost/fstudy');
-
-
-// Define the new directory path and URL
-define('WP_CONTENT_FOLDERNAME', 'contents');
-define('WP_CONTENT_DIR', ABSPATH . WP_CONTENT_FOLDERNAME);
-define('WP_CONTENT_URL', 'http://localhost/fstudy/' . WP_CONTENT_FOLDERNAME);
 
 define('AUTOMATIC_UPDATER_DISABLED', true);
 define('WP_AUTO_UPDATE_CORE', false);

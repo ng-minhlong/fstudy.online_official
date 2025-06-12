@@ -791,7 +791,7 @@ run.addEventListener("click", async function () {
         };
         console.log(code);
 
-        const oData = await fetch("http://localhost:8000/api/submit/", {
+        const oData = await fetch("<?php echo URL_NODE_API; ?>/api/submit/", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(code)
@@ -801,7 +801,7 @@ run.addEventListener("click", async function () {
 
         // Delay xóa file backend
         setTimeout(function () {
-            fetch("http://localhost:8000/", {});
+            fetch("<?php echo URL_NODE_API; ?>/", {});
             console.log("Delete successfully!");
         }, 6000);
         renderCompileAndResult(d);
@@ -949,7 +949,7 @@ async function runTestCase() {
     };
 
     console.log(code);
-    var sampleTestCase = await fetch("http://localhost:8000/api/compileTestCase/", {
+    var sampleTestCase = await fetch("<?php echo URL_NODE_API; ?>/api/compileTestCase/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(code)

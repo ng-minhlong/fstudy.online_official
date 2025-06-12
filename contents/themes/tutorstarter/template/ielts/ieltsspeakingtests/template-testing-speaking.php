@@ -1445,7 +1445,7 @@ async function handleAudioAfterStop() {
     formData.append("lang", "en");
 
     try {
-        const response = await fetch("http://127.0.0.1:5000/stt", {
+        const response = await fetch("<?php echo URL_PYTHON_API; ?>/stt", {
             method: "POST",
             body: formData,
         });
@@ -1547,7 +1547,7 @@ async function stopRecording() {
         async function speakText(text) {
             try {
                 const lang = 'en';
-                const apiUrl = `http://127.0.0.1:5000/tts?text=${encodeURIComponent(text)}&lang=${lang}`;
+                const apiUrl = `<?php echo URL_PYTHON_API; ?>/tts?text=${encodeURIComponent(text)}&lang=${lang}`;
                 
                 const audio = new Audio(apiUrl);
                 

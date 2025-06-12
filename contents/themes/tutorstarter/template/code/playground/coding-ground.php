@@ -115,7 +115,7 @@ echo" <link rel='stylesheet' href='" . $site_url . "/contents/themes/tutorstarte
             lang: option.value
         }
         console.log(code)
-        var oData = await fetch("http://localhost:8000/api/compile", {
+        var oData = await fetch("<?php echo URL_NODE_API; ?>/api/compile", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -127,7 +127,7 @@ echo" <link rel='stylesheet' href='" . $site_url . "/contents/themes/tutorstarte
         var delayInMilliseconds = 6000; //1 second
 
     setTimeout(function() {
-        var deletefile =  fetch("http://localhost:8000/", {})
+        var deletefile =  fetch("<?php echo URL_NODE_API; ?>/", {})
         console.log("Delete successfully !")
     }, delayInMilliseconds);
         
