@@ -57,6 +57,8 @@ echo "<script>
 var resultId = '" . $result_id ."';
 var siteUrl = '" .$site_url . "';
 var id_test = '" . $id_test . "';
+
+
 console.log('Result ID: ' + resultId);
 </script>";
 
@@ -322,7 +324,8 @@ $conn->close();
 
                 
                 <div class="row" id = "quiz-container1">
-                     <?php echo $testcode ?>
+                    <!-- <?php echo $testcode ?> -->
+                    <div id = "test"></div>
                 </div>
                 <div id="sidebar1">
                     <h3>Answers</h3>
@@ -343,463 +346,178 @@ $conn->close();
         
        
     
-        <script>
+      <script>
 
-    document.addEventListener('DOMContentLoaded', function() {
-        function logQuestionsInfo() {
-    const questions = document.querySelectorAll('.question');
-    const totalQuestions = questions.length;
-    const questionIds = Array.from(questions).map((_, index) => index + 1);
+var IMAGE_HOST = 'http://localhost/fstudy/contents/themes/tutorstarter/template/media_img_intest/thptqg/';
 
-    questions.forEach((question, index) => {
-        question.setAttribute('q-id', questionIds[index]);
-    });
-
-    return { totalQuestions, questionIds };
+function replaceImageHost(content) {
+    return content.replace(/\$\{IMAGE_HOST\}/g, IMAGE_HOST);
 }
 
-function createCheckboxes() {
-    const { questionIds } = logQuestionsInfo();
-    const container = document.getElementById('container-checkbox');
+const testcode = <?php echo $testcode ?>;
+const container = document.getElementById("test");
+const checkboxContainer = document.getElementById("container-checkbox");
+const userAnswers = {};
 
-    questionIds.forEach(id => {
-        const box = document.createElement('div');
-        box.className = 'checkbox-box';
-        box.textContent = id;
+let questionIndex = 1;
 
-        box.addEventListener('click', () => {
-            const targetQuestion = document.querySelector(`.question[q-id="${id}"]`);
-            if (targetQuestion) {
-                targetQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        });
+for (const partKey in testcode.data) {
+    const part = testcode.data[partKey];
+    const questions = part.questions;
+
+    for (const qKey in questions) {
+        const q = questions[qKey];
+
+        // Khởi tạo câu trả lời mặc định rỗng
+        userAnswers[qKey] = "";
+
+        // Tạo vùng hiển thị câu hỏi
+        const qDiv = document.createElement("div");
+        qDiv.id = `question-${questionIndex}`;
+        qDiv.className = "question-block";
+        qDiv.style.padding = "20px";
+        qDiv.style.border = "1px solid #ccc";
+        qDiv.style.marginBottom = "20px";
+        qDiv.style.scrollMarginTop = "100px";
+
+        const qContent = document.createElement("div");
+        qContent.innerHTML = `<b>Câu ${questionIndex}:</b> ${replaceImageHost(q.question_content)}`;
+        qDiv.appendChild(qContent);
 
 
-        container.appendChild(box);
-    });
-}
+        const answers = q.answer || {};
+        const currentIndex = questionIndex; // Capture current index
 
-            // Get all questions and initialize variables
-            const questions = document.querySelectorAll('.question');
-            // Thêm q-id vào mỗi câu hỏi khi khởi tạo
-            questions.forEach((question, index) => {
-                question.setAttribute('q-id', index + 1);
-            });
-            const totalQuestions = questions.length;
-            let currentQuestionIndex = 0;
-            let singlePageMode = true;
-            
-            // Create navigation controls
-            const navControls = document.createElement('div');
-            navControls.className = 'navigation-controls';
-            navControls.style.display = 'none';
-            navControls.style.justifyContent = 'space-between';
-            navControls.style.margin = '20px 0';
-            navControls.style.padding = '10px';
-            navControls.style.backgroundColor = '#f5f5f5';
-            navControls.style.borderRadius = '5px';
-            
-            // Create header controls
-            const headerControls = document.createElement('div');
-            headerControls.className = 'header-controls';
-            headerControls.style.display = 'flex';
-            headerControls.style.justifyContent = 'center';
-            headerControls.style.gap = '10px';
-            headerControls.style.marginBottom = '20px';
-            
-            // Create toggle all answers button
-            const toggleAllBtn = document.createElement('button');
-            toggleAllBtn.textContent = 'Ẩn/Hiện tất cả đáp án';
-            toggleAllBtn.className = 'btn btn-secondary';
-            toggleAllBtn.style.padding = '5px 10px';
-            toggleAllBtn.style.cursor = 'pointer';
-            
-            // Create view mode toggle button
-            const viewModeBtn = document.createElement('button');
-            viewModeBtn.textContent = 'Xem từng câu hỏi';
-            viewModeBtn.className = 'btn btn-primary';
-            viewModeBtn.style.padding = '5px 10px';
-            viewModeBtn.style.cursor = 'pointer';
-            
-            // Add buttons to header
-            //headerControls.appendChild(toggleAllBtn);
-            //headerControls.appendChild(viewModeBtn);
-            
-            // Insert header controls before the first question
-            document.querySelector('#main-answer').prepend(headerControls);
-            
-            // Create navigation buttons
-            const prevBtn = document.createElement('button');
-            prevBtn.textContent = 'Câu trước';
-            prevBtn.className = 'btn btn-primary';
-            prevBtn.style.padding = '5px 15px';
-            prevBtn.style.cursor = 'pointer';
-            
-            const nextBtn = document.createElement('button');
-            nextBtn.textContent = 'Câu tiếp';
-            nextBtn.className = 'btn btn-primary';
-            nextBtn.style.padding = '5px 15px';
-            nextBtn.style.cursor = 'pointer';
-            
-            const questionCounter = document.createElement('span');
-            questionCounter.textContent = `Câu ${currentQuestionIndex + 1}/${totalQuestions}`;
-            questionCounter.style.alignSelf = 'center';
-            
-            // Add navigation buttons to controls
-            navControls.appendChild(prevBtn);
-            navControls.appendChild(questionCounter);
-            navControls.appendChild(nextBtn);
-            
-            // Insert navigation controls after the first question
-            questions[0].parentNode.insertBefore(navControls, questions[0].nextSibling);
+        // Part 1: multiple_choice
+        if (part.type === "multiple_choice") {
+            for (const [key, value] of Object.entries(answers)) {
+                
+                const label = document.createElement("label");
+                label.style.display = "block";
+                label.style.margin = "5px 0";
 
-            function updateCheckboxState(qid) {
-                const checkbox = document.querySelector(`.checkbox-box:nth-child(${qid})`);
-                if (!checkbox) return;
+                const input = document.createElement("input");
+                input.type = "radio";
+                input.name = qKey;
+                input.value = key;
 
-                let isAnswered = false;
-
-                const key = `q${qid}`;
-
-                if (userChoices.part1.hasOwnProperty(key)) {
-                    isAnswered = userChoices.part1[key] !== null;
-                }
-
-                if (userChoices.part2.hasOwnProperty(key)) {
-                    const answers = Object.values(userChoices.part2[key]);
-                    isAnswered = answers.length === 4 && answers.every(val => val === 'true' || val === 'false');
-                }
-
-                if (userChoices.part3.hasOwnProperty(key)) {
-                    isAnswered = userChoices.part3[key].trim() !== '';
-                }
-
-                checkbox.classList.toggle('answered', isAnswered);
-            }
-
-            
-            // Function to show a specific question
-            function showQuestion(index) {
-                questions.forEach((q, i) => {
-                    if (singlePageMode) {
-                        q.style.display = 'block';
-                    } else {
-                        q.style.display = i === index ? 'block' : 'none';
+                input.addEventListener("change", () => {
+                    userAnswers[qKey] = key;
+                    const checkboxEl = document.getElementById(`checkbox-${currentIndex}`);
+                    if (checkboxEl) {
+                        checkboxEl.style.backgroundColor = "#28a745";
                     }
                 });
-                
-                questionCounter.textContent = `Câu ${index + 1}/${totalQuestions}`;
-                currentQuestionIndex = index;
-                
-                // Disable/enable navigation buttons
-                prevBtn.disabled = index === 0;
-                nextBtn.disabled = index === totalQuestions - 1;
-            }
-            
-            // Function to toggle all answers
-            function toggleAllAnswers() {
-                const answers = document.querySelectorAll('.answer');
-                const firstAnswer = answers[0];
-                const isHidden = firstAnswer.style.display === 'none';
-                
-                answers.forEach(answer => {
-                    answer.style.display = isHidden ? 'block' : 'none';
-                });
-                
-                toggleAllBtn.textContent = isHidden ? 'Ẩn tất cả đáp án' : 'Hiện tất cả đáp án';
-            }
-            
-            // Function to toggle view mode
-            function toggleViewMode() {
-                singlePageMode = !singlePageMode;
-                
-                if (singlePageMode) {
-                    // Show all questions
-                    questions.forEach(q => q.style.display = 'block');
-                    viewModeBtn.textContent = 'Xem từng câu hỏi';
-                    navControls.style.display = 'none';
-                } else {
-                    // Show current question only
-                    showQuestion(currentQuestionIndex);
-                    viewModeBtn.textContent = 'Xem tất cả câu hỏi';
-                    navControls.style.display = 'flex';
-                }
-            }
-            
-            // Event listeners
-            prevBtn.addEventListener('click', () => {
-                if (currentQuestionIndex > 0) {
-                    showQuestion(currentQuestionIndex - 1);
-                }
-            });
-            
-            nextBtn.addEventListener('click', () => {
-                if (currentQuestionIndex < totalQuestions - 1) {
-                    showQuestion(currentQuestionIndex + 1);
-                }
-            });
-            
-            toggleAllBtn.addEventListener('click', toggleAllAnswers);
-            viewModeBtn.addEventListener('click', toggleViewMode);
-            
-            // Initialize
-            
-            
-            // Hide all answers initially
-            document.querySelectorAll('.answer').forEach(answer => {
-                answer.style.display = 'none';
-            });
-            const allParts = document.querySelectorAll('.question-part');
 
-//let currentPartIndex = -1;
-const userChoices = {
-                part1: {},
-                part2: {},
-                part3: {}
-            };
-allParts.forEach((part) => {
-   
-
-    const questions = part.querySelectorAll('.question');
-
-     questions.forEach((question) => {
-        const qid = parseInt(question.getAttribute('q-id'), 10);
-        let currentPartIndex = -1;
-
-        if (subject === "Toán học") {
-            if (qid >= 1 && qid <= 12) {
-                currentPartIndex = 0;
-            } else if (qid >= 13 && qid <= 16) {
-                currentPartIndex = 1;
-            } else if (qid >= 17 && qid <= 22) {
-                currentPartIndex = 2;
+                label.appendChild(input);
+                label.insertAdjacentHTML("beforeend", ` ${replaceImageHost(value)}`);
+                qDiv.appendChild(label);
             }
-        } else if (subject === "Hóa học" || subject === "Sinh học" || subject === "Địa lý") {
-            if (qid >= 1 && qid <= 18) {
-                currentPartIndex = 0;
-            } else if (qid >= 19 && qid <= 22) {
-                currentPartIndex = 1;
-            } else if (qid >= 23 && qid <= 28) {
-                currentPartIndex = 2;
-            }
-        } else if (subject === "Tiếng anh") {
-            if (qid >= 1 && qid <= 40) {
-                currentPartIndex = 0;
-            }
+
         }
 
-    if (currentPartIndex === 0) {
-        userChoices.part1[`q${qid}`] = null;
-        // PHẦN I - Trắc nghiệm
-            const choices = question.querySelectorAll('.choice-ans .col-md-6');
-            if (choices.length === 0) {
-                console.error('Không tìm thấy lựa chọn cho câu hỏi', question);
-                return;
-            }
+        // Part 2: true_false
+        else if (part.type === "true_false") {
+            for (const [key, value] of Object.entries(answers)) {
+                const groupLabel = document.createElement("div");
+                groupLabel.innerHTML = `<i>${key}</i>: ${replaceImageHost(value)}`;
+                groupLabel.style.marginTop = "8px";
+                qDiv.appendChild(groupLabel);
 
-            choices.forEach((choice, cIndex) => {
-                choice.style.cursor = 'pointer';
-                choice.style.padding = '8px';
-                choice.style.margin = '4px';
-                choice.style.border = '1px solid #ddd';
-                choice.style.borderRadius = '4px';
-                choice.style.backgroundColor = '#f9f9f9';
+                ["Đúng", "Sai"].forEach(choice => {
+                    const label = document.createElement("label");
+                    label.style.marginLeft = "15px";
+                    label.style.display = "inline-block";
 
-                choice.addEventListener('click', () => {
-                    choices.forEach(c => {
-                        c.style.backgroundColor = '#f9f9f9';
-                        c.style.borderColor = '#ddd';
+                    const input = document.createElement("input");
+                    input.type = "radio";
+                    input.name = `${qKey}_${key}`;
+                    input.value = choice;
+
+                    input.addEventListener("change", () => {
+                        if (!userAnswers[qKey]) userAnswers[qKey] = {};
+                        userAnswers[qKey][key] = choice;
+
+                        // Kiểm tra nếu đã chọn đủ các đáp án con
+                        const totalSubQuestions = Object.keys(answers).length;
+                        const currentAnswers = Object.keys(userAnswers[qKey]).length;
+
+                        if (currentAnswers === totalSubQuestions) {
+                            const checkboxEl = document.getElementById(`checkbox-${currentIndex}`);
+                            if (checkboxEl) {
+                                checkboxEl.style.backgroundColor = "#28a745";
+                            }
+                        }
                     });
 
-                    choices.forEach(c => c.classList.remove('selected-choice'));
-                    choice.classList.add('selected-choice');
+                    
 
-
-                    const option = String.fromCharCode(65 + cIndex);
-                    userChoices.part1[`q${qid}`] = option;
-                    updateCheckboxState(qid);
-
+                    label.appendChild(input);
+                    label.append(` ${choice}`);
+                    qDiv.appendChild(label);
                 });
-                
-        
-        });
-    } else if (currentPartIndex === 1) {
-            userChoices.part2[`q${qid}`] = {
-            a: null,
-            b: null,
-            c: null,
-            d: null
-        };
-
-        // PHẦN II - Đúng/Sai
-            const askDiv = question.querySelector('.ask');
-            if (!askDiv) {
-                console.error('Không tìm thấy phần ask cho câu hỏi', question);
-                return;
             }
 
-            if (askDiv.querySelector('.options-container')) return;
-
-            const optionsContainer = document.createElement('div');
-            optionsContainer.className = 'options-container';
-            optionsContainer.style.marginTop = '10px';
-            optionsContainer.style.padding = '10px';
-            optionsContainer.style.borderTop = '1px dashed #ccc';
-
-            for (let i = 0; i < 4; i++) {
-                const optionDiv = document.createElement('div');
-                optionDiv.style.marginBottom = '8px';
-
-                const label = document.createElement('span');
-                label.textContent = `${String.fromCharCode(97 + i)}) `;
-                label.style.marginRight = '8px';
-
-                const select = document.createElement('select');
-                select.className = 'form-control';
-                select.style.width = '120px';
-                select.style.display = 'inline-block';
-
-                ['-- Chọn --', 'Đúng', 'Sai'].forEach((text, idx) => {
-                    const option = document.createElement('option');
-                    option.value = idx === 0 ? '' : idx === 1 ? 'true' : 'false';
-                    option.textContent = text;
-                    select.appendChild(option);
-                });
-
-                select.addEventListener('change', (e) => {
-                    if (!userChoices.part2[`q${qid}`]) {  // Sửa qIndex thành qid
-                        userChoices.part2[`q${qid}`] = {};  // Sửa qIndex thành qid
-                    }
-                    userChoices.part2[`q${qid}`][String.fromCharCode(97 + i)] = e.target.value;  // Sửa qIndex thành qid
-                    updateCheckboxState(qid);
-                });
-                
-
-                optionDiv.appendChild(label);
-                optionDiv.appendChild(select);
-                optionsContainer.appendChild(optionDiv);
-            }
-
-            askDiv.appendChild(optionsContainer);
-    
-    } else if (currentPartIndex === 2) {
-        userChoices.part3[`q${qid}`] = "";
-        // PHẦN III - Tự luận
-            const askDiv = question.querySelector('.ask');
-            if (!askDiv) {
-                console.error('Không tìm thấy phần ask cho câu hỏi', question);
-                return;
-            }
-
-            if (askDiv.querySelector('.answer-input-container')) return;
-
-            const inputContainer = document.createElement('div');
-            inputContainer.className = 'answer-input-container';
-            inputContainer.style.marginTop = '10px';
-            inputContainer.style.padding = '10px';
-            inputContainer.style.borderTop = '1px dashed #ccc';
-
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.placeholder = 'Nhập câu trả lời...';
-            input.style.width = '100%';
-            input.style.padding = '8px';
-            input.style.border = '1px solid #ddd';
-            input.style.borderRadius = '4px';
-
-            input.addEventListener('input', (e) => {
-                userChoices.part3[`q${qid}`] = e.target.value;
-                updateCheckboxState(qid);
-            });
-           
-            inputContainer.appendChild(input);
-            askDiv.appendChild(inputContainer);
-    
-    }
-});
-});
-// Create log button
-            document.getElementById('logButton').addEventListener('click', () => {
-            console.log('--- Tất cả lựa chọn ---');
-            console.log(JSON.stringify(userChoices, null, 2));
-
-            console.log('--- Theo từng phần ---');
-            console.log('PHẦN I (Trắc nghiệm):', JSON.stringify(userChoices.part1, null, 2));
-            console.log('PHẦN II (Đúng/Sai):', JSON.stringify(userChoices.part2, null, 2));
-            console.log('PHẦN III (Tự luận):', JSON.stringify(userChoices.part3, null, 2));
-
-            fetch(`${siteUrl}/api/cham-diem/thptqg/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    id_test: id_test,
-                    testname: <?php echo "'$testname'" ?>,
-                    username: <?php echo "'$current_username'" ?>,
-                    subject: subject,
-                    result_id: <?php echo "'$result_id'" ?>,
-                    user_answer: userChoices
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const result = data.data;
-                    alert(
-                        `Kết quả:\n` +
-                        `- Tổng điểm: ${result.total_score}/10\n` +
-                        `- Đúng: ${result.correct_count}\n` +
-                        `- Sai: ${result.wrong_count}\n` +
-                        `- Bỏ qua: ${result.skipped_count}\n` +
-                        `- Điểm phần I: ${result.part_scores.part1}\n` +
-                        `- Điểm phần II: ${result.part_scores.part2}\n` +
-                        `- Điểm phần III: ${result.part_scores.part3}`
-                    );
-                } else {
-                    alert('Chấm điểm thất bại.');
-                }
-            })
-            .catch(error => {
-                console.error('Lỗi khi gửi dữ liệu:', error);
-                alert('Đã xảy ra lỗi khi gửi yêu cầu.');
-            });
-        });
-        hidePreloader();
-            showQuestion(0);
-            logQuestionsInfo();
-            createCheckboxes();  // Tạo checkbox tương ứng
-
-    });
-   
-    const totalMinutes = <?php echo $time; ?>;
-    let timeLeft = 3600; // đổi phút sang giây
-    const timerDisplay = document.getElementById('timer');
-
-    
-
-    function updateTimer() {
-        const minutes = Math.floor(timeLeft / 60);
-        const seconds = timeLeft % 60;
-        timerDisplay.innerHTML = `<div class = "time-control"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ebe8e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> ${minutes}: ${seconds < 10 ? '0' : ''}${seconds} </div>`;
-
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            // Tự động nộp bài
-            if (typeof logButton !== 'undefined') {
-                //logButton.click();
-            } else {
-                alert("Không tìm thấy nút nộp bài!");
-            }
         }
 
-        timeLeft--;
+        // Part 3: completion
+        else if (part.type === "completion") {
+            const input = document.createElement("input");
+            input.type = "text";
+            input.style.width = "100%";
+            input.style.marginTop = "10px";
+
+            input.addEventListener("input", () => {
+                userAnswers[qKey] = input.value.trim();
+                if (input.value.trim() !== "") {
+                    const checkboxEl = document.getElementById(`checkbox-${currentIndex}`);
+                    if (checkboxEl) {
+                        checkboxEl.style.backgroundColor = "#28a745";
+                    }
+                }
+            });
+
+
+            qDiv.appendChild(input);
+        }
+
+        container.appendChild(qDiv);
+
+        // Tạo checkbox chuyển đến câu
+        const box = document.createElement("div");
+        box.id = `checkbox-${questionIndex}`;
+        box.textContent = questionIndex;
+        box.style.width = "30px";
+        box.style.height = "30px";
+        box.style.border = "1px solid #333";
+        box.style.display = "inline-flex";
+        box.style.justifyContent = "center";
+        box.style.alignItems = "center";
+        box.style.margin = "5px";
+        box.style.cursor = "pointer";
+        box.style.borderRadius = "4px";
+        box.style.transition = "background 0.3s";
+
+        box.addEventListener("click", () => {
+            const target = document.getElementById(`question-${currentIndex}`);
+            if (target) {
+                target.scrollIntoView({ behavior: "smooth" });
+            }
+        });
+
+
+        checkboxContainer.appendChild(box);
+        questionIndex++;
     }
+}
 
-    const timerInterval = setInterval(updateTimer, 1000);
-    //updateTimer();
+// Nút Nộp bài
+document.getElementById("logButton").addEventListener("click", () => {
+    console.log("Kết quả người dùng:");
+    console.log(JSON.stringify(userAnswers, null, 2));
+});
+</script>
 
-        </script>
         
     </body>
 </html>

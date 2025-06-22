@@ -1302,7 +1302,100 @@ if ($result->num_rows > 0) {
         font-size: 20px;
         font-weight: bold;
     }
-    
+
+
+
+
+   
+
+  .left-col-break {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+#break-page {
+    position: fixed;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+
+  .break-container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+  }
+
+  .left-col-break,
+  .break-instructions {
+    width: 50%;
+    padding: 40px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .left-col-break {
+    align-items: center;
+    gap: 30px;
+  }
+
+  .break-timer-box {
+    border: 2px solid white;
+    padding: 30px 60px;
+    border-radius: 10px;
+    text-align: center;
+  }
+
+  .break-timer-label {
+    font-size: 20px;
+  }
+
+  .break-timer {
+    font-size: 48px;
+    margin-top: 10px;
+  }
+
+  .resume-button {
+    padding: 14px 28px;
+    font-size: 18px;
+    background-color: #444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .break-instructions h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .break-instructions p,
+  .break-instructions li {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+    .resume-button {
+       
+        padding: 12px 24px;
+        font-size: 18px;
+        background-color: white;
+        color: black;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
 
 
 
@@ -1317,6 +1410,30 @@ if ($result->num_rows > 0) {
 <script src="https://kit.fontawesome.com/acfb8e1879.js" crossorigin="anonymous"></script>
 
     <body onload="main()" >
+         <div class="break-page" id="break-page" style="display: none;">
+                <div class="break-container">
+                    <div class="left-col-break">
+                        <div class="break-timer-box">
+                            <div class="break-timer-label">Remaining Break Time:</div>
+                            <div id="break_timer" class="break-timer">10:00</div>
+                        </div>
+                        <button id="skip-break" class="resume-button">Resume Testing Now</button>
+                    </div>
+                    <div class="break-instructions">
+                    <h2>Take a Break: Do Not Close Your Device</h2>
+                    <p>After the break, a <strong>Resume Testing Now</strong> button will appear and you’ll start the next section.</p>
+                    <p><strong>Follow these rules during the break:</strong></p>
+                    <ol>
+                        <li>Do not disturb students who are still testing.</li>
+                        <li>Do not exit the app or close your laptop.</li>
+                        <li>Do not access phones, smartwatches, textbooks, notes, or the internet.</li>
+                        <li>Do not eat or drink near any testing device.</li>
+                        <li>Do not speak in the test room; outside the test room, do not discuss the exam with anyone.</li>
+                    </ol>
+                    </div>
+                    
+                </div>
+            </div>
         
     
     <div class ="content-container">
@@ -1490,6 +1607,9 @@ if ($result->num_rows > 0) {
             <img id="modalImage" src="" >
             </div>
         </div>
+        
+           
+
   
          
                 <div  id="quiz-container" ></div>
@@ -1753,112 +1873,7 @@ if ($result->num_rows > 0) {
                     </div>
                 </div>
 
-     <!-- giấu form send kết quả bài thi -->
-
-
     
-  
- <span id="message"  style = "display:none" ></span>
- <form id="frmContactUs"  style = "display:none" >
-         <div class="card">
-             <div class="card-header">Form lưu kết quả</div>
-             <div class="card-body" >
-
-    <div class = "form-group" >
-         <input   type="text" id="resulttest" name="resulttest" placeholder="Kết quả"  class="form-control form_data" />
-         <span id="result_error" class="text-danger" ></span>
-
-    </div>
-
-
-    <div class = "form-group">
-         <input type="text" id="dateform" name="dateform" placeholder="Ngày"  class="form-control form_data"  />
-         <span id="date_error" class="text-danger" ></span>
-    </div>
-
-     
-
-    <div class = "form-group"  >
-         <input type="text" id="timedotest" name="timedotest" placeholder="Thời gian làm bài"  class="form-control form_data" />
-         <span id="time_error" class="text-danger"></span>
-    </div>
-
-    <div class = "form-group" >
-         <input type="text" id="idtest" name="idtest" placeholder="Id test"  class="form-control form_data" />
-         <span id="idtest_error" class="text-danger" ></span>
-    </div>
-
-    <div class = "form-group" >
-         <input   type="text" id="test_type" name="test_type" placeholder="Test type"  class="form-control form_data" />
-         <span id="test_type_error" class="text-danger" ></span>
-
-    </div>
-
-     <div class = "form-group"   >
-         <input type="text"  id="testname" name="testname" placeholder="Test Name"  class="form-control form_data" />
-         <span id="testname_error" class="text-danger"></span>
-    </div>
-
-
-
-    <div class = "form-group"   >
-        <input type="text"  id="useranswer" name="useranswer" placeholder="User Answer"  class="form-control form_data" />
-        <span id="useranswer_error" class="text-danger"></span>
-   </div>
-
-  
-   <div class = "form-group"   >
-        <input type="text"  id="total_question_number" name="total_question_number" placeholder="Total Number"  class="form-control form_data" />
-        <span id="total_question_number_error" class="text-danger"></span>  
-    </div>
-           
-
-    <div class = "form-group"   >
-        <input type="text"  id="correct_number" name="correct_number" placeholder="Correct Number"  class="form-control form_data" />
-        <span id="correctanswer_error" class="text-danger"></span>  
-    </div>
-            
-    <div class = "form-group"   >
-        <input type="text"  id="incorrect_number" name="incorrect_number" placeholder="Incorrect Number"  class="form-control form_data" />
-        <span id="incorrect_number_error" class="text-danger"></span>  
-    </div>
-        
-
-    <div class = "form-group"   >
-        <input type="text"  id="skip_number" name="skip_number" placeholder="Skip Number"  class="form-control form_data" />
-        <span id="skip_number_error" class="text-danger"></span>  
-    </div>
-
-    <div class = "form-group"   >
-        <input type="text"  id="save_specific_time" name="save_specific_time" placeholder="save_specific_time"  class="form-control form_data" />
-        <span id="save_specific_time_error" class="text-danger"></span>  
-    </div>
-
-
-    <div class = "form-group"   >
-        <input type="text"  id="testsavenumber" name="testsavenumber" placeholder="Result Number"  class="form-control form_data" />
-        <span id="testsavenumber_error" class="text-danger"></span>  
-    </div>
-           
-
-    <div class = "form-group"   >
-        <input type="text"  id="correct_percentage" name="correct_percentage" placeholder="Correct Percentage"  class="form-control form_data" />
-        <span id="correct_percentager_error" class="text-danger"></span>  
-    </div>
-
-    </div>
-
-   <div class="card-footer">
-       <!--  <button type="button" name="submit" id="submit" class="btn btn-primary" onclick="save_data(); return false;">Save</button>-->
-                      <td><input type="submit" id="submit" name="submit"/></td> 
-
-     </div>
-         
- </div>
- <div id="result_msg" ></div>
-</form>
-<!-- kết thúc send form -->	
-         
          
 
         <script>
@@ -1867,47 +1882,6 @@ if ($result->num_rows > 0) {
 let submitTest = false;
 let pre_id_test_ = `<?php echo esc_html($custom_number); ?>`;
 //console.log(`preid: ${pre_id_test_}`);
-
-
-// function save data qua ajax
-jQuery('#frmContactUs').submit(function(event) {
-event.preventDefault(); // Prevent the default form submission
-
- var link = "<?php echo admin_url("admin-ajax.php"); ?>";
-
- var form = jQuery('#frmContactUs').serialize();
- var formData = new FormData();
- formData.append('action', 'contact_us');
- formData.append('contact_us', form);
-
- jQuery.ajax({
-     url: link,
-     data: formData,
-     processData: false,
-     contentType: false,
-     type: 'post',
-     success: function(result) {
-         jQuery('#submit').attr('disabled', false);
-         if (result.success == true) {
-             jQuery('#frmContactUs')[0].reset();
-         }
-         jQuery('#result_msg').html('<span class="' + result.success + '">' + result.data + '</span>');
-     }
- });
-});
-
-         //end
-
-
-document.addEventListener("DOMContentLoaded", function () {
-    document.addEventListener("submitForm", function () {
-        setTimeout(function () {
-            let form = document.getElementById("frmContactUs");
-            form.submit(); // This should work now that there's no conflict
-        }, 2000); 
-    });
-});
-//end new adding
 
 var modal = document.getElementById("questionModal");
   var closeBtn = document.querySelector(".close-modal-2");
@@ -2364,16 +2338,6 @@ function isLastQuestionOfCategory(index) {
     return true;
 }
 
-// Hàm kiểm tra xem câu hỏi có phải là cuối cùng của question_category không
-function isLastQuestionOfCategory(index) {
-    const currentCategory = quizData.questions[index].question_category;
-    for (let i = index + 1; i < quizData.questions.length; i++) {
-        if (quizData.questions[i].question_category === currentCategory) {
-            return false;
-        }
-    }
-    return true;
-}
 
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -2445,21 +2409,6 @@ function ChangeQuestion(questionNumber)
     }
         currentQuestionIndex = questionNumber-1;
     }
-
-// Button functions for testing
-function blue_highlight(spanId) {
-    document.getElementById(spanId).style.backgroundColor = '#00CED1';
-}
-
-function green_highlight(spanId) {
-    document.getElementById(spanId).style.backgroundColor = '#90EE90';
-}
-function yellow_highlight(spanId) {
-    document.getElementById(spanId).style.backgroundColor = 'yellow';
-}
-function purple_highlight(spanId) {
-    document.getElementById(spanId).style.backgroundColor = '#FFB6C1';
-}
 
 
     
@@ -2836,6 +2785,9 @@ contentQuestions += `
         <div id="submit-review-content"></div>
     </div>
 </div>
+
+
+
 `;
 
 for (let i = 0; i < quizData.questions.length; i++) {
@@ -3318,6 +3270,52 @@ function closeModal() {
     const modal = document.getElementById("questionModalProgress");
     modal.style.display = "none";
 }
+let breakCountdown = 600; // 10 minutes in seconds
+let breakInterval;
+
+function startBreakTimer() {
+    // Ẩn review page, hiện break page
+    document.getElementById("review-page").style.display = "none";
+    document.getElementById("break-page").style.display = "block";
+    document.getElementById("quiz-container").style.display = "none";
+    document.getElementById("time-remaining-container").style.display = "none";
+
+    // Cập nhật ngay lần đầu
+    updateBreakDisplay();
+
+    // Bắt đầu countdown
+    breakInterval = setInterval(() => {
+        breakCountdown--;
+        updateBreakDisplay();
+
+        if (breakCountdown <= 0) {
+            clearInterval(breakInterval);
+            proceedToNextModuleAfterBreak();
+        }
+    }, 1000);
+
+    // Sự kiện skip
+    document.getElementById("skip-break").onclick = () => {
+        clearInterval(breakInterval);
+        proceedToNextModuleAfterBreak();
+    };
+}
+
+function updateBreakDisplay() {
+    const minutes = Math.floor(breakCountdown / 60);
+    const seconds = breakCountdown % 60;
+    document.getElementById("break_timer").textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+}
+
+function proceedToNextModuleAfterBreak() {
+    document.getElementById("break-page").style.display = "none";
+    document.getElementById("quiz-container").style.display = "block";
+    document.getElementById("time-remaining-container").style.display = "flex";
+
+    switchToNextModule(); // Chuyển sang Section 1: Math
+}
+
+
 function showReviewPage() {
     let quizSections = document.querySelectorAll(".quiz-section");
     let reviewPage = document.querySelectorAll(".review-page");
@@ -3357,10 +3355,13 @@ function showReviewPage() {
             <button class="close-review" onclick="closeReviewPage()" style="padding: 10px 20px; font-size: 16px;">Close Review</button>
         </div>
     `;
-
     if (nextModule) {
-        document.getElementById("switch-module-button").onclick = () => switchToNextModule(nextModule);
-    } else {
+        if (nextModule === "Section 1: Math" && currentModule === "Section 2: Reading And Writing") {
+            document.getElementById("switch-module-button").onclick = () => startBreakTimer();
+        } else {
+            document.getElementById("switch-module-button").onclick = () => switchToNextModule(nextModule);
+        }
+    }else {
         document.getElementById("submit-test-button").onclick = PreSubmit;
     }
 }
@@ -3542,12 +3543,12 @@ echo'
 <script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/submit_answer_9.js"></script>
 <!--<script type="module" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/check_dev_tool.js"></script>
     -->
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/highlight_text_4.js"></script>
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/highlight_text_5.js"></script>
 <script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/fullscreen.js"></script>
 <script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/format-time-3.js"></script>
 <script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/draft-popup.js"></script>
 <script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/start-digital-sat-Test-7.js"></script>
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/checkboxAndRemember.js"></script>
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/checkboxAndRemember_3.js"></script>
 
 <script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/reload-test.js"></script>
 <script type ="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/change-mode.js"></script> 

@@ -113,7 +113,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 define('AUTOMATIC_UPDATER_DISABLED', true);
 define('WP_AUTO_UPDATE_CORE', false);
-
+define('JWT_AUTH_SECRET_KEY', 'U%Vx|9HrsPwWA+X=z>qa{gu}>bF@c]3?0[nJDpehIJ-++ba_7`[;l8_@=35Pdvr,'); // Thay bằng một chuỗi bí mật mạnh
+define('JWT_AUTH_CORS_ENABLE', true);
 
 
 

@@ -13,7 +13,8 @@ $testname = wp_kses_post($_POST['testname']);
 $answer = wp_unslash(wp_kses_post($_POST['answer']));
 $time = wp_kses_post($_POST['time']);
 $number_question = wp_kses_post($_POST['number_question']);
-$testcode = wp_unslash(wp_kses_post($_POST['testcode']));
+$testcode = wp_unslash($_POST['testcode']);
+
 $token_need = wp_unslash($_POST['token_need']);
 $role_access = wp_unslash($_POST['role_access']);
 $time_allow = wp_unslash($_POST['time_allow']);

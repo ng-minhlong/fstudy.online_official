@@ -1,5 +1,4 @@
-
-<?php
+<?php 
 function get_streak(WP_REST_Request $request) {
     global $wpdb;
 

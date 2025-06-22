@@ -1032,7 +1032,7 @@ async function submitAnswerAndGenerateLink() {
     try {
         // Đảm bảo các hàm này chạy xong trước khi hiển thị thông báo
         await filterAnswerForEachType();
-       // await ResultInput();
+     
         
         // Chỉ hiển thị thông báo sau khi mọi thứ đã hoàn thành
         Swal.fire({

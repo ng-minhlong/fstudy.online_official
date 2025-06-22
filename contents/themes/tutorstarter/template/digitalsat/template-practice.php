@@ -404,8 +404,18 @@ $new_skip_ans = 0;
 
         // Loop through all question IDs in the questions array
         foreach ($questions as $question_id) {
-            // Query for each question to get detailed data
-            $sql_question = "SELECT explanation, id_question, type_question, question_content, answer_1, answer_2, answer_3, answer_4, correct_answer, image_link FROM digital_sat_question_bank_verbal WHERE id_question = ?";
+            // Determine which table to query based on question ID prefix
+            $is_verbal = (strpos($question_id, "verbal") === 0);
+            $is_math = (strpos($question_id, "math") === 0);
+            
+            if ($is_verbal) {
+                $sql_question = "SELECT explanation, id_question, type_question, question_content, answer_1, answer_2, answer_3, answer_4, correct_answer, image_link FROM digital_sat_question_bank_verbal WHERE id_question = ?";
+            } elseif ($is_math) {
+                $sql_question = "SELECT explanation, id_question, type_question, question_content, answer_1, answer_2, answer_3, answer_4, correct_answer, image_link FROM digital_sat_question_bank_math WHERE id_question = ?";
+            } else {
+                continue; // Skip if question doesn't match either prefix
+            }
+
             $stmt_question = $conn->prepare($sql_question);
             $stmt_question->bind_param("s", $question_id);
             $stmt_question->execute();
@@ -445,29 +455,23 @@ $new_skip_ans = 0;
                     $user_answer = trim($user_answer);
                 }
 
-
-          
                 // Determine if the answer is correct or incorrect
-                if ($user_answer  == ""){
+                if ($user_answer == "") {
                     $result_status = "Not answered";
                     $color_class = 'grey-text';
                     $new_skip_ans++;
                     $incorrectOrSkippedQuestions[] = $question_data['id_question']; // Add to PHP array
-
-                }
-                else if ($user_answer == $correct_answer_text){
-                    $result_status = 'Correct' ;
-                    $color_class =  'green-text' ;
+                } else if ($user_answer == $correct_answer_text) {
+                    $result_status = 'Correct';
+                    $color_class = 'green-text';
                     $new_correct_ans++;
-                }
-                else
-                {
+                } else {
                     $result_status = 'Incorrect';
-                    $color_class =  'red-text';
+                    $color_class = 'red-text';
                     $new_incorrrect_ans++;
                     $incorrectOrSkippedQuestions[] = $question_data['id_question']; // Add to PHP array
-
                 }
+
                 $time_spent = 'N/A';
                 foreach ($time_data as $time_entry) {
                     if ($time_entry['question'] == $question_number) {
@@ -475,13 +479,9 @@ $new_skip_ans = 0;
                         break;
                     }
                 }
-                // Display each answer in the table
-              
-
+                
                 $question_number++;
             }
-
-            
         }
 
         if (empty($incorrectOrSkippedQuestions)) {
@@ -525,6 +525,7 @@ $new_skip_ans = 0;
 
             foreach ($incorrectOrSkippedQuestions as $question_redo_id){
                 if (strpos($question_redo_id, "verbal") === 0) {
+                    error_log("Verbal block chạy");
                     // Query only from digital_sat_question_bank_verbal table
                     $sql_question_redo =
                         "SELECT id_question, type_question, question_content, answer_1, answer_2, answer_3, answer_4, correct_answer, explanation, image_link, category FROM digital_sat_question_bank_verbal WHERE id_question = ?";
@@ -545,12 +546,17 @@ $new_skip_ans = 0;
                         echo "'type': " .
                             json_encode($question_data_redo["type_question"]) .
                             ",";
-                        echo "'question': " .
-                            json_encode($question_data_redo["question_content"]) .
+                        echo "\"question\": " . json_encode($question_data_redo["question_content"]) . ",";
+
+                        if (!empty($question_data_redo["image_link"])) {
+                        $custom_image_path = "/fstudy/contents/themes/tutorstarter/template/media_img_intest/digital_sat/" . $question_data_redo["id_question"] . ".png";
+                            echo "'image': " . json_encode($custom_image_path) . ",";
+                        } else {
+                            echo "'image': " . json_encode(""),
                             ",";
-                        echo "'image': " .
-                            json_encode($question_data_redo["image_link"]) .
-                            ",";
+                        }
+
+
                         echo "'question_category': " . json_encode($question_category_map[$question_data_redo["id_question"]] ?? 'Practice Test') . ",";
                         echo "'id_question': " .
                             json_encode($question_data_redo["id_question"]) .
@@ -558,37 +564,14 @@ $new_skip_ans = 0;
                         echo "'category': " .
                             json_encode($question_data_redo["category"]) .
                             ",";
-
-                        echo "'answer': [";
-                        echo "['" .
-                            $question_data_redo["answer_1"] .
-                            "', '" .
-                            ($question_data_redo["correct_answer"] == "answer_1"
-                                ? "true"
-                                : "false") .
-                            "'],";
-                        echo "['" .
-                            $question_data_redo["answer_2"] .
-                            "', '" .
-                            ($question_data_redo["correct_answer"] == "answer_2"
-                                ? "true"
-                                : "false") .
-                            "'],";
-                        echo "['" .
-                            $question_data_redo["answer_3"] .
-                            "', '" .
-                            ($question_data_redo["correct_answer"] == "answer_3"
-                                ? "true"
-                                : "false") .
-                            "'],";
-                        echo "['" .
-                            $question_data_redo["answer_4"] .
-                            "', '" .
-                            ($question_data_redo["correct_answer"] == "answer_4"
-                                ? "true"
-                                : "false") .
-                            "']";
+                        echo "\"answer\": [";
+                        echo json_encode([$question_data_redo["answer_1"], $question_data_redo["correct_answer"] == "answer_1" ? "true" : "false"]) . ",";
+                        echo json_encode([$question_data_redo["answer_2"], $question_data_redo["correct_answer"] == "answer_2" ? "true" : "false"]) . ",";
+                        echo json_encode([$question_data_redo["answer_3"], $question_data_redo["correct_answer"] == "answer_3" ? "true" : "false"]) . ",";
+                        echo json_encode([$question_data_redo["answer_4"], $question_data_redo["correct_answer"] == "answer_4" ? "true" : "false"]);
                         echo "],";
+
+
                         echo "'explanation': " .
                             json_encode($question_data_redo["explanation"]) .
                             ",";
@@ -596,85 +579,69 @@ $new_skip_ans = 0;
                         echo "'related_lectures': ''";
                         echo "}";
                     }
-                    else if (strpos($question_id, "math") === 0) {
+                }
+                    elseif (strpos($question_redo_id, "math") === 0) {
+                        error_log("Math block chạy");
                         // Query only from digital_sat_question_bank_verbal table
-                        $sql_question =
-                            "SELECT id_question, type_question, question_content, answer_1, answer_2, answer_3, answer_4, correct_answer, explanation, image_link FROM digital_sat_question_bank_math WHERE id_question = ?";
-                        $stmt_question = $conn->prepare($sql_question);
-                        $stmt_question->bind_param("s", $question_id);
-                        $stmt_question->execute();
-                        $result_question = $stmt_question->get_result();
+                        $sql_question_redo =
+                            "SELECT id_question, type_question, question_content, answer_1, answer_2, answer_3, answer_4, correct_answer,category, explanation, image_link FROM digital_sat_question_bank_math WHERE id_question = ?";
+                         $stmt_question_redo = $conn->prepare($sql_question_redo);
+                        $stmt_question_redo->bind_param("s", $question_redo_id);
+                        $stmt_question_redo->execute();
+                        $result_question_redo = $stmt_question_redo->get_result();
         
-                        if ($result_question->num_rows > 0) {
-                            $question_data = $result_question->fetch_assoc();
+                        if ($result_question_redo->num_rows > 0) {
+                            $question_data_redo = $result_question_redo->fetch_assoc();
         
                             if (!$first) {
                                 echo ",";
                             }
                             $first = false;
+
         
                             echo "{";
                             echo "'type': " .
-                                json_encode($question_data["type_question"]) .
+                                json_encode($question_data_redo["type_question"]) .
                                 ",";
                             echo "'question': " .
-                                json_encode($question_data["question_content"]) .
+                                json_encode($question_data_redo["question_content"]) .
                                 ",";
-                            /*echo "'image': " .
-                                json_encode($question_data["image_link"]) .
-                                ",";
-                                */
-                            echo "'image': '',";
                             
-                            echo "'question_category': '',";
+                            if (!empty($question_data_redo["image_link"])) {
+                                $custom_image_path = "/fstudy/contents/themes/tutorstarter/template/media_img_intest/digital_sat/" . $question_data_redo["id_question"] . ".png";
+                                echo "'image': " . json_encode($custom_image_path) . ",";
+                            } else {
+                                echo "'image': " . json_encode(""),
+                                ",";
+                            }
+                                
+                            
+                            echo "'question_category': " . json_encode($question_category_map[$question_data_redo["id_question"]] ?? 'Practice Test') . ",";
                             echo "'id_question': " .
-                                json_encode($question_data["id_question"]) .
+                                json_encode($question_data_redo["id_question"]) .
                                 ",";
-                            /*echo "'category': " .
-                                json_encode($question_data["category"]) .
+                            echo "'category': " .
+                                json_encode($question_data_redo["category"]) .
                                 ",";
-                                */
+                                
         
         
-                            echo "'answer': [";
-                            echo "['" .
-                                $question_data["answer_1"] .
-                                "', '" .
-                                ($question_data["correct_answer"] == "answer_1"
-                                    ? "true"
-                                    : "false") .
-                                "'],";
-                            echo "['" .
-                                $question_data["answer_2"] .
-                                "', '" .
-                                ($question_data["correct_answer"] == "answer_2"
-                                    ? "true"
-                                    : "false") .
-                                "'],";
-                            echo "['" .
-                                $question_data["answer_3"] .
-                                "', '" .
-                                ($question_data["correct_answer"] == "answer_3"
-                                    ? "true"
-                                    : "false") .
-                                "'],";
-                            echo "['" .
-                                $question_data["answer_4"] .
-                                "', '" .
-                                ($question_data["correct_answer"] == "answer_4"
-                                    ? "true"
-                                    : "false") .
-                                "']";
+                            echo "\"answer\": [";
+                            echo json_encode([$question_data_redo["answer_1"], $question_data_redo["correct_answer"] == "answer_1" ? "true" : "false"]) . ",";
+                            echo json_encode([$question_data_redo["answer_2"], $question_data_redo["correct_answer"] == "answer_2" ? "true" : "false"]) . ",";
+                            echo json_encode([$question_data_redo["answer_3"], $question_data_redo["correct_answer"] == "answer_3" ? "true" : "false"]) . ",";
+                            echo json_encode([$question_data_redo["answer_4"], $question_data_redo["correct_answer"] == "answer_4" ? "true" : "false"]);
                             echo "],";
+
                             echo "'explanation': " .
-                                json_encode($question_data["explanation"]) .
+                                json_encode($question_data_redo["explanation"]) .
                                 ",";
                             echo "'section': '',";
                             echo "'related_lectures': ''";
                             echo "}";
                         }
                     }
-                }
+                
             }
             // Close the questions array and the main object
             echo "]};";
@@ -1870,8 +1837,8 @@ for (let i = 1; i <= quizData.questions.length; i++)
 {
     demsocau ++
 }
-//console.log("Hiện tại đang có", demsocau, "/",quizData.number_questions,"câu được khởi tạo" );
-    
+console.log("Hiện tại đang có", demsocau, "/",quizData.number_questions,"câu được khởi tạo" );
+console.log(quizData)
 
         let logoname = "";
        // console.log("Logo tên:" ,logoname)

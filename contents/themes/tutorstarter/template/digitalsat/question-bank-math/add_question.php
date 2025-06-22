@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $answer_2 = wp_unslash($_POST['answer_2']);
     $answer_3 = wp_unslash($_POST['answer_3']);
     $answer_4 = wp_unslash($_POST['answer_4']);
+    $category = wp_unslash($_POST['category']);
 
     if ($_POST['type_question'] === 'completion') {
         $correct_answer = $_POST['custom_correct_answer'];
@@ -36,7 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'answer_4' => $answer_4,
         'correct_answer' => $correct_answer,
         'explanation' => $explanation,
-        'image_link' => $image_link
+        'image_link' => $image_link,
+        'category' => $category,
     );
 
     

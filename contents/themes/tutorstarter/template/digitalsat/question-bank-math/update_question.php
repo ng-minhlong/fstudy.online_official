@@ -25,6 +25,7 @@ if ($_POST['type_question'] === 'completion') {
 }
 
 $explanation = wp_unslash($_POST['explanation']);
+$category = wp_unslash($_POST['category']);
 $image_link = wp_unslash($_POST['image_link']);
 
 // Prepare the data for updating
@@ -38,6 +39,7 @@ $data = array(
     'answer_4' => $answer_4,
     'correct_answer' => $correct_answer,
     'explanation' => $explanation,
+    'category' => $category,
     'image_link' => $image_link,
 );
 

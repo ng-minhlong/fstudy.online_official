@@ -61,8 +61,18 @@ $stmt->execute();
 $result = $stmt->get_result();
 $site_url = get_site_url();
 
+// Khởi tạo các biến counter nếu chưa có
+$new_correct_ans = 0;
+$new_incorrrect_ans = 0;
+$new_skip_ans = 0;
 
+// Khởi tạo biến questions từ dữ liệu
+$questions = isset($data['question_choose']) ? explode(",", $data['question_choose']) : [];
+$questions = array_map(function($id) {
+    return str_replace(' ', '', trim($id));
+}, $questions);
 
+$total_questions = count($questions);
 if ($result->num_rows > 0) {
     $data = $result->fetch_assoc();  
 
@@ -469,9 +479,9 @@ $new_skip_ans = 0;
                                 </div>
                                 <br>
                                 <div class="result-stats-item">
-                                   <i class="fa-solid fa-chart-simple" style="color: #63E6BE;"></i>
+                                    <i class="fa-solid fa-chart-simple" style="color: #63E6BE;"></i>
                                     <span class="result-stats-label">Độ chính xác (#đúng/#tổng)</span>
-                                    <span class="result-stats-text">'. esc_html($result->resulttest) .'</span>
+                                    <span class="result-stats-text">'. esc_html($result->correct_percentage) .'</span>
                                 </div>
                                 <br>
                                 <div class="result-stats-item">
@@ -518,7 +528,7 @@ $new_skip_ans = 0;
                                     <div class="result-score-box">
                                         <div class="result-score-icon text-score"><i class="fa-solid fa-flag fa-lg" style="color: #74C0FC;"></i></div>
                                         <div class="result-score-icontext text-score">Điểm</div>
-                                        <div class="result-score-text text-score">'. esc_html($result->resulttest) .'</div>
+                                        <div class="result-score-text text-score">'. esc_html(json_decode($result->resulttest)->result) .'</div>
                                         <div class="result-score-sub"><span>Overall</span></div>
 
                                     </div>
@@ -540,189 +550,391 @@ $new_skip_ans = 0;
 
 
 
-        if ($review) {
-            echo '<p>Type Test: ' . esc_html($review->test_type) . '</p>';
-            echo '<p>Resource: ' . esc_html($review->book) . '</p>';
-        } else {
-            echo '<p>Type Test: N/A</p>';
-            echo '<p>Resource: N/A</p>';
-        }
-
-        echo'
-        <div style="display: flex; justify-content: space-around;">
-            <div style="width: 45%;">
-                <canvas id="domainRadarChart"></canvas>
-            </div>
-            <div style="width: 45%;">
-                <div style="margin-bottom: 10px;">
-                    <label class="switch">
-                        <input type="checkbox" id="togglePerformance">
-                        <span class="slider round"></span>
-                    </label>
-                    <span id="toggleLabel">Domain Performance</span>
-                </div>
-                <canvas id="performanceChart"></canvas>
+      
+        ?>
+        <!-- Dynamic Questions Overview Section -->
+        <div id="dynamic-overview" style="margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 5px;">
+            <div id="overview-content">
+                <h4>All Questions Overview</h4>
+                <p>Total: <span class="total-count"><?php echo $total_questions; ?></span></p>
+                <p>Correct: <span class="correct-count"><?php echo $new_correct_ans; ?></span></p>
+                <p>Incorrect: <span class="incorrect-count"><?php echo $new_incorrrect_ans + $new_skip_ans; ?></span></p>
             </div>
         </div>
-        
 
-        ';
-        
-        // Start the table for answers
-        echo '<table border="1">';
-echo '<tr>
-    <th>Question</th>
-    <th>ID Question</th>
-    <th>User Answer</th>
-    <th>Correct Answer</th>
-    <th>Result</th>
-    <th>Domain</th>
-    <th>Time (seconds)</th>
-    <th>Action</th>
-</tr>';
+        <div class="tab-buttons" style="margin-bottom: 20px;">
+            <button class="tab-button active" onclick="filterQuestions('all')">All Questions</button>
+            <button class="tab-button" onclick="filterQuestions('verbal')">Reading and Writing</button>
+            <button class="tab-button" onclick="filterQuestions('math')">Math</button>
+        </div>
 
-// Split the user answers based on the string format
-$user_answer_string = $result->useranswer;
-$answers_array = preg_split('/Question /', $user_answer_string);
-array_shift($answers_array); // Remove first empty element if present
+        <!-- Knowledge and Skill section (initially hidden) -->
+        <div id="knowledge-skill-section" style="display: none; margin-bottom: 20px;">
+            <h3>Knowledge and Skill</h3>
+            <div id="domain-stats"></div>
+        </div>
+        <table border="1" id="questions-table">
+            <tr>
+                <th>Question</th>
+                <th>ID Question</th>
+                <th>Module</th>
+                <th>User Answer</th>
+                <th>Correct Answer</th>
+                <th>Result</th>
+                <th>Domain</th>
+                <th>Time (seconds)</th>
+                <th>Action</th>
+            </tr>
 
-// Counter for question numbering
-$question_number = 1;
-
-$questions = explode(",", $data['question_choose']);
-// Normalize question IDs to handle spaces
-$questions = array_map(function($id) {
-    return str_replace(' ', '', trim($id));
-}, $questions);
-
-$results_by_domain = [
-    'Standard English Conventions' => ['correct' => 0, 'incorrect' => 0, 'not_answered' => 0],
-    'Information and Ideas' => ['correct' => 0, 'incorrect' => 0, 'not_answered' => 0],
-    'Craft and Structure' => ['correct' => 0, 'incorrect' => 0, 'not_answered' => 0],
-    'Expression of Ideas' => ['correct' => 0, 'incorrect' => 0, 'not_answered' => 0]
-];
-
-$results_by_category = [];
-$graph_data = []; // Array to store data for the graph
-$user_answers_json = json_decode($result->useranswer, true);
-
-// Loop through all question IDs in the questions array
-foreach ($questions as $question_id) {
-    if (strpos($question_id, "verbal") === 0) {
-        $sql_question = "SELECT explanation, id_question, type_question, question_content, answer_1, answer_2, answer_3, answer_4, correct_answer, image_link, category FROM digital_sat_question_bank_verbal WHERE id_question = ?";
-        $stmt_question = $conn->prepare($sql_question);
-        $stmt_question->bind_param("s", $question_id);
-        $stmt_question->execute();
-        $result_question = $stmt_question->get_result();
-    }
-    else if (strpos($question_id, "math") === 0) {
-        $sql_question = "SELECT explanation, id_question, type_question, question_content, answer_1, answer_2, answer_3, answer_4, correct_answer, image_link, category FROM digital_sat_question_bank_math WHERE id_question = ?";
-        $stmt_question = $conn->prepare($sql_question);
-        $stmt_question->bind_param("s", $question_id);
-        $stmt_question->execute();
-        $result_question = $stmt_question->get_result();
-    }
-
-    if ($result_question->num_rows > 0) {
-        $question_data = $result_question->fetch_assoc();
-        $domain = '';
-        if (in_array($question_data['category'], ['Boundaries', 'Form, Structure and Sense'])) {
-            $domain = 'Standard English Conventions';
-        } else if (in_array($question_data['category'], ['Central ideas and detail', 'Command of Evidence', 'Inferences'])) {
-            $domain = 'Information and Ideas';
-        } else if (in_array($question_data['category'], ['Cross Text Connections', 'Text Structure and Purpose', 'Words in context'])) {
-            $domain = 'Craft and Structure';
-        } else if (in_array($question_data['category'], ['Rhetorical Analysis', 'Transition'])) {
-            $domain = 'Expression of Ideas';
-        }
-
-        if ($question_data['type_question'] == 'multiple-choice') {
-            $correct_answer_text = '';
-            switch ($question_data['correct_answer']) {
-                case 'answer_1': $correct_answer_text = 'A'; break;
-                case 'answer_2': $correct_answer_text = 'B'; break;
-                case 'answer_3': $correct_answer_text = 'C'; break;
-                case 'answer_4': $correct_answer_text = 'D'; break;
-            }
-        }
-        else if ($question_data['type_question'] == 'completion') {
-            $correct_answer_text = $question_data['correct_answer'];              
-        }
-
-        // User's answer for the current question
-        $question_key = "Question " . $question_number;
-        $user_answer = isset($user_answers_json[$question_key]['user_answer']) ? trim($user_answers_json[$question_key]['user_answer']) : '';
-
-
-        // Determine if the answer is correct or incorrect
-        if ($user_answer == "") {
-            $result_status = "not_answered";
-            $result_check = "Not Answer";
-            $color_class = 'grey-text';
-            $new_skip_ans++;
-            $point_color = 'gray';
-        }
-        else if ($user_answer == $correct_answer_text) {
-            $result_status = "correct";
-            $result_check = "Correct";
-            $color_class = 'green-text';
-            $new_correct_ans++;
-            $point_color = 'green';
-        }
-        else {
-            $result_status = "incorrect";
-            $result_check = "Incorrect";
-            $color_class = 'red-text';
-            $new_incorrrect_ans++;
-            $point_color = 'red';
-        }
-
-        if ($domain) {
-            $results_by_domain[$domain][$result_status]++;
-        }
-
-        $category = $question_data['category'];
-        if (!isset($results_by_category[$category])) {
-            $results_by_category[$category] = ['correct' => 0, 'incorrect' => 0, 'not_answered' => 0];
-        }
-        $results_by_category[$category][$result_status]++;
-
-        $time_spent = 'N/A';
-        foreach ($time_data as $time_entry) {
-            if ($time_entry['question'] == $question_number) {
-                $time_spent = $time_entry['time'];
-                break;
-            }
-        }
-
-        // Store data for the graph
-        $graph_data[] = [
-            'question_number' => $question_number,
-            'time_spent' => ($time_spent !== 'N/A') ? $time_spent : 0,
-            'color' => $point_color,
-            'result' => $result_check
+        <?php
+        // Initialize counters for domain statistics
+        $domain_stats = [
+            'verbal' => [
+                'Standard English Conventions' => ['correct' => 0, 'incorrect' => 0, 'not_answered' => 0],
+                'Information and Ideas' => ['correct' => 0, 'incorrect' => 0, 'not_answered' => 0],
+                'Craft and Structure' => ['correct' => 0, 'incorrect' => 0, 'not_answered' => 0],
+                'Expression of Ideas' => ['correct' => 0, 'incorrect' => 0, 'not_answered' => 0]
+            ],
+            'math' => [
+                'Algebra' => ['correct' => 0, 'incorrect' => 0, 'not_answered' => 0],
+                'Advanced Math' => ['correct' => 0, 'incorrect' => 0, 'not_answered' => 0],
+                'Problem-Solving and Data Analysis' => ['correct' => 0, 'incorrect' => 0, 'not_answered' => 0],
+                'Geometry and Trigonometry' => ['correct' => 0, 'incorrect' => 0, 'not_answered' => 0]
+            ]
         ];
 
-        // Display each answer in the table
-        echo '<tr>';
-        echo '<td>Question ' . $question_number . '</td>';
-        echo '<td>'. $question_data['id_question']. '</td>'; 
-        echo '<td>' . esc_html($user_answer) . '</td>';
-        echo '<td>' . $correct_answer_text . '</td>';
-        echo '<td class="' . $color_class . '">' . $result_check . '</td>';
-        echo '<td>'. $question_data['category']. '</td>'; 
-        echo '<td>' . esc_html($time_spent) . '</td>';
+        // Split the user answers based on the string format
+        $user_answer_string = $result->useranswer;
+        $answers_array = preg_split('/Question /', $user_answer_string);
+        array_shift($answers_array); // Remove first empty element if present
 
-        $explanation = isset($question_data['explanation']) ? htmlspecialchars($question_data['explanation'], ENT_QUOTES, 'UTF-8') : 'Explanation not available';
-        echo '<td><a onclick="openDetailExplanation(\'' . esc_js($question_number) . '\', \'' . esc_js($question_data['id_question']) . '\', \'' . esc_js(trim(json_encode($question_data['question_content']), '"')) . '\', \'' . esc_js($question_data['image_link']) . '\', \'' . esc_js(trim(json_encode($question_data['answer_1']), '"')) . '\', \'' . esc_js(trim(json_encode($question_data['answer_2']), '"')) . '\', \'' . esc_js(trim(json_encode($question_data['answer_3']), '"')) . '\', \'' . esc_js(trim(json_encode($question_data['answer_4']), '"')) . '\', \'' . esc_js(trim(json_encode($correct_answer_text), '"')) . '\', \'' . esc_js($user_answer) . '\', `' . htmlspecialchars($question_data['explanation'], ENT_QUOTES, 'UTF-8') . '`)" id="quick-view-' . $question_data['id_question'] . '">Review</a></td>';
+        // Counter for question numbering
+        $question_number = 1;
+
+        $questions = explode(",", $data['question_choose']);
+        // Normalize question IDs to handle spaces
+        $questions = array_map(function($id) {
+            return str_replace(' ', '', trim($id));
+        }, $questions);
+
+        $results_by_category = [];
+        $graph_data = []; // Array to store data for the graph
+        $user_answers_json = json_decode($result->useranswer, true);
+
+        // Loop through all question IDs in the questions array
+        foreach ($questions as $question_id) {
+            if (strpos($question_id, "verbal") === 0) {
+                $sql_question = "SELECT explanation, id_question, type_question, question_content, answer_1, answer_2, answer_3, answer_4, correct_answer, image_link, category FROM digital_sat_question_bank_verbal WHERE id_question = ?";
+                $stmt_question = $conn->prepare($sql_question);
+                $stmt_question->bind_param("s", $question_id);
+                $stmt_question->execute();
+                $result_question = $stmt_question->get_result();
+            }
+            else if (strpos($question_id, "math") === 0) {
+                $sql_question = "SELECT explanation, id_question, type_question, question_content, answer_1, answer_2, answer_3, answer_4, correct_answer, image_link, category FROM digital_sat_question_bank_math WHERE id_question = ?";
+                $stmt_question = $conn->prepare($sql_question);
+                $stmt_question->bind_param("s", $question_id);
+                $stmt_question->execute();
+                $result_question = $stmt_question->get_result();
+            }
+
+            if ($result_question->num_rows > 0) {
+                $question_data = $result_question->fetch_assoc();
+                $domain = '';
+                $module_type = strpos($question_id, "verbal") === 0 ? 'verbal' : 'math';
+                
+                if ($module_type === 'verbal') {
+                    if (in_array($question_data['category'], ['Boundaries', 'Form, Structure and Sense'])) {
+                        $domain = 'Standard English Conventions';
+                    } else if (in_array($question_data['category'], ['Central ideas and detail', 'Command of Evidence', 'Inferences'])) {
+                        $domain = 'Information and Ideas';
+                    } else if (in_array($question_data['category'], ['Cross Text Connections', 'Text Structure and Purpose', 'Words in context'])) {
+                        $domain = 'Craft and Structure';
+                    } else if (in_array($question_data['category'], ['Rhetorical Analysis', 'Transition'])) {
+                        $domain = 'Expression of Ideas';
+                    }
+                } else {
+                    // Math domains
+                    $domain = $question_data['category']; // Assuming math categories match domain names
+                }
+
+                if ($question_data['type_question'] == 'multiple-choice') {
+                    $correct_answer_text = '';
+                    switch ($question_data['correct_answer']) {
+                        case 'answer_1': $correct_answer_text = 'A'; break;
+                        case 'answer_2': $correct_answer_text = 'B'; break;
+                        case 'answer_3': $correct_answer_text = 'C'; break;
+                        case 'answer_4': $correct_answer_text = 'D'; break;
+                    }
+                }
+                else if ($question_data['type_question'] == 'completion') {
+                    $correct_answer_text = $question_data['correct_answer'];              
+                }
+
+                // User's answer for the current question
+                $question_key = "Question " . $question_number;
+                $user_answer = isset($user_answers_json[$question_key]['user_answer']) ? trim($user_answers_json[$question_key]['user_answer']) : '';
+
+                $module = isset($user_answers_json[$question_key]['module']) ? trim($user_answers_json[$question_key]['module']) : '';
+                
+                // Determine if the answer is correct or incorrect
+                if ($user_answer == "") {
+                    $result_status = "not_answered";
+                    $result_check = "Not Answer";
+                    $color_class = 'grey-text';
+                    $new_skip_ans++;
+                    $point_color = 'gray';
+                }
+                else if ($user_answer == $correct_answer_text) {
+                    $result_status = "correct";
+                    $result_check = "Correct";
+                    $color_class = 'green-text';
+                    $new_correct_ans++;
+                    $point_color = 'green';
+                }
+                else {
+                    $result_status = "incorrect";
+                    $result_check = "Incorrect";
+                    $color_class = 'red-text';
+                    $new_incorrrect_ans++;
+                    $point_color = 'red';
+                }
+
+                // Update domain stats
+                if ($domain && isset($domain_stats[$module_type][$domain])) {
+                    $domain_stats[$module_type][$domain][$result_status]++;
+                }
+
+                $category = $question_data['category'];
+                if (!isset($results_by_category[$category])) {
+                    $results_by_category[$category] = ['correct' => 0, 'incorrect' => 0, 'not_answered' => 0];
+                }
+                $results_by_category[$category][$result_status]++;
+
+                $time_spent = 'N/A';
+                foreach ($time_data as $time_entry) {
+                    if ($time_entry['question'] == $question_number) {
+                        $time_spent = $time_entry['time'];
+                        break;
+                    }
+                }
+
+                // Store data for the graph
+                $graph_data[] = [
+                    'question_number' => $question_number,
+                    'time_spent' => ($time_spent !== 'N/A') ? $time_spent : 0,
+                    'color' => $point_color,
+                    'result' => $result_check
+                ];
+
+                // Display each answer in the table with data attributes for filtering
+                echo '<tr data-module="' . $module_type . '" data-domain="' . htmlspecialchars($domain) . '">';
+                echo '<td>Question ' . $question_number . '</td>';
+                echo '<td>'. $question_data['id_question']. '</td>'; 
+                echo '<td>' . esc_html($module) . '</td>';
+                echo '<td>' . esc_html($user_answer) . '</td>';
+                echo '<td>' . $correct_answer_text . '</td>';
+                echo '<td class="' . $color_class . '">' . $result_check . '</td>';
+                echo '<td>'. $question_data['category']. '</td>'; 
+                echo '<td>' . esc_html($time_spent) . '</td>';
+
+                $explanation = isset($question_data['explanation']) ? htmlspecialchars($question_data['explanation'], ENT_QUOTES, 'UTF-8') : 'Explanation not available';
+                echo '<td><a onclick="openDetailExplanation(\'' . esc_js($question_number) . '\', \'' . esc_js($question_data['id_question']) . '\', \'' . esc_js(trim(json_encode($question_data['question_content']), '"')) . '\', \'' . esc_js($question_data['image_link']) . '\', \'' . esc_js(trim(json_encode($question_data['answer_1']), '"')) . '\', \'' . esc_js(trim(json_encode($question_data['answer_2']), '"')) . '\', \'' . esc_js(trim(json_encode($question_data['answer_3']), '"')) . '\', \'' . esc_js(trim(json_encode($question_data['answer_4']), '"')) . '\', \'' . esc_js(trim(json_encode($correct_answer_text), '"')) . '\', \'' . esc_js($user_answer) . '\', `' . htmlspecialchars($question_data['explanation'], ENT_QUOTES, 'UTF-8') . '`)" id="quick-view-' . $question_data['id_question'] . '">Review</a></td>';
+                
+                echo '</tr>';
+
+                $question_number++;
+            }
+        }
+    ?>
+    </table>
+<script>
+    // Store domain stats in JavaScript for display
+    const domainStats = <?php echo json_encode($domain_stats); ?>;
+    function filterQuestions(type) {
+        // Update active tab
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
         
-        echo '</tr>';
-
-        $question_number++;
+        // Update overview title and stats
+        const overviewContent = document.getElementById('overview-content');
+        let totalCount = 0;
+        let correctCount = 0;
+        let incorrectCount = 0;
+        let skipCount = 0;
+        
+        const rows = document.querySelectorAll('#questions-table tr[data-module]');
+        rows.forEach(row => {
+            const rowModule = row.getAttribute('data-module');
+            const resultCell = row.querySelector('td:nth-child(6)');
+            const result = resultCell ? resultCell.textContent : '';
+            
+            if (type === 'all' || rowModule === type) {
+                totalCount++;
+                if (result === 'Correct') correctCount++;
+                if (result === 'Incorrect') incorrectCount++;
+                if (result === 'Not Answer') skipCount++;
+            }
+        });
+        
+        // Set overview content based on selected tab
+        if (type === 'all') {
+            overviewContent.innerHTML = `
+                <h4>All Questions Overview</h4>
+                <p>Total: <span class="total-count">${totalCount}</span></p>
+                <p>Correct: <span class="correct-count">${correctCount}</span></p>
+                <p>Incorrect: <span class="incorrect-count">${incorrectCount + skipCount}</span></p>
+            `;
+        } else if (type === 'verbal') {
+            overviewContent.innerHTML = `
+                <h4>Reading and Writing Overview</h4>
+                <p>Total: <span class="total-count">${totalCount}</span></p>
+                <p>Correct: <span class="correct-count">${correctCount}</span></p>
+                <p>Incorrect: <span class="incorrect-count">${incorrectCount + skipCount}</span></p>
+            `;
+        } else if (type === 'math') {
+            overviewContent.innerHTML = `
+                <h4>Math Overview</h4>
+                <p>Total: <span class="total-count">${totalCount}</span></p>
+                <p>Correct: <span class="correct-count">${correctCount}</span></p>
+                <p>Incorrect: <span class="incorrect-count">${incorrectCount + skipCount}</span></p>
+            `;
+        }
+        
+        // Show/hide Knowledge and Skill section
+        document.getElementById('knowledge-skill-section').style.display = type === 'all' ? 'none' : 'block';
+        
+        // Filter table rows
+        rows.forEach(row => {
+            const rowModule = row.getAttribute('data-module');
+            row.style.display = type === 'all' || rowModule === type ? '' : 'none';
+        });
+        
+        // Update domain stats display if not 'all'
+        if (type !== 'all') {
+            updateDomainStats(type);
+        }
     }
+
+    function updateDomainStats(type) {
+        let html = '<table border="1" style="width:100%;"><tr><th>Domain</th><th>Correct</th><th>Incorrect</th><th>Not Answered</th><th>Total</th></tr>';
+        
+        let totalCorrect = 0;
+        let totalIncorrect = 0;
+        let totalNotAnswered = 0;
+        
+        for (const [domain, stats] of Object.entries(domainStats[type])) {
+            const domainTotal = stats.correct + stats.incorrect + stats.not_answered;
+            html += `
+                <tr>
+                    <td>${domain}</td>
+                    <td>${stats.correct}</td>
+                    <td>${stats.incorrect}</td>
+                    <td>${stats.not_answered}</td>
+                    <td>${domainTotal}</td>
+                </tr>
+            `;
+            
+            totalCorrect += stats.correct;
+            totalIncorrect += stats.incorrect;
+            totalNotAnswered += stats.not_answered;
+        }
+        
+        // Add totals row
+        html += `<tr style="font-weight:bold;">
+            <td>Total</td>
+            <td>${totalCorrect}</td>
+            <td>${totalIncorrect}</td>
+            <td>${totalNotAnswered}</td>
+            <td>${totalCorrect + totalIncorrect + totalNotAnswered}</td>
+        </tr>`;
+        
+        html += '</table>';
+        document.getElementById('domain-stats').innerHTML = html;
+    }
+</script>
+
+<style>
+    #dynamic-overview {
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-echo '</table>';
+#overview-content h4 {
+    margin-top: 0;
+    color: #2c3e50;
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 5px;
+    display: inline-block;
+}
+
+#overview-content p {
+    margin: 8px 0;
+    font-size: 15px;
+}
+
+#overview-content .total-count {
+    font-weight: bold;
+    color: #3498db;
+}
+
+#overview-content .correct-count {
+    font-weight: bold;
+    color: #2ecc71;
+}
+
+#overview-content .incorrect-count {
+    font-weight: bold;
+    color: #e74c3c;
+}
+    .tab-button {
+        padding: 10px 20px;
+        margin-right: 10px;
+        background-color: #f1f1f1;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+    .tab-button:hover {
+        background-color: #ddd;
+    }
+    
+    .tab-button.active {
+        background-color: #4CAF50;
+        color: white;
+    }
+    
+    .green-text { color: green; }
+    .red-text { color: red; }
+    .grey-text { color: grey; }
+    
+    #knowledge-skill-section table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    
+    #knowledge-skill-section th, #knowledge-skill-section td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    
+    #knowledge-skill-section th {
+        background-color: #f2f2f2;
+    }
+    
+    #knowledge-skill-section tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+</style>
+
+<?php
 
 // Calculate average time
 $total_time = 0;
@@ -844,50 +1056,8 @@ echo '
     });
 </script>
 ';
-echo "<script> console.log('Results by Domain:', " . json_encode($results_by_domain, JSON_PRETTY_PRINT) . ");\n </script>";
-echo "<script> console.log('Results by Category:', " . json_encode($results_by_category, JSON_PRETTY_PRINT) . ");\n </script>";
-
-
         
-        // Lọc các domain có tổng số câu hỏi > 0
-        $filtered_results_by_domain = array_filter($results_by_domain, function($domain) {
-            return ($domain['correct'] + $domain['incorrect'] + $domain['not_answered']) > 0;
-        });
-
-        // Lọc các category có tổng số câu hỏi > 0
-        $filtered_results_by_category = array_filter($results_by_category, function($category) {
-            return ($category['correct'] + $category['incorrect'] + $category['not_answered']) > 0;
-        });
-
-        // Chuyển dữ liệu sang JavaScript
-        echo "<script>";
-        echo "const filteredResultsByDomain = " . json_encode($results_by_domain) . ";";
-        echo "const filteredResultsByCategory = " . json_encode($filtered_results_by_category) . ";";
-        echo "</script>";
-        $domainPercentages = [];
-        $domainAnswered = [];
-        foreach ($results_by_domain as $domain => $results) {
-            $total = $results['correct'] + $results['incorrect'] + $results['not_answered'];
-            $percentage = ($total > 0) ? ($results['correct'] / $total) * 100 : 0;
-            $domainPercentages[$domain] = $percentage;
-            $domainAnswered[$domain] = ($total > 0);
-        }
-
-        // Tính tỷ lệ phần trăm số câu đúng cho mỗi category
-        $categoryPercentages = [];
-        $categoryAnswered = [];
-        foreach ($results_by_category as $category => $results) {
-            $total = $results['correct'] + $results['incorrect'] + $results['not_answered'];
-            $percentage = ($total > 0) ? ($results['correct'] / $total) * 100 : 0;
-            $categoryPercentages[$category] = $percentage;
-            $categoryAnswered[$category] = ($total > 0);
-        }
-
-        echo "<script>";
-        echo "const domainPercentages = " . json_encode($domainPercentages) . ";";
-        echo "const domainAnswered = " . json_encode($domainAnswered) . ";";
-        echo "const categoryPercentages = " . json_encode($categoryPercentages) . ";";
-        echo "const categoryAnswered = " . json_encode($categoryAnswered) . ";";        echo "</script>";
+       
 
 
         remove_filter("the_content", "wptexturize");
@@ -1075,131 +1245,6 @@ function createRadarChart(canvasId, data, title) {
         }
     });
 }
-
-// Tạo biểu đồ radar cho Domain
-createRadarChart('domainRadarChart', filteredResultsByDomain, 'Results by Domain');
-
-// Tạo biểu đồ radar cho Category
-// Tạo biểu đồ cột ngang
-function createHorizontalBarChart(canvasId, data, answered, title) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
-    const labels = Object.keys(data);
-    const percentages = Object.values(data);
-
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Percentage Correct',
-                data: percentages,
-                backgroundColor: labels.map(label => answered[label] ? 'rgba(75, 192, 192, 0.6)' : 'rgba(201, 203, 207, 0.6)'),
-                borderColor: labels.map(label => answered[label] ? 'rgba(75, 192, 192, 1)' : 'rgba(201, 203, 207, 1)'),
-                borderWidth: 1
-            }]
-        },
-        options: {
-            indexAxis: 'y', // Hiển thị cột ngang
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: title
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.raw}% Correct`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    max: 100, // Giới hạn trục x từ 0 đến 100
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-}
-// Biến để lưu trữ đối tượng biểu đồ
-let performanceChart = null;
-
-// Hàm tạo biểu đồ cột ngang
-function createHorizontalBarChart(canvasId, data, answered, title) {
-    const ctx = document.getElementById(canvasId).getContext('2d');
-    const labels = Object.keys(data);
-    const percentages = Object.values(data);
-
-    // Hủy biểu đồ cũ nếu tồn tại
-    if (performanceChart) {
-        performanceChart.destroy();
-    }
-
-    // Tạo biểu đồ mới
-    performanceChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Percentage Correct',
-                data: percentages,
-                backgroundColor: labels.map(label => answered[label] ? 'rgba(75, 192, 192, 0.6)' : 'rgba(201, 203, 207, 0.6)'),
-                borderColor: labels.map(label => answered[label] ? 'rgba(75, 192, 192, 1)' : 'rgba(201, 203, 207, 1)'),
-                borderWidth: 1
-            }]
-        },
-        options: {
-            indexAxis: 'y', // Hiển thị cột ngang
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: title
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.raw}% Correct`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    max: 100, // Giới hạn trục x từ 0 đến 100
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-}
-
-// Hàm khởi tạo biểu đồ ban đầu
-function initializeChart() {
-    const isDomain = !document.getElementById('togglePerformance').checked; // Mặc định là Domain Performance
-    const data = isDomain ? domainPercentages : categoryPercentages;
-    const answered = isDomain ? domainAnswered : categoryAnswered;
-    const title = isDomain ? 'Domain Performance' : 'Category Performance';
-    createHorizontalBarChart('performanceChart', data, answered, title);
-}
-
-// Xử lý sự kiện toggle
-document.getElementById('togglePerformance').addEventListener('change', function() {
-    const toggleLabel = document.getElementById('toggleLabel');
-    toggleLabel.textContent = this.checked ? 'Category Performance' : 'Domain Performance';
-    initializeChart();
-});
-
-// Khởi tạo biểu đồ khi trang được tải
-document.addEventListener('DOMContentLoaded', function() {
-    // Đặt toggle mặc định là Domain Performance
-    document.getElementById('togglePerformance').checked = false;
-    document.getElementById('toggleLabel').textContent = 'Domain Performance';
-    initializeChart();
-});
-
 
 
 

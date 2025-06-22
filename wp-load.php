@@ -69,7 +69,7 @@ if ( file_exists( ABSPATH . 'wp-config.php' ) ) {
 	// Standardize $_SERVER variables across setups.
 	wp_fix_server_vars();
 
-	define( 'WP_CONTENT_DIR', ABSPATH . 'wp-content' );
+	define( 'WP_CONTENT_DIR', ABSPATH . 'contents' );
 	require_once ABSPATH . WPINC . '/functions.php';
 
 	$path = wp_guess_url() . '/wp-admin/setup-config.php';

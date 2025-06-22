@@ -322,6 +322,10 @@ if ( tutor_utils()->get_option( 'enable_profile_completion' ) ) {
 	width:100px !important;
 }
 </style>
+<script>
+    const getStreakNonce = '<?php echo wp_create_nonce('wp_rest'); ?>';
+</script>
+
 <!--<div class="tutor-fs-5 tutor-fw-medium tutor-color-black tutor-text-capitalize tutor-mb-24 tutor-dashboard-title"><?php esc_html_e( 'Dashboard', 'tutor' ); ?></div>-->
 <div class="flex min-h-screen">
     <!-- Sidebar -->
@@ -668,9 +672,15 @@ async function claimStreak() {
     }
 }
 
+
 async function loadStreak() {
     try {
-        const res = await fetch(`<?php echo $siteurl ?>/api/v1/get-streak?user_id=${user_id}`);
+        const res = await fetch(`<?php echo $siteurl ?>/api/v1/get-streak?user_id=${user_id}`, {
+            method: 'GET',
+            headers: {
+                'X-WP-Nonce': getStreakNonce
+            }
+        });
         const data = await res.json();
         document.getElementById('streak-count').innerText = `Số streak hiện tại: ${data.streak_count}`;
     } catch (err) {

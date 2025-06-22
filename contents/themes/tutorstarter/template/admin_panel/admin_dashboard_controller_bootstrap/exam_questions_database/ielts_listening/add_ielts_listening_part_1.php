@@ -90,6 +90,9 @@ $result = $conn->query($sql);
             padding: 10px;
             text-align: left;
         }
+        .modal-content{
+            width: 900px !important;
+        }
        
     </style>
 

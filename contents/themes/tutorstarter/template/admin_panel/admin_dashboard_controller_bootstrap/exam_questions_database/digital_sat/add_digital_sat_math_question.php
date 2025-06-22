@@ -55,7 +55,7 @@ $result = $conn->query($sql);
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
-
+<link rel="stylesheet" href="http://localhost/fstudy/contents/themes/tutorstarter/assets/dist/css/mathMode.css" />
 
     <!-- Custom fonts for this template-->
     <link href="../../vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
@@ -233,13 +233,27 @@ if (window.MathJax) {
         <button type="submit" class="btn btn-primary">Filter</button>
         <a href="?" class="btn btn-secondary">Clear Filter</a>
     </form>
+
+     <div class="d-flex mb-3">
+        <select id="bulk-category" class="form-select me-2" style="width: 250px;">
+            <option value="">Chọn loại để cập nhật</option>
+          
+
+            <option value="Algebra">Algebra</option>
+            <option value="Advanced Math">Advanced Math</option>
+            <option value="Problem-Solving and Data Analysis">Problem-Solving and Data Analysis</option>
+            <option value="Geometry and Trigonometry">Geometry and Trigonometry</option>
+
+        </select>
+        <button class="btn btn-warning" onclick="bulkUpdateCategory()">Cập nhật loại</button>
+    </div>
     <button id="open-popup">Xem ghi chú các câu/ các loại</button>
 
 <!-- Display the data from the database -->
 <table class="table table-bordered">
     <tr>
+        <th><input type="checkbox" id="select-all"></th> <!-- Chọn tất cả -->
         <th>STT</th>
-        
         <th>ID Question</th>
         <th>Type</th>
         <th>Question</th>
@@ -250,6 +264,8 @@ if (window.MathJax) {
         <th>Correct Answer</th>
         <th>Explanation</th>
         <th>Image Link (if have)</th>
+        <th>Category</th>
+        <th>Action</th>
     </tr>
     
 
@@ -258,11 +274,25 @@ if (window.MathJax) {
 
         if ($result->num_rows > 0) {
             while($row = $result->fetch_assoc()) {
-                 // Process "Sample" and "Important Add" columns
-                 $question_content_words = explode(' ', $row['question_content']);
-                 $question_content_display = count($question_content_words) > 20 ? implode(' ', array_slice($question_content_words, 0, 20)) . '...' : $row['question_content'];
-                 $question_content_view_more = count($question_content_words) > 20 ? "<button class='btn btn-link' onclick='showFullContent(\"Question Content\", \"{$row['question_content']}\")'>View More</button>" : '';
- 
+                
+                 // 1. Remove tags for word count safely
+                $plain_text = strip_tags($row['question_content']);
+                $question_content_words = explode(' ', $plain_text);
+
+                // 2. Truncate and escape preview
+                $question_content_display = count($question_content_words) > 20 
+                    ? implode(' ', array_slice($question_content_words, 0, 20)) . '...' 
+                    : $plain_text;
+
+                // 3. Encode the full HTML content for JS onclick
+                $question_content_sanitized = htmlspecialchars(json_encode($row['question_content'], JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8');
+
+                // 4. Add button
+                $question_content_view_more = count($question_content_words) > 20 
+                    ? "<button class='btn btn-link' onclick='showFullContent(\"Question Content\", $question_content_sanitized)'>View More</button>" 
+                    : '';
+
+
                  $explanation_words = explode(' ', $row['explanation']);
                  $explanation_display = count($explanation_words) > 20 ? implode(' ', array_slice($explanation_words, 0, 20)) . '...' : $row['explanation'];
                  $explanation_view_more = count($explanation_words) > 20 ? "<button class='btn btn-link' onclick='showFullContent(\"Explanation Add\", \"{$row['explanation']}\")'>View More</button>" : '';
@@ -279,6 +309,7 @@ if (window.MathJax) {
 
 
                 echo "<tr id='row_{$row['number']}'>
+                        <td><input type='checkbox' class='select-question' value='{$row['id_question']}'></td>
                         <td>{$stt}</td> <!-- Display the STT here -->
 
                         <td>{$row['id_question']}</td>
@@ -291,6 +322,7 @@ if (window.MathJax) {
                         <td>{$row['correct_answer']}</td>
                         <td>{$explanation_display} $explanation_view_more</td>
                         <td>{$image_link_display} $image_link_view_more</td>
+                        <td>{$row['category']}</td>
                         <td>
                             <button class='btn btn-primary btn-sm' onclick='openEditModal({$row['number']})'>Edit</button>
                             <button class='btn btn-danger btn-sm' onclick='deleteRecord({$row['number']})'>Delete</button>
@@ -413,6 +445,15 @@ if (window.MathJax) {
                     </div>
                     Explanation: <textarea id="edit_explanation" name="explanation" class="form-control" required></textarea><br>
                     Image Link: <input type="text" id="edit_image_link" name="image_link" class="form-control"></input><br>
+                    Phân loại câu hỏi:
+                    <select id="edit_category" name="category" class="form-control" required>
+                        <option value=""></option>
+                        <option value="Algebra">Algebra</option>
+                        <option value="Advanced Math">Advanced Math</option>
+                        <option value="Problem-Solving and Data Analysis">Problem-Solving and Data Analysis</option>
+                        <option value="Geometry and Trigonometry">Geometry and Trigonometry</option>
+
+                    </select><br>
                 </form>
             </div>
             <div class="modal-footer">
@@ -468,6 +509,16 @@ if (window.MathJax) {
                     </div>
                     Explanation: <textarea id="add_explanation" name="explanation" class="form-control" required></textarea><br>
                     Image Link: <input type="text" id="add_image_link" name="image_link" class="form-control"></input><br>
+                    Phân loại câu hỏi:
+                    <select id="add_category" name="category" class="form-control" required>
+                        <option value=""></option>
+                        <option value="Algebra">Algebra</option>
+                        <option value="Advanced Math">Advanced Math</option>
+                        <option value="Problem-Solving and Data Analysis">Problem-Solving and Data Analysis</option>
+                        <option value="Geometry and Trigonometry">Geometry and Trigonometry</option>
+                        
+
+                    </select><br>
                 </form>
 
             </div>
@@ -581,7 +632,7 @@ function openEditModal(number) {
             }
             $('#edit_explanation').val(data.explanation);
             $('#edit_image_link').val(data.image_link);
-            
+            $('#edit_category').val(data.category);
             // Call the toggle function to set correct answer visibility
             toggleCorrectAnswerInput(data.type_question);
             
@@ -711,6 +762,45 @@ function showFullContent(title, content) {
 
     // Show the modal
     $('#viewMoreModal').modal('show');
+}
+
+// Chọn tất cả checkbox
+$('#select-all').on('click', function() {
+    $('.select-question').prop('checked', this.checked);
+});
+
+function bulkUpdateCategory() {
+    const selectedCategory = $('#bulk-category').val();
+    if (!selectedCategory) {
+        alert('Vui lòng chọn loại cần cập nhật.');
+        return;
+    }
+
+    const selectedIds = $('.select-question:checked').map(function() {
+        return this.value;
+    }).get();
+
+    if (selectedIds.length === 0) {
+        alert('Vui lòng chọn ít nhất một câu hỏi.');
+        return;
+    }
+
+    // Gửi AJAX
+    $.ajax({
+        url: '<?php echo get_site_url(); ?>/contents/themes/tutorstarter/template/digitalsat/question-bank-math/bulk_update_category.php',
+        type: 'POST',
+        data: {
+            ids: selectedIds,
+            category: selectedCategory
+        },
+        success: function(response) {
+            alert(response);
+            location.reload(); // Cập nhật lại giao diện
+        },
+        error: function(xhr) {
+            alert("Có lỗi xảy ra.");
+        }
+    });
 }
 
 

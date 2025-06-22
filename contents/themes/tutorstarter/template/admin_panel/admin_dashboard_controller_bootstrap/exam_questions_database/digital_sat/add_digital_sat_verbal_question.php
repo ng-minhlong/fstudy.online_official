@@ -26,7 +26,7 @@ if ($conn->connect_error) {
 $id_question_filter = isset($_GET['id_question_filter']) ? $_GET['id_question_filter'] : '';
 
 // Pagination logic
-$limit = 20; // Number of records per page
+$limit = 50; // Number of records per page
 $page = isset($_GET['page']) ? $_GET['page'] : 1; // Current page number
 $offset = ($page - 1) * $limit; // Calculate offset
 
@@ -237,12 +237,34 @@ $result = $conn->query($sql);
         <button type="submit" class="btn btn-primary">Filter</button>
         <a href="?" class="btn btn-secondary">Clear Filter</a>
     </form>
+    <div class="d-flex mb-3">
+        <select id="bulk-category" class="form-select me-2" style="width: 250px;">
+            <option value="">Chọn loại để cập nhật</option>
+          
+
+            <option value="Boundaries">Boundaries</option>
+            <option value="Central ideas and detail">Central ideas and detail</option>
+            <option value="Form, Structure and Sense">Form, Structure and Sense</option>
+            <option value="Inferences">Inferences</option>
+            <option value="Cross Text Connections">Cross Text Connections</option>
+            <option value="Words in context">Words in context</option>
+            <option value="Text Structure and Purpose">Text Structure and Purpose</option>
+            <option value="Transition">Transition</option>
+            <option value="Rhetorical Analysis">Rhetorical Analysis</option>
+            <option value="Command of Evidence">Command of Evidence</option>
+
+
+        </select>
+        <button class="btn btn-warning" onclick="bulkUpdateCategory()">Cập nhật loại</button>
+    </div>
+
 
     <button id="open-popup">Xem ghi chú các câu/ các loại</button>
 
 <!-- Display the data from the database -->
 <table class="table table-bordered">
     <tr>
+        <th><input type="checkbox" id="select-all"></th> <!-- Chọn tất cả -->
         <th>STT</th>
         
         <th>ID Question</th>
@@ -287,6 +309,7 @@ $result = $conn->query($sql);
 
 
                 echo "<tr id='row_{$row['number']}'>
+                        <td><input type='checkbox' class='select-question' value='{$row['id_question']}'></td>
                         <td>{$stt}</td> <!-- Display the STT here -->
 
                         <td>{$row['id_question']}</td>
@@ -692,6 +715,44 @@ function showFullContent(title, content) {
     $('#viewMoreModal').modal('show');
 }
 
+// Chọn tất cả checkbox
+$('#select-all').on('click', function() {
+    $('.select-question').prop('checked', this.checked);
+});
+
+function bulkUpdateCategory() {
+    const selectedCategory = $('#bulk-category').val();
+    if (!selectedCategory) {
+        alert('Vui lòng chọn loại cần cập nhật.');
+        return;
+    }
+
+    const selectedIds = $('.select-question:checked').map(function() {
+        return this.value;
+    }).get();
+
+    if (selectedIds.length === 0) {
+        alert('Vui lòng chọn ít nhất một câu hỏi.');
+        return;
+    }
+
+    // Gửi AJAX
+    $.ajax({
+        url: '<?php echo get_site_url(); ?>/contents/themes/tutorstarter/template/digitalsat/question-bank-verbal/bulk_update_category.php',
+        type: 'POST',
+        data: {
+            ids: selectedIds,
+            category: selectedCategory
+        },
+        success: function(response) {
+            alert(response);
+            location.reload(); // Cập nhật lại giao diện
+        },
+        error: function(xhr) {
+            alert("Có lỗi xảy ra.");
+        }
+    });
+}
 
 </script>
 

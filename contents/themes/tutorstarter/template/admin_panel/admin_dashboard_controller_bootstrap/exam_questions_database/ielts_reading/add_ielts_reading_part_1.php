@@ -45,6 +45,8 @@ if ($id_part_filter) {
 }
 $sql .= " LIMIT $limit OFFSET $offset"; // Add pagination limits
 $result = $conn->query($sql);
+$site_url = get_site_url();
+
 ?>
 
 <!DOCTYPE html>
@@ -72,7 +74,7 @@ $result = $conn->query($sql);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/contents/themes/tutorstarter/ielts-reading-tookit/script_database_1.js"></script>
+    <script src="<?php echo $site_url ?>/contents/themes/tutorstarter/ielts-reading-tookit/script_database_1.js"></script>
 
 
     
