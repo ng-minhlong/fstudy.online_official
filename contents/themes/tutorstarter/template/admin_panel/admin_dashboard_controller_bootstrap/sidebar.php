@@ -322,7 +322,12 @@ require_once(__DIR__ . '/../config-custom.php');
         <i class="fas fa-fw fa-chart-area"></i>
         <span>THPTQG</span></a>
 </li>
-
+<!-- Nav Item - Charts -->
+<li class="nav-item">
+    <a class="nav-link" href="<?php echo MAIN_PATH; ?>exam_questions_database/document/add_document.php">
+        <i class="fas fa-fw fa-chart-area"></i>
+        <span>Tài liệu</span></a>
+</li>
 
 
 <!-- Divider -->

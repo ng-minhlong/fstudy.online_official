@@ -411,7 +411,7 @@ if ( tutor_utils()->get_option( 'enable_profile_completion' ) ) {
 				<span class="tutor-round-box tutor-mr-12 tutor-mr-lg-0 tutor-mb-lg-12">
 					<i class="tutor-icon-mortarboard-o" area-hidden="true"></i>
 				</span>	
-				Số khóa học đang hoạt động<?php echo esc_html( $active_course_count ); ?>
+				Số khóa học còn hạn: <?php echo esc_html( $active_course_count ); ?>
 			</div>
             <div>
 				<span class="tutor-round-box tutor-mr-12 tutor-mr-lg-0 tutor-mb-lg-12">

@@ -11,7 +11,6 @@ $post_id = get_the_ID();
 $user_id = get_current_user_id();// Get the custom number field value
 //$custom_number =intval(get_query_var('id_test'));
 //$custom_number = get_post_meta($post_id, '_ieltsreadingtest_custom_number', true);
-// Get the custom number field value
 global $wpdb; // Use global wpdb object to query the DB
 
 // Get testsavenumber from URL
@@ -31,7 +30,6 @@ if (!empty($results)) {
 
 }
 
-echo "<script>console.log('Custom Number doing template: " . esc_js($custom_number) . "');</script>";
 
 // Database credentials (update with your own database details)
   // Database credentials

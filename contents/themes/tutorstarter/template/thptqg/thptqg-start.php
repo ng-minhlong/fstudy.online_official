@@ -89,7 +89,7 @@ if ($result_test->num_rows > 0) {
     $answer = $data['answer']; // Fetch the answer field
     $subject = $data['subject']; // Fetch the subject field
     $year = $data['year']; // Fetch the year field
-    $time = "2"; // Fetch the time field
+    $time = $data['time'];; // Fetch the time field
     $token_need = $data['token_need'];
     $time_allow = $data['time_allow'];
     $permissive_management = $data['permissive_management'];
@@ -179,176 +179,292 @@ $conn->close();
     </head>
     <body>
         <style type="text/css">
-         
+    .answer {
+        background: #FEFCF2;
+        padding: 10px;
+        border-radius: 10px;
+        margin-top: 10px;
+    }
 
-            .answer {
-                background: #FEFCF2;
-                padding: 10px;
-                border-radius: 10px;
-                margin-top: 10px;
-            }
+    .question img {
+        max-width: 100%!important;
+        height: auto;
+    }
 
-            .question img {
-                max-width: 100%!important;
-                height: auto;
-            }
+    #main-answer .ask img, #main-answer .answer img {
+        max-height: 20px;
+    }
 
-            #main-answer .ask img, #main-answer .answer img {
-                max-height: 20px;
-            }
+    img[data-filename], img[width], img[height], img[alt] {
+        max-width: 100%!important;
+        height: auto!important;
+        max-height: unset!important;
+    }
 
-            img[data-filename], img[width], img[height], img[alt] {
-                max-width: 100%!important;
-                height: auto!important;
-                max-height: unset!important;
-            }
+    img {
+        display: inline !important;
+        max-width: none !important; /* Cho phép JS can thiệp width thật */
+        /*max-width: 80px !important;
+        max-height: 30px !important*/
+    }
 
-            img {
-                display: inline !important
-            }
+    .choice-ans div {
+        margin: 5px;
+    }
 
-            .choice-ans div {
-                margin: 5px;
-            }
+    #ans-table .num {
+        font-family: Arial, sans-serif;
+        font-size: 13px;
+        padding: 0!important;
+        border: 1px solid #fff;
+        margin: 0!important;
+        background: #C8E6C9;
+        text-align: center;
+        line-height: 26px;
+        font-weight: bold;
+    }
 
-            #ans-table .num {
-                font-family: Arial, sans-serif;
-                font-size: 13px;
-                padding: 0!important;
-                border: 1px solid #fff;
-                margin: 0!important;
-                background: #C8E6C9;
-                text-align: center;
-                line-height: 26px;
-                font-weight: bold;
-            }
+    .bg-primary {
+        background-color: #0D47A1!important;
+        color: #fff!important;
+    }
 
-            .bg-primary {
-                background-color: #0D47A1!important;
-                color: #fff!important;
-            }
+    .text-primary {
+        color: #1565C0!important;
+    }
 
-            .text-primary {
-                color: #1565C0!important;
-            }
+    @media (max-width: 768px) {
+        .hidden-mb {
+            display: none;
+        }
+    }
 
-            @media (max-width: 768px) {
-                .hidden-mb {
-                    display: none;
-                }
-            }
+    #main-answer {
+        font-family: Arial, sans-serif;
+    }
 
+    .container-content {
+        height: 500px;
+        padding: 20px 0px 10px 0px;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        min-height: 100vh;
+    }
+
+    .sticky {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .header-info {
+        padding: 10px 16px;
+        background: #555;
+        color: #f1f1f1;
+        display: flex;
+        justify-content: space-between; /* đẩy right-header sang trái, left-header sang phải */
+        align-items: center; /* căn giữa theo chiều dọc */
+        flex-wrap: nowrap;
+    }
+
+    .right-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .left-header {
+        display: flex;
+        align-items: center;
+        gap: 10px; /* khoảng cách giữa icon - thời gian - nút */
+    }
+
+    .timer {
+        white-space: nowrap;
+    }
+
+    .content-body {
+        padding-top: 10px;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        flex: 1;
+        min-height: 0; /* Cần thiết để scroll bên trong quiz/sidebar hoạt động */
+    }
+
+    #quiz-container1 {
+        overflow-y: auto;
+        flex: 3;
+        padding-left: 100px;
+        height: 100%;
+    }
+
+    #sidebar1 {
+        flex: 1;
+        padding: 10px;
+        border-left: 2px solid #ccc;
+        height: 100%;
+        overflow-y: auto;
+    }
+
+    .question-wrapper, .context-wrapper {
+        display: none;
+    }
+
+    .active {
+        display: block;
+    }
+
+    .box-answer {
+        cursor: pointer;
+        width: calc(20% - 10px);
+        height: 40px;
+        border: 1px solid black;
+        margin-bottom: 10px;
+        display: inline-block;
+        box-sizing: border-box;
+        padding: 15px;
+    }
+
+    .container-checkbox {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        max-width: 200px;
+        margin-top: 20px;
+    }
+
+    .checkbox-box {
+        width: 40px;
+        height: 40px;
+        border: 2px solid black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .col-md-6 {
+        background-color: white !important;
+        border-radius: 10px !important;
+        border-color: grey !important;
+    }
+
+    .selected-choice {
+        background-color: #d4edda !important;
+        border-color: #28a745 !important;
+    }
+
+    .checkbox-box.answered {
+        background-color: #d4edda;
+        border-color: #28a745;
+        color: #155724;
+    }
+
+    .testname {
+        justify-content: center;
+    }
+</style>
+
+<div class="container-content">
+    <div class="sticky header-info" id="header-info">
+        <div class="right-header">
+            <div id="testname" class="testname">Đề thi: <?php echo $testname ?></div>
+        </div>
+        <div class="left-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                viewBox="0 0 24 24" fill="none" stroke="#ebe8e8"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <div id="timer" class="timer">Thời gian: <?php echo $time ?></div>
+
+            <button id="logButton"
+                style="padding: 10px 20px; background-color: #007bff; color: white; border: none;
+                border-radius: 4px; cursor: pointer; z-index: 1000;">
+                Nộp bài
+            </button>
+        </div>
+    </div>
+
+
+    <div class="content-body">
+        <div class="row" id="quiz-container1">
+            <div id="test">Nội dung bài kiểm tra</div>
+        </div>
+        <div id="sidebar1">
+            <h3>Danh sách câu hỏi</h3>
+            <div id="timer"></div>
             
-            #main-answer {
-                font-family: Arial, sans-serif;
-            }
+            <div id="boxanswers"></div>
+            <div class="container-checkbox" id="container-checkbox"></div>
+        </div>
+    </div>
+</div>
 
-            #sidebar1 {
-                flex: 1;
-                padding: 10px;
-                border-left: 2px solid #ccc;
-                height: 100%;
-                overflow-y: auto;
-            }
-            #quiz-container1 {
-                overflow-y: auto;
-                flex: 3;
-                padding-left: 100px;
-                height: 100%;
-            }
-            .question-wrapper, .context-wrapper {
-                display: none;
-            }
-            .active {
-                display: block;
-            }
-            .box-answer {
-                cursor: pointer;
-                width: calc(20% - 10px);
-                height: 40px;
-                border: 1px solid black;
-                margin-bottom: 10px;
-                display: inline-block;
-                box-sizing: border-box;
-                padding: 15px;
-            }
-            .container-content {
-                height: 500px;
-                padding: 20px 0px 10px 0px;
-                display: flex;
-                flex-direction: row;
-                flex-wrap: wrap;
-                min-height: 100vh;
-            }
-
-            .container-checkbox {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 10px;
-                max-width: 200px;
-                margin-top: 20px;
-            }
-
-            .checkbox-box {
-                width: 40px;
-                height: 40px;
-                border: 2px solid black;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                font-weight: bold;
-                cursor: pointer;
-                user-select: none;
-            }
-            .col-md-6{
-                background-color: white !important;
-                border-radius: 10px  !important;
-                border-color: grey !important;
-            }
-
-            .selected-choice {
-                background-color: #d4edda !important;
-                border-color: #28a745 !important;
-            }
-            .checkbox-box.answered {
-                background-color: #d4edda;
-                border-color: #28a745;
-                color: #155724;
-            }
-        </style>
-    
-   
-            <div class="container-content">
-
-                
-
-                
-                <div class="row" id = "quiz-container1">
-                    <!-- <?php echo $testcode ?> -->
-                    <div id = "test"></div>
-                </div>
-                <div id="sidebar1">
-                    <h3>Answers</h3>
-                    <div id = "timer"></div>
-                    <button id="logButton"
-                        style=" padding: 10px 20px;
-                            background-color: #007bff; color: white; border: none;
-                            border-radius: 4px; cursor: pointer; z-index: 1000;">
-                        Nộp bài
-                    </button>
-                    <div id="boxanswers"></div>
-                    <div class = "container-checkbox" id = "container-checkbox"></div>
-                   
-                </div></div>
-                        
-            </div>
-        
         
        
-    
+    <script>
+
+        document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("img").forEach(function (img) {
+        // Đảm bảo ảnh đã tải xong mới kiểm tra width
+        img.onload = function () {
+            if (img.naturalWidth > 50) {
+                img.style.height = "35px";
+            } else {
+                img.style.height = "20px";
+            }
+        };
+
+        // Trường hợp ảnh đã được load sẵn
+        if (img.complete) {
+            if (img.naturalWidth > 50) {
+                img.style.height = "35px";
+            } else {
+                img.style.height = "20px";
+            }
+        }
+    });
+});
+
+
+(function countdownTimer() {
+    // Lấy số phút từ PHP (giá trị ban đầu)
+    const initialMinutes = <?php echo $time ?>;
+    let timeInSeconds = initialMinutes * 60;
+
+    const timerDisplay = document.getElementById("timer");
+
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    const timerInterval = setInterval(() => {
+        if (timeInSeconds <= 0) {
+            clearInterval(timerInterval);
+            timerDisplay.textContent = "Hết giờ!";
+            alert("Hết giờ! Bài làm sẽ được nộp.");
+            // Gọi hành động nộp bài
+            document.getElementById("logButton").click();
+            return;
+        }
+
+        timerDisplay.textContent = `Thời gian: ${formatTime(timeInSeconds)}`;
+        timeInSeconds--;
+    }, 1000);
+})();
+</script>
+
       <script>
 
-var IMAGE_HOST = 'http://localhost/fstudy/contents/themes/tutorstarter/template/media_img_intest/thptqg/';
+var IMAGE_HOST = `http://localhost/fstudy/contents/themes/tutorstarter/template/media_img_intest/thptqg/${id_test}/`;
 
 function replaceImageHost(content) {
     return content.replace(/\$\{IMAGE_HOST\}/g, IMAGE_HOST);
@@ -364,12 +480,15 @@ let questionIndex = 1;
 for (const partKey in testcode.data) {
     const part = testcode.data[partKey];
     const questions = part.questions;
+    
+    // Khởi tạo part trong userAnswers
+    userAnswers[partKey] = {};
 
     for (const qKey in questions) {
         const q = questions[qKey];
 
-        // Khởi tạo câu trả lời mặc định rỗng
-        userAnswers[qKey] = "";
+        // Khởi tạo câu trả lời mặc định rỗng cho từng câu hỏi trong part
+        userAnswers[partKey][qKey] = "";
 
         // Tạo vùng hiển thị câu hỏi
         const qDiv = document.createElement("div");
@@ -381,9 +500,9 @@ for (const partKey in testcode.data) {
         qDiv.style.scrollMarginTop = "100px";
 
         const qContent = document.createElement("div");
-        qContent.innerHTML = `<b>Câu ${questionIndex}:</b> ${replaceImageHost(q.question_content)}`;
+        const questionContext = q.context || '';
+        qContent.innerHTML = `<div id = "question-context" class = "question-context">${questionContext}</div><div id = "question-details" class = "question-details"><b style = "display:none">Câu ${questionIndex}:</b> ${replaceImageHost(q.question_content)}</div>`;
         qDiv.appendChild(qContent);
-
 
         const answers = q.answer || {};
         const currentIndex = questionIndex; // Capture current index
@@ -402,7 +521,7 @@ for (const partKey in testcode.data) {
                 input.value = key;
 
                 input.addEventListener("change", () => {
-                    userAnswers[qKey] = key;
+                    userAnswers[partKey][qKey] = key;
                     const checkboxEl = document.getElementById(`checkbox-${currentIndex}`);
                     if (checkboxEl) {
                         checkboxEl.style.backgroundColor = "#28a745";
@@ -413,7 +532,6 @@ for (const partKey in testcode.data) {
                 label.insertAdjacentHTML("beforeend", ` ${replaceImageHost(value)}`);
                 qDiv.appendChild(label);
             }
-
         }
 
         // Part 2: true_false
@@ -435,12 +553,12 @@ for (const partKey in testcode.data) {
                     input.value = choice;
 
                     input.addEventListener("change", () => {
-                        if (!userAnswers[qKey]) userAnswers[qKey] = {};
-                        userAnswers[qKey][key] = choice;
+                        if (!userAnswers[partKey][qKey]) userAnswers[partKey][qKey] = {};
+                        userAnswers[partKey][qKey][key] = choice;
 
                         // Kiểm tra nếu đã chọn đủ các đáp án con
                         const totalSubQuestions = Object.keys(answers).length;
-                        const currentAnswers = Object.keys(userAnswers[qKey]).length;
+                        const currentAnswers = Object.keys(userAnswers[partKey][qKey]).length;
 
                         if (currentAnswers === totalSubQuestions) {
                             const checkboxEl = document.getElementById(`checkbox-${currentIndex}`);
@@ -450,14 +568,11 @@ for (const partKey in testcode.data) {
                         }
                     });
 
-                    
-
                     label.appendChild(input);
                     label.append(` ${choice}`);
                     qDiv.appendChild(label);
                 });
             }
-
         }
 
         // Part 3: completion
@@ -468,7 +583,7 @@ for (const partKey in testcode.data) {
             input.style.marginTop = "10px";
 
             input.addEventListener("input", () => {
-                userAnswers[qKey] = input.value.trim();
+                userAnswers[partKey][qKey] = input.value.trim();
                 if (input.value.trim() !== "") {
                     const checkboxEl = document.getElementById(`checkbox-${currentIndex}`);
                     if (checkboxEl) {
@@ -476,7 +591,6 @@ for (const partKey in testcode.data) {
                     }
                 }
             });
-
 
             qDiv.appendChild(input);
         }
@@ -505,17 +619,47 @@ for (const partKey in testcode.data) {
             }
         });
 
-
         checkboxContainer.appendChild(box);
         questionIndex++;
     }
 }
+logButton.addEventListener('click', () => {
+            console.log('--- Tất cả lựa chọn ---');
+            console.log(JSON.stringify(userAnswers, null, 2));
 
-// Nút Nộp bài
-document.getElementById("logButton").addEventListener("click", () => {
-    console.log("Kết quả người dùng:");
-    console.log(JSON.stringify(userAnswers, null, 2));
-});
+            console.log('--- Theo từng phần ---');
+            console.log('PHẦN I (Trắc nghiệm):', JSON.stringify(userAnswers.part1, null, 2));
+            console.log('PHẦN II (Đúng/Sai):', JSON.stringify(userAnswers.part2, null, 2));
+            console.log('PHẦN III (Tự luận):', JSON.stringify(userAnswers.part3, null, 2));
+
+            fetch(`${siteUrl}/api/cham-diem/thptqg/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id_test: id_test, // Thay bằng ID bài test thực tế
+                    testname: <?php echo "'$testname'"?>,
+                    username: <?php echo "'$current_username'"?>, // Thay bằng username thực tế
+                    subject: subject, // Ví dụ: 'Toán', 'Văn', 'Anh'
+                    result_id: <?php echo "'$result_id '"?>,
+                    user_answer: userAnswers
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const result = data.data;
+                    console.log('chấm xong');
+                } else {
+                    alert('Chấm điểm thất bại.');
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi khi gửi dữ liệu:', error);
+                alert('Đã xảy ra lỗi khi gửi yêu cầu.');
+            });
+        });
 </script>
 
         

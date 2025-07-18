@@ -1,0 +1,24 @@
+2025-07-18T15:51:21+00:00 Uncaught TypeError: in_array(): Argument #2 ($haystack) must be of type array, null given in C:\xampp\htdocs\fstudy\contents\themes\tutorstarter\template\search-test-page\search_document.php:134
+Stack trace:
+#0 C:\xampp\htdocs\fstudy\contents\themes\tutorstarter\template\search-test-page\search_document.php(134): in_array('free', NULL)
+#1 C:\xampp\htdocs\fstudy\contents\plugins\insert-headers-and-footers\includes\class-wpcode-snippet-execute.php(419) : eval()'d code(2375): include('C:\\xampp\\htdocs...')
+#2 C:\xampp\htdocs\fstudy\wp-includes\class-wp-hook.php(324): WPCode_Snippet_Execute->{closure}('')
+#3 C:\xampp\htdocs\fstudy\wp-includes\class-wp-hook.php(348): WP_Hook->apply_filters(NULL, Array)
+#4 C:\xampp\htdocs\fstudy\wp-includes\plugin.php(517): WP_Hook->do_action(Array)
+#5 C:\xampp\htdocs\fstudy\wp-includes\template-loader.php(13): do_action('template_redire...')
+#6 C:\xampp\htdocs\fstudy\wp-blog-header.php(19): require_once('C:\\xampp\\htdocs...')
+#7 C:\xampp\htdocs\fstudy\index.php(17): require('C:\\xampp\\htdocs...')
+#8 {main}
+  thrown
+2025-07-18T15:59:27+00:00 Uncaught TypeError: in_array(): Argument #2 ($haystack) must be of type array, null given in C:\xampp\htdocs\fstudy\contents\themes\tutorstarter\template\search-test-page\search_document.php:134
+Stack trace:
+#0 C:\xampp\htdocs\fstudy\contents\themes\tutorstarter\template\search-test-page\search_document.php(134): in_array('free', NULL)
+#1 C:\xampp\htdocs\fstudy\contents\plugins\insert-headers-and-footers\includes\class-wpcode-snippet-execute.php(419) : eval()'d code(2375): include('C:\\xampp\\htdocs...')
+#2 C:\xampp\htdocs\fstudy\wp-includes\class-wp-hook.php(324): WPCode_Snippet_Execute->{closure}('')
+#3 C:\xampp\htdocs\fstudy\wp-includes\class-wp-hook.php(348): WP_Hook->apply_filters(NULL, Array)
+#4 C:\xampp\htdocs\fstudy\wp-includes\plugin.php(517): WP_Hook->do_action(Array)
+#5 C:\xampp\htdocs\fstudy\wp-includes\template-loader.php(13): do_action('template_redire...')
+#6 C:\xampp\htdocs\fstudy\wp-blog-header.php(19): require_once('C:\\xampp\\htdocs...')
+#7 C:\xampp\htdocs\fstudy\index.php(17): require('C:\\xampp\\htdocs...')
+#8 {main}
+  thrown

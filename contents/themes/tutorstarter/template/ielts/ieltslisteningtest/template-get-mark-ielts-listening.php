@@ -17,7 +17,7 @@ $testsavenumber = get_query_var('testsaveieltslistening');
 // Query database to find results by testsavenumber
 $results = $wpdb->get_results(
     $wpdb->prepare(
-        "SELECT * FROM save_user_result_ielts_listening WHERE testsavenumber = %d",
+        "SELECT * FROM save_user_result_ielts_listening WHERE testsavenumber = %s",
         $testsavenumber
     )
 );
@@ -34,7 +34,6 @@ if (!empty($results)) {
 }
 
 
-echo "<script>console.log('Custom Number doing template: " . esc_js($custom_number) . "');</script>";
 
   // Database credentials
   $servername = DB_HOST;
@@ -44,7 +43,7 @@ echo "<script>console.log('Custom Number doing template: " . esc_js($custom_numb
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);
-    $conn->set_charset("utf8mb4");
+$conn->set_charset("utf8mb4");
 
 // Check connection
 if ($conn->connect_error) {
@@ -62,6 +61,7 @@ if ($stmt_test === false) {
 $stmt_test->bind_param("s", $custom_number);
 $stmt_test->execute();
 $result_test = $stmt_test->get_result();
+$site_url = get_site_url();
 
 if ($result_test->num_rows > 0) {
     // Lấy các ID từ question_choose (ví dụ: "1001,2001,3001")
@@ -84,23 +84,23 @@ if ($result_test->num_rows > 0) {
         // Xác định bảng và câu lệnh SQL tương ứng dựa trên index của part
         switch ($index) {
             case 0:
-                $sql_part = "SELECT part, duration, number_question_of_this_part, audio_link, group_question, category 
+                $sql_part = "SELECT part, duration, number_question_of_this_part, group_question,audio_link, category 
                              FROM ielts_listening_part_1_question WHERE id_part = ?";
                 break;
             case 1:
-                $sql_part = "SELECT part, duration, number_question_of_this_part, audio_link, group_question, category 
+                $sql_part = "SELECT part, duration, number_question_of_this_part, group_question,audio_link, category 
                              FROM ielts_listening_part_2_question WHERE id_part = ?";
                 break;
             case 2:
-                $sql_part = "SELECT part, duration, number_question_of_this_part, audio_link, group_question, category 
+                $sql_part = "SELECT part, duration, number_question_of_this_part, group_question,audio_link, category 
                              FROM ielts_listening_part_3_question WHERE id_part = ?";
                 break;
             case 3:
-                $sql_part = "SELECT part, duration, number_question_of_this_part, audio_link, group_question, category 
+                $sql_part = "SELECT part, duration, number_question_of_this_part, group_question,audio_link, category 
                              FROM ielts_listening_part_4_question WHERE id_part = ?";
                 break;
             default:
-                continue 2; // Nếu có nhiều hơn 3 phần, bỏ qua
+                continue 2; 
         }
 
         // Chuẩn bị và thực thi câu lệnh SQL cho từng phần
@@ -118,8 +118,8 @@ if ($result_test->num_rows > 0) {
             $entry = [
                 'part_number' => $row['part'],
                 'audio_link' => $row['audio_link'],
-                'number_question_of_this_part' => $row['number_question_of_this_part'],
-                'duration' => $row['duration'],
+                'number_question_of_this_part' => '10',
+                'duration' => '10',
                 'category' => $row['category'],
                 'group_question' => $row['group_question']
             ];
@@ -324,6 +324,7 @@ if (!empty($results)) {
     
         // Group questions by parts
         $groupedQuestions = [];  // Initialize as an empty array
+        $groupedQuestionsForRemark = []; // Initialize once
         foreach ($questions as $questionData) {
             if (trim($questionData) === '') continue;
     
@@ -350,6 +351,7 @@ if (!empty($results)) {
         echo '<script type="text/javascript">
             // Chuyển dữ liệu PHP thành JSON và gán cho biến JavaScript
             var groupedQuestions = ' . $encodedGroupedQuestions . ';
+           
             </script>';
 
 
@@ -1000,7 +1002,9 @@ input:checked + .slider:before {
  
 
     </body>
-    <script src="/contents/themes/tutorstarter/ielts-listening-toolkit/script_result_3.js"></script>
+    <?php echo'<script src="'. $site_url .'/contents/themes/tutorstarter/ielts-listening-toolkit/script_result_3.js"></script>'?>
+    
+
 <script>
         var ajaxUrl = <?php echo json_encode(admin_url("admin-ajax.php")); ?>;
         const oldCorrectNumber = <?php echo json_encode(esc_html($result->correct_number)); ?>;

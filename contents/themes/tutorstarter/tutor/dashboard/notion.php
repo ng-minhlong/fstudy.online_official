@@ -122,84 +122,21 @@ echo "<script>
     <table class="table" id="notationTable" border="1" cellpadding="10" cellspacing="0">
         <thead>
             <tr>
-                <th>Number</th>
+                <th>STT</th>
                 <th>Thời gian lưu</th>
-<!--                <th>Username</th> -->
-                <th>Word Save</th>
-                <th>Loại từ</th>
+                <!--<th>Username</th> -->
+                <th>Từ được lưu</th>
+                <th>Loại đề</th>
                 <th>Nghĩa - Giải thích</th>
                 
                 <th>ID Test</th>
 
-                <th>Actions</th>
+                <th>Hành động</th>
             </tr>
         </thead>
-        <tbody>
-        <?php if (!empty($notations)) : ?>
-    <?php $rowNumber = 1; ?>
-                    <?php foreach ($notations as $notation) :
-                        $table_notes = json_decode($notation->table_note, true);
-                        
-                        if ($table_notes) :
-                            // Lấy từ gốc (bỏ qua các key số)
-                            if (isset($table_notes['word_save'])) :
-                    ?>
-                        <tr id="row-<?php echo $table_notes['id_note']; ?>">
-                            <td><?php echo $rowNumber++; ?></td>
-                            <td id="save-time-<?php echo $table_notes['id_note']; ?>"><?php echo esc_html($table_notes['save_time']); ?></td>
-
-                            <td id="word-<?php echo $table_notes['id_note']; ?>"><?php echo esc_html($table_notes['word_save']); ?></td>
-                            <td id="test-type-<?php echo $table_notes['id_note']; ?>"><?php echo esc_html($table_notes['test_type']); ?></td>
-                            <td id="meaning-<?php echo $table_notes['id_note']; ?>"><?php echo esc_html($table_notes['meaning_or_explanation']); ?></td>
-
-                            <td><?php echo esc_html($table_notes['id_test']); ?></td>
-                            <!--<td><?php echo esc_html($table_notes['id_note']); ?></td> -->
-
-                            <td>
-                                <button class="button-10" onclick="openEditPopup('row-<?php echo $table_notes['id_note']; ?>')">Sửa</button>
-                                <button class="button-10" onclick="deleteWord('row-<?php echo $note['id_note']; ?>')">Xóa</button>
-                            </td>
-                        </tr>
-
-                    <?php 
-                            endif;
-
-                            // Duyệt các từ con (các key số)
-                            foreach ($table_notes as $key => $note) :
-                                if (!is_array($note) || !isset($note['word_save'])) continue;
-                    ?>
-                                 <tr id="row-<?php echo $note['id_note']; ?>">
-                                        <td><?php echo $rowNumber++; ?></td>
-                                        <td id="save-time-<?php echo $note['id_note']; ?>"><?php echo esc_html($note['save_time']); ?></td>
-
-                                        <td id="word-<?php echo $note['id_note']; ?>"><?php echo esc_html($note['word_save']); ?></td>
-                                        <td id="test-type-<?php echo $note['id_note']; ?>"><?php echo esc_html($note['test_type']); ?></td>
-
-                                        <td id="meaning-<?php echo $note['id_note']; ?>"><?php echo esc_html($note['meaning_or_explanation']); ?></td>
-
-
-
-                                        <td><?php echo esc_html($note['id_test']); ?></td>
-                                        <!-- <td><?php echo esc_html($note['id_note']); ?></td> -->
-
-                                        <td>
-                                            <button class="button-10" onclick="openEditPopup('row-<?php echo $note['id_note']; ?>')">Sửa</button>
-                                            <button class="button-10" onclick="deleteWord('row-<?php echo $note['id_note']; ?>')">Xóa</button>
-
-                                        </td>
-                                    </tr>
-                    <?php 
-                endforeach;
-            endif;
-        ?>
-    <?php endforeach; ?>
-    <?php else : ?>
-        <tr>
-            <td colspan="8">Không có từ nào được lưu.</td>
-        </tr>
-    <?php endif; ?>
-
-</tbody>
+        <tbody id="notation-body">
+            <tr><td colspan="7">Đang tải dữ liệu...</td></tr>
+        </tbody>
 
 
     </table>
@@ -208,7 +145,7 @@ echo "<script>
 <div id="editPopup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#fff; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.1); z-index:1000;">
     <h3>Chỉnh sửa từ đã lưu</h3>
     
-    <label>Save Time:</label>
+    <label>Thời gian lưu:</label>
     <input type="text" id="editSaveTime" readonly style="width: 100%; margin-bottom: 10px; background: #f3f3f3;">
     
     <label>ID Test:</label>
@@ -217,10 +154,10 @@ echo "<script>
     <label>ID Note:</label>
     <input type="text" id="editIdNote" readonly style="width: 100%; margin-bottom: 10px; background: #f3f3f3;">
 
-    <label for="editWord">Word Save:</label>
+    <label for="editWord">Từ được lưu:</label>
     <input type="text" id="editWord" style="width: 100%; margin-bottom: 10px;">
 
-    <label for="editMeaning">Meaning or Explanation:</label>
+    <label for="editMeaning">Nghĩa hoặc Giải thích:</label>
     <textarea id="editMeaning" class="text-area-meaning" style="width: 100%; margin-bottom: 10px;"></textarea>
 
     <div class="controls">
@@ -232,9 +169,9 @@ echo "<script>
 
 <div id="addPopup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#fff; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.1); z-index:1000;">
     <h3>Thêm Từ Mới</h3>
-    <label for="addWord">Word Save:</label>
+    <label for="addWord">Từ được lưu:</label>
     <input type="text" id="addWord" style="width: 100%; margin-bottom: 10px;">
-    <label for="addMeaning">Meaning or Explanation:</label>
+    <label for="addMeaning">Nghĩa hoặc Giải thích:</label>
     <textarea id="addMeaning" class="text-area-meaning" style="width: 100%; margin-bottom: 10px;"></textarea>
     <div class="controls">
         <button class="button-10" onclick="saveNewWord()">Lưu</button>
@@ -284,13 +221,35 @@ const fetchNotations = async (username) => {
 
 // Ví dụ sử dụng hàm fetchNotations
 fetchNotations(username).then(data => {
-    if (data) {
-        // Xử lý dữ liệu nhận được
-        console.log('Fetched notations:', data);
-    } else {
-        console.log('No data found');
+    const tbody = document.getElementById("notation-body");
+    tbody.innerHTML = "";
+
+    if (!data || data.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='7'>Không có từ nào được lưu.</td></tr>";
+        return;
     }
+
+    data.forEach((note, index) => {
+        const row = document.createElement("tr");
+        row.id = `row-${note.number}`;
+
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td id="save-time-${note.number}">${note.created_at || ""}</td>
+            <td id="word-${note.number}">${note.word_save}</td>
+            <td id="test-type-${note.number}">${note.type}</td>
+            <td id="meaning-${note.number}">${note.meaning_and_explanation}</td>
+            <td>${note.idtest}</td>
+            <td>
+                <button class="button-10" onclick="openEditPopup('row-${note.number}')">Sửa</button>
+                <button class="button-10" onclick="deleteWord('row-${note.number}')">Xóa</button>
+            </td>
+        `;
+
+        tbody.appendChild(row);
+    });
 });
+
 
 
 
@@ -349,7 +308,7 @@ function openEditPopup(idNote) {
 
         console.log(`Đã lưu ID Note: ${idNote}, Word Save mới: ${wordSave}, Meaning mới: ${meaningOrExplanation}`);
 
-        const apiUrl = `${siteUrl}/wp-json/api/v1/update-notation/`;
+        const apiUrl = `${siteUrl}/api/v1/update-notation/`;
 
         fetch(apiUrl, {
             method: "POST",
@@ -435,7 +394,6 @@ function openAddPopup() {
 function closeAddPopup() {
     document.getElementById("addPopup").style.display = "none";
 }
-
 function saveNewWord() {
     let wordSave = document.getElementById("addWord").value;
     let meaningOrExplanation = document.getElementById("addMeaning").value;
@@ -445,14 +403,21 @@ function saveNewWord() {
         return;
     }
 
-    let data = new FormData();
-    data.append('action', 'add_notation');
-    data.append('word_save', wordSave);
-    data.append('meaning_or_explanation', meaningOrExplanation);
+    let data = {
+        username: "<?php echo esc_js($username); ?>",  // server inject username
+        user_id: <?php echo esc_js($user_id); ?>,       // server inject user_id
+        word_save: wordSave,
+        meaning_or_explanation: meaningOrExplanation,
+        idtest: "",  
+        type: ""  
+    };
 
-    fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+    fetch(`${siteUrl}/api/v1/add-notation/`, {
         method: 'POST',
-        body: data
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
     })
     .then(response => response.json())
     .then(result => {
@@ -462,21 +427,22 @@ function saveNewWord() {
             newRow.innerHTML = `
                 <td>#</td>
                 <td>${new Date().toISOString().split('T')[0]}</td>
-                <td><?php echo esc_html($username); ?></td>
+                <td>${data.username}</td>
                 <td>${wordSave}</td>
                 <td>${meaningOrExplanation}</td>
+                <td>${data.idtest}</td>
+                <td>${data.type}</td>
                 <td></td>
-                <td></td>
-                <td></td>
-                <td><button class="button-10" onclick="openEditPopup(${result.number})">Sửa</button></td>
+                <td><button class="button-10" onclick="openEditPopup(${result.insert_id})">Sửa</button></td>
             `;
             closeAddPopup();
             alert("Thêm mới thành công!");
         } else {
-            alert("Lỗi khi thêm!");
+            alert(result.message || "Lỗi khi thêm!");
         }
     });
 }
+
 
 
 </script>

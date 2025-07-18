@@ -1186,7 +1186,7 @@ html {
 echo'
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://smtpjs.com/v3/smtp.js"></script>
-    <script src="'. $site_url .'/contents/themes/tutorstarter/ielts-reading-tookit/script_reading_8.js"></script>
+    <script src="'. $site_url .'/contents/themes/tutorstarter/ielts-reading-tookit/script_reading_11.js"></script>
     <script src="'. $site_url .'/contents/themes/tutorstarter/ielts-reading-tookit/highlight-text-1.js"></script>'
     ?>
 

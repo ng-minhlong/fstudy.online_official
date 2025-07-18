@@ -56,11 +56,11 @@ do_action( 'tutor_before_login_form' );
 	<input type="hidden" name="redirect_to" value="<?php echo esc_url( apply_filters( 'tutor_after_login_redirect_url', tutor()->current_url ) ); ?>" />
 
 	<div class="tutor-mb-20">
-		<input type="text" class="tutor-form-control" placeholder="<?php esc_html_e( 'Username or Email Address', 'tutor' ); ?>" name="log" value="" size="20" required/>
+		<input type="text" class="tutor-form-control" placeholder="<?php esc_html_e( 'Tên đăng nhập hoặc Email', 'tutor' ); ?>" name="log" value="" size="20" required/>
 	</div>
 
 	<div class="tutor-mb-32">
-		<input type="password" class="tutor-form-control" placeholder="<?php esc_html_e( 'Password', 'tutor' ); ?>" name="pwd" value="" size="20" required/>
+		<input type="password" class="tutor-form-control" placeholder="<?php esc_html_e( 'Mật khẩu', 'tutor' ); ?>" name="pwd" value="" size="20" required/>
 	</div>
 
 	<div class="tutor-login-error"></div>
@@ -73,17 +73,17 @@ do_action( 'tutor_before_login_form' );
 		<div class="tutor-form-check">
 			<input id="tutor-login-agmnt-1" type="checkbox" class="tutor-form-check-input tutor-bg-black-40" name="rememberme" value="forever" />
 			<label for="tutor-login-agmnt-1" class="tutor-fs-7 tutor-color-muted">
-				<?php esc_html_e( 'Keep me signed in', 'tutor' ); ?>
+				<?php esc_html_e( 'Giữ tôi đăng nhập', 'tutor' ); ?>
 			</label>
 		</div>
 		<a href="<?php echo esc_url( $lost_pass ); ?>" class="tutor-btn tutor-btn-ghost">
-			<?php esc_html_e( 'Forgot Password?', 'tutor' ); ?>
+			<?php esc_html_e( 'Quên mật khẩu?', 'tutor' ); ?>
 		</a>
 	</div>
 
 	<?php do_action( 'tutor_login_form_end' ); ?>
 	<button type="submit" class="tutor-btn tutor-btn-primary tutor-btn-block">
-		<?php esc_html_e( 'Sign In', 'tutor' ); ?>
+		<?php esc_html_e( 'Đăng nhập', 'tutor' ); ?>
 	</button>
 	
 	<?php if ( get_option( 'users_can_register', false ) ) : ?>
@@ -96,9 +96,9 @@ do_action( 'tutor_before_login_form' );
 			}
 			?>
 		<div class="tutor-text-center tutor-fs-6 tutor-color-secondary tutor-mt-20">
-			<?php esc_html_e( 'Don\'t have an account?', 'tutor' ); ?>&nbsp;
+			<?php esc_html_e( 'Chưa có tài khoản ?', 'tutor' ); ?>&nbsp;
 			<a href="<?php echo esc_url( add_query_arg( $url_arg, tutor_utils()->student_register_url() ) ); ?>" class="tutor-btn tutor-btn-link">
-				<?php esc_html_e( 'Register Now', 'tutor' ); ?>
+				<?php esc_html_e( 'Đăng ký ngay', 'tutor' ); ?>
 			</a>
 		</div>
 	<?php endif; ?>

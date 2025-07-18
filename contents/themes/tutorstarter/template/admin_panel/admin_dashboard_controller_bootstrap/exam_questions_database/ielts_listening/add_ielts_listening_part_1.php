@@ -46,6 +46,7 @@ if ($id_part_filter) {
 }
 $sql .= " LIMIT $limit OFFSET $offset"; // Add pagination limits
 $result = $conn->query($sql);
+$site_url = get_site_url();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -74,7 +75,7 @@ $result = $conn->query($sql);
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script src="/wordpress/contents/themes/tutorstarter/ielts-reading-tookit/script_database_1.js"></script>
+    <script src="<?php echo $site_url ?>/contents/themes/tutorstarter/ielts-reading-tookit/script_database_1.js"></script>
 
     
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
@@ -138,7 +139,7 @@ $result = $conn->query($sql);
         <th>ID Test</th>
         <th>Listening Part</th>
         <th>Thời gian</th>
-        <th>Audio Link</th>
+        <!--<th>Audio Link - add automatically by using key</th> -->
         <th>Group Question</th>
         <th>Category</th>
         <th>Key Answer</th>
@@ -170,10 +171,11 @@ if ($result->num_rows > 0) {
                 <td>{$row['id_part']}</td>
                 <td>{$row['part']}</td>
                 <td>{$row['duration']}</td>
-                <td>{$sample_words_display} $sample_words_view_more</td>
+                <!--<td>{$sample_words_display} $sample_words_view_more</td>-->
                 <td>{$question_content_display} $question_content_view_more</td>
                 <td>{$row['category']}</td>
                 <td id=useranswerdiv_{$row['number']}></td>
+                
                 <td>{$row['note']}</td>
 
                 <td>
@@ -190,6 +192,8 @@ if ($result->num_rows > 0) {
                     {
                         part_number: {$row['number']},
                         audio_link: '" . addslashes($row['audio_link']) . "',
+                        paragraph: '',
+                        number_question_of_this_part: '10',
                         duration: {$row['duration']},
                         group_question: " . $row['group_question'] . "
                     }

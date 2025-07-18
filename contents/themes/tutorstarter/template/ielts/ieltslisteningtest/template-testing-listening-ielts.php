@@ -86,6 +86,7 @@ $site_url = get_site_url();
 echo "<script> 
 var resultId = '" . $result_id ."';
 var siteUrl = '" .$site_url . "';
+console.log('fuck',siteUrl);
 var id_test = '" . $id_test . "';
 console.log('Result ID: ' + resultId);
 </script>";
@@ -113,6 +114,7 @@ if ($result_test->num_rows > 0) {
     // Lấy các ID từ question_choose (ví dụ: "1001,2001,3001")
     $data = $result_test->fetch_assoc();
     $question_choose = $data['question_choose'];
+    $tag = $data['tag'];
     $testname = $data['testname'];
     $token_need = $data['token_need'];
     $time_allow = $data['time_allow'];
@@ -247,19 +249,19 @@ if (strpos($current_url, '?part=') !== false) {
         // Xác định bảng và câu lệnh SQL tương ứng dựa trên index của part
         switch ($index) {
             case 0:
-                $sql_part = "SELECT part, duration, audio_link, group_question, category 
+                $sql_part = "SELECT part, duration, audio_link, group_question, category,number_question_of_this_part,audio_link 
                              FROM ielts_listening_part_1_question WHERE id_part = ?";
                 break;
             case 1:
-                $sql_part = "SELECT part, duration, audio_link, group_question, category 
+                $sql_part = "SELECT part, duration, audio_link, group_question, category ,number_question_of_this_part,audio_link 
                              FROM ielts_listening_part_2_question WHERE id_part = ?";
                 break;
             case 2:
-                $sql_part = "SELECT part, duration, audio_link, group_question, category 
+                $sql_part = "SELECT part, duration, audio_link, group_question, category ,number_question_of_this_part,audio_link 
                              FROM ielts_listening_part_3_question WHERE id_part = ?";
                 break;
             case 3:
-                $sql_part = "SELECT part, duration, audio_link, group_question, category 
+                $sql_part = "SELECT part, duration, audio_link, group_question, category ,number_question_of_this_part,audio_link 
                              FROM ielts_listening_part_4_question WHERE id_part = ?";
                 break;
             default:
@@ -280,8 +282,9 @@ if (strpos($current_url, '?part=') !== false) {
         while ($row = $result_part->fetch_assoc()) {
             $entry = [
                 'part_number' => $row['part'],
-                'audio_link' => $row['audio_link'],
+                'audio_link' => "" .$site_url . "/contents/themes/tutorstarter/template/media_img_intest/ielts_listening/audio/{$data['tag']}/{$data['id_test']}/Track{$row['part']}.mp3",
                 'duration' => $row['duration'],
+                'number_question_of_this_part' => '10',
                 'category' => $row['category'],
                 'group_question' => $row['group_question']
             ];
@@ -1062,7 +1065,7 @@ img{
                 <div id="question-range-of-part" class="question-range"></div>
                 <i class="fa-regular fa-clock"></i><span id="timer" class="timer" style="font-weight: bold"></span>
                 <i class="fa-solid fa-bug"></i>
-                <button  id="right-main-button" onclick = 'saveProgress()'>  <span class="icon-text-wrapper">
+                <button class = "controls button"  id="right-main-button" onclick = 'saveProgress()'>  <span class="icon-text-wrapper">
                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17l5-5-5-5"/><path d="M13.8 12H3m9 10a10 10 0 1 0 0-20"/>
                     </svg>  Save Progress </span>
                 </button> 
@@ -1229,10 +1232,20 @@ img{
         
     <script>
             let highlights = {}; // Object để lưu trữ các highlight
+            let count_number_part = 0;
+            let timerInterval; // Declare timer interval globally
+            let startTime; // Biến để lưu thời gian bắt đầu quiz
+            let userAnswers = {}; // Object to store user answers
+            let correctCount = 0;
+            let incorrectCount = 0;
+            let skippedCount = 0; // New variable for skipped answers
+            let totalQuestions = 0; // Total question count
+
+
 
     </script>
     <?php echo'
-     <script src="'.$site_url.'\contents\themes\tutorstarter\ielts-listening-toolkit\script__listening_3.js"></script>  
+     <script src="'.$site_url.'\contents\themes\tutorstarter\ielts-listening-toolkit\test_script1.js"></script>  
      <script src="'.$site_url.'\contents\themes\tutorstarter\ielts-listening-toolkit\highlight_text.js"></script>'
 ?>
 </body>

@@ -546,29 +546,39 @@ function openEditModal(number) {
 
 // Save the edited data
 function saveEdit() {
+    let testcode = $('#edit_testcode').val();
+    $('#edit_testcode').val(escapeMathML(testcode));
+
     $.ajax({
         url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/thptqg/database-template/update_question.php',
         type: 'POST',
         data: $('#editForm').serialize(),
         success: function(response) {
-            location.reload(); // Reload the page to reflect changes
+            location.reload();
         }
     });
 }
-
 function openAddModal() {
     $('#addForm')[0].reset(); // Clear form data
     $('#addModal').modal('show'); // Show the modal
 }
-
+function escapeMathML(testcode) {
+    return testcode.replace(
+        /<math xmlns="http:\/\/www\.w3\.org\/1998\/Math\/MathML">/g,
+        '<math xmlns=\\"http://www.w3.org/1998/Math/MathML\\">'
+    );
+}
 // Save the new question
 function saveNew() {
+    let testcode = $('#add_testcode').val();
+    $('#add_testcode').val(escapeMathML(testcode));
+
     $.ajax({
         url: '<?php echo get_site_url()?>/contents/themes/tutorstarter/template/thptqg/database-template/add_question.php',
         type: 'POST',
         data: $('#addForm').serialize(),
         success: function(response) {
-            location.reload(); // Reload to show the new record
+            location.reload();
         }
     });
 }
