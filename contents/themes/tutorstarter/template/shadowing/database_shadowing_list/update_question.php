@@ -23,6 +23,7 @@ require_once(__DIR__ . '/../../admin_panel/config-custom.php');
         'token_need' => $token_need,
         'role_access' => $role_access,
         'time_allow' => $time_allow,
+        'updated_at' => date('Y-m-d H:i:s'),
 
     );
 

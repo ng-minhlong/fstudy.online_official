@@ -262,6 +262,8 @@ print(json.dumps(answers, indent=2, ensure_ascii=False))
         <th>Role Access</th>
         <th>Permissive Management</th>
         <th>Time Allow</th>
+        <th>Created At</th>
+        <th>Last Update</th>
         <th>Actions</th>
     </tr>
 
@@ -294,6 +296,8 @@ print(json.dumps(answers, indent=2, ensure_ascii=False))
                         <td>{$row['role_access']}</td>
                         <td>{$row['permissive_management']}</td>
                         <td>{$row['time_allow']}</td>
+                        <td>{$row['created_at']}</td>
+                        <td>{$row['updated_at']}</td>
                         <td>
                             <button class='btn btn-primary btn-sm' onclick='openEditModal({$row['number']})'>Edit</button>
                             <button class='btn btn-danger btn-sm' onclick='deleteRecord({$row['number']})'>Delete</button>

@@ -58,6 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'token_need' => $token_need,
         'role_access' => $role_access,
         'time_allow' => $time_allow,
+        'updated_at' => date('Y-m-d H:i:s'),
+        'created_at' => date('Y-m-d H:i:s'),
         'full_test_specific_module' => $full_test_specific_module,
 
     );

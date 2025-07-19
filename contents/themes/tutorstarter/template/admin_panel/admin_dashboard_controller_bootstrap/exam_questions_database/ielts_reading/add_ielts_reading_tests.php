@@ -140,6 +140,8 @@ $result = $conn->query($sql);
         <th>Role Access</th>
         <th>Permissive Management</th>
         <th>Time Allow</th>
+        <th>Created At</th>
+        <th>Last update </th>
 
     </tr>
 
@@ -182,7 +184,8 @@ $result = $conn->query($sql);
                         <td>{$row['role_access']}</td>
                         <td>{$row['permissive_management']}</td>
                         <td>{$row['time_allow']}</td>
-
+                        <td>{$row['created_at']}</td>
+                        <td>{$row['updated_at']}</td>
                         
                         <td>
                             <button class='btn btn-primary btn-sm' onclick='openEditModal({$row['number']})'>Edit</button>
