@@ -531,7 +531,7 @@ function openEditModal(number) {
             $('#edit_prices').val(data.prices);
             $('#edit_tag').val(data.tag);
             $('#edit_category').val(data.category);
-
+            $('#edit_document_name').val(data.document_name);
             $('#edit_file_link').val(data.file_link);
             $('#editModal').modal('show');
         }

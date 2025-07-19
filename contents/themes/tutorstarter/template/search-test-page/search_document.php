@@ -2,7 +2,7 @@
 
 add_filter('document_title_parts', function ($title) {
  
-        $title['title'] = sprintf('Document');
+        $title['title'] = sprintf('Tài liệu');
     
     return $title;
 });
@@ -20,92 +20,45 @@ echo "<script>  const currentUsername = '" . strval($username) . "';  </script>"
 echo '<script>  var siteUrl = "' . $site_url .'";  </script>';
 
 
-
-// Define the post types with labels for the navigation
-$test_tables = [
-    
-    'talk-with-edward' => 'conversation_with_ai_list',
-    'studyvocabulary' => 'list_vocabulary_package',
-    'dictation' => 'dictation_question',
-    'shadowing' => 'shadowing_question',
-
-
-
-];
-
-// Labels mapping
-$test_labels = [
-  
-    'talk-with-edward' => 'Talk With Edward',
-    'studyvocabulary' => 'Learn Vocabulary',
-    'dictation' => 'Dictation',
-    'shadowing' => 'Shadowing',
-
-
-];
-
+ 
+// Define the document table name
+$table_name = 'document';
+$current_post_type  = 'document';
 // Get the current post type and search term
-$current_post_type = get_query_var('search_url', 'digitalsat');
 $search_term = $_GET['term'] ?? '';
 global $wpdb;
-
-// Determine the table to query
-// Determine the table to query
-$table_name = 'document';
-$search_column = ($table_name === 'list_vocabulary_package') ? 'package_name' : 'testname';
-
 
 $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;
 $limit = 12;
 $offset = ($paged - 1) * $limit;
 
-if (!empty($table_name)) {
-    $price_filter = $_GET['price'] ?? '';  
-    if (!is_array($price_filter)) {
-        $price_filter = [$price_filter]; // Chuyển về mảng nếu chỉ có một giá trị
-    }
+$price_filter = $_GET['prices'] ?? '';  
+if (!is_array($price_filter)) {
+    $price_filter = [$price_filter];
+}
 
-    $test_type_filter = $_GET['test_type'] ?? [];
-    if (!is_array($test_type_filter)) {
-        $test_type_filter = [$test_type_filter]; // Chuyển về mảng nếu chỉ có một giá trị
-    }
-    
-    $conditions = [];
-    $params = ['%' . $wpdb->esc_like($search_term) . '%', $limit, $offset];
+$conditions = [];
+$params = ['%' . $wpdb->esc_like($search_term) . '%', $limit, $offset];
 
-    // Điều kiện lọc theo giá
-    if (in_array('free', $price_filter) && in_array('premium', $price_filter)) {
-        // Không cần điều kiện gì vì cả free và premium đều được chấp nhận
-    } elseif (in_array('free', $price_filter)) {
-        $conditions[] = "token_need = 0";
-    } elseif (in_array('premium', $price_filter)) {
-        $conditions[] = "token_need > 0";
-    }
-    
-  
-    
+// Điều kiện lọc theo giá
+if (in_array('free', $price_filter) && in_array('premium', $price_filter)) {
+    // Không cần điều kiện gì vì cả free và premium đều được chấp nhận
+} elseif (in_array('free', $price_filter)) {
+    $conditions[] = "prices = '0'";
+} elseif (in_array('premium', $price_filter)) {
+    $conditions[] = "prices > '0'";
+}
 
-    if (in_array('Practice', $test_type_filter) && in_array('Full Test', $test_type_filter)) {
-        // Không cần điều kiện vì chấp nhận cả hai
-    } elseif (in_array('Practice', $test_type_filter)) {
-        $conditions[] = "test_type = 'Practice'";
-    } elseif (in_array('Full Test', $test_type_filter)) {
-        $conditions[] = "test_type = 'Full Test'";
-    }
-    
+// Gộp các điều kiện thành câu SQL
+$where_clause = !empty($conditions) ? 'AND ' . implode(' AND ', $conditions) : '';
 
-    // Gộp các điều kiện thành câu SQL
-    $where_clause = !empty($conditions) ? 'AND ' . implode(' AND ', $conditions) : '';
-
-    $query = $wpdb->prepare(
-        "SELECT * FROM {$table_name} WHERE $search_column LIKE %s $where_clause ORDER BY $search_column ASC LIMIT %d OFFSET %d",
-        ...$params
+$query = $wpdb->prepare(
+    "SELECT * FROM {$table_name} WHERE document_name LIKE %s $where_clause ORDER BY created_at DESC LIMIT %d OFFSET %d",
+    ...$params
     );
 
     $results = $wpdb->get_results($query);
-} else {
-    $results = [];
-}
+
 
 
 // Display the navigation buttons
@@ -115,27 +68,14 @@ if (!empty($table_name)) {
         <!-- Existing content -->
     
 
-
-<div class="post-type-navigation">
-    <?php foreach ($test_tables as $type => $table) : ?>
-        <a href="<?php echo esc_url(home_url("/practices/" . ($type === 'all' ? '' : $type))); ?>" 
-           class="nav-button <?php echo $current_post_type === $type ? 'active' : ''; ?>">
-           <?php echo esc_html($test_labels[$type] ?? ucfirst($type)); ?>
-           </a>
-    <?php endforeach; ?>
-</div>
-
 <div class="search-feature">
     <!-- Search Form -->
-    <form method="get" action="<?php echo esc_url(home_url('/practices/' . ($current_post_type ? $current_post_type : ''))); ?>" class="search-form">
+    <form method="get" action="<?php echo esc_url(home_url( $current_post_type ? $current_post_type : '')); ?>" class="search-form">
         <input type="text" name="term" placeholder="Nhập từ khóa..." value="<?php echo esc_attr($search_term); ?>" />
 
         <div class="test-type-option">
             <label><input type="checkbox" name="price[]" value="free" <?php if (in_array('free', $price_filter)) echo 'checked'; ?>> Free</label>
             <label><input type="checkbox" name="price[]" value="premium" <?php if (in_array('premium', $price_filter)) echo 'checked'; ?>> Premium</label>
-
-            <label><input type="checkbox" name="test_type[]" value="Practice" <?php if (in_array('Practice', $test_type_filter)) echo 'checked'; ?>> Practice</label>
-            <label><input type="checkbox" name="test_type[]" value="Full Test" <?php if (in_array('Full Test', $test_type_filter)) echo 'checked'; ?>> Full Length</label>
 
         </div>
 
@@ -166,117 +106,51 @@ $query = new WP_Query($args);
 <div class="test-library">
     <?php if (!empty($results)) : ?>
         <div class="test-grid">
-    <?php 
-    // Lấy thông tin username hiện tại (ví dụ sử dụng hàm của WordPress)
-    $current_user = wp_get_current_user();
-    $username = $current_user->user_login;
-
-    foreach ($results as $test) : 
-        // Xác định bảng lưu kết quả và cột cần kiểm tra dựa trên loại bài kiểm tra
-        $table_res_name = '';
-        $check_column = '';
-        if ($current_post_type === 'digitalsat') {
-            $table_res_name = 'save_user_result_digital_sat';
-            $check_column = 'resulttest'; // Cột cần kiểm tra
-        } 
-        
-        
-        
-        
-        elseif ($current_post_type === 'ieltsreadingtest') {
-            $table_res_name = 'save_user_result_ielts_reading';
-            $check_column = 'overallband'; // Cột cần kiểm tra
-        }
-        elseif ($current_post_type === 'ieltsspeakingtests') {
-            $table_res_name = 'save_user_result_ielts_speaking';
-            $check_column = 'resulttest'; // Cột cần kiểm tra
-        }
-        elseif ($current_post_type === 'ieltslisteningtest') {
-            $table_res_name = 'save_user_result_ielts_listening';
-            $check_column = 'overallband'; // Cột cần kiểm tra
-        }
-        elseif ($current_post_type === 'ieltswritingtests') {
-            $table_res_name = 'save_user_result_ielts_writing';
-            $check_column = 'resulttest'; // Cột cần kiểm tra
-        }
-
-        elseif ($current_post_type === 'thptqg') {
-            $table_res_name = 'save_user_result_thptqg';
-            $check_column = 'overallband'; // Cột cần kiểm tra
-        }
-
-
-
-        elseif ($current_post_type === 'topikreading') {
-            $table_res_name = 'save_user_result_topik_reading';
-            $check_column = 'overallband'; // Cột cần kiểm tra
-        }
-        elseif ($current_post_type === 'topiklistening') {
-            $table_res_name = 'save_user_result_topik_listening';
-            $check_column = 'overallband'; // Cột cần kiểm tra
-        }
-
-        
-
-        // Kiểm tra kết quả trong bảng (dựa trên idtest và username)
-        $completed = false;
-        if (!empty($table_res_name) && !empty($username)) {
-            $completed_query = $wpdb->prepare(
-                "SELECT {$check_column} FROM {$table_res_name} 
-                 WHERE {$check_column} IS NOT NULL AND idtest = %d AND username = %s",
-                $test->id_test,
-                $username
-            );
-            $completed = $wpdb->get_var($completed_query); // Kết quả trả về
-        }
-    ?>
+    <?php foreach ($results as $document) : ?>
         <div class="test-item">
             <div class="price-icon">
-                   <!-- <i class="fa-solid fa-check" style="color: #63E6BE;"></i> -->
-                    <?php
-                        if (isset($test->token_need) && $test->token_need > 0) {
-                            echo esc_html($test->token_need) . ' tokens';
-                        } else {
-                            echo 'Free';
-                        }
-                    ?>
-
+                <?php
+                    if ($document->prices > 0) {
+                        echo esc_html($document->prices) . ' tokens';
+                    } else {
+                        echo 'Free';
+                    }
+                ?>
             </div>
-
-            <h2><?php echo esc_html($test->$search_column); ?></h2>
-            <div class="test-meta">
-                <p>⏱️ <?php echo esc_html($test->time ?? ''); ?> minutes</p>
-                <p>📄 <?php echo esc_html($test->number_question ?? ''); ?> questions</p>
-            </div>
-            <?php if ($completed) : ?>
-                <div class="completed-icon">
-                    <i class="fa-solid fa-check" style="color: #63E6BE;"></i>
+            <div class="document-info">
+                <h3><?php echo esc_html($document->document_name); ?></h3>
+                <div class="document-meta">
+                    <span class="category"><?php echo esc_html($document->category); ?></span>
+                    <?php if (!empty($document->tag)) : ?>
+                        <div class="tags">
+                            <?php 
+                            $tags = json_decode($document->tag);
+                            if (is_array($tags)) {
+                                foreach ($tags as $tag) {
+                                    echo '<span class="tag">' . esc_html($tag) . '</span>';
+                                }
+                            }
+                            ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
-            <?php endif; ?>
+            </div>
+
+           
+          
             <?php
-                $custom_paths = [
-                  
-
-                    'talk-with-edward' => '/practice/talk-with-edward/',
-                    'studyvocabulary' => '/practice/vocabulary/package/',
-                    'dictation' => '/practice/dictation/',
-                    'shadowing' => '/practice/shadowing/'
-                    
-
-
-                ];
-
+              
                
 
 
 
 
-                $base_path = $custom_paths[$current_post_type] ?? "/test/{$current_post_type}/";
-                $test_url = home_url("{$base_path}{$test->id_test}");
+                $base_path = "/{$current_post_type}/";
+                $document_url = home_url("{$base_path}{$document->document_id}");
             ?>
 
 
-                <a href="<?php echo esc_url($test_url); ?>" class="detail-button">Take Test</a>
+                <a href="<?php echo esc_url($document_url); ?>" class="detail-button">Take Document</a>
         </div>
     <?php endforeach; ?>
 </div>
@@ -290,15 +164,15 @@ $query = new WP_Query($args);
                 '%' . $wpdb->esc_like($search_term) . '%'
             );
           
-            $total_tests = $wpdb->get_var($wpdb->prepare(
-                "SELECT COUNT(*) FROM {$table_name} WHERE testname LIKE %s $where_clause",
-                ...$params
+            $total_documents = $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$table_name} WHERE document_name LIKE %s $where_clause",
+                '%' . $wpdb->esc_like($search_term) . '%'
             ));
-            $total_pages = ceil($total_tests / $limit);
+            $total_pages = ceil($total_documents / $limit);
             
 
             echo paginate_links([
-                'total' => $total_pages, // Số trang tính toán chính xác
+                'total' => $total_pages,
                 'current' => $paged,
                 'format' => '?paged=%#%',
                 'prev_text' => '&laquo; Prev',
@@ -308,7 +182,7 @@ $query = new WP_Query($args);
             ?>
         </div>
     <?php else : ?>
-        <p>Không tìm thấy bài thi nào với từ khóa "<?php echo esc_html($search_term); ?>" cho loại bài thi "<?php echo ucfirst($current_post_type); ?>"</p>
+        <p>Không tìm thấy tài liệu nào với từ khóa "<?php echo esc_html($search_term); ?>"</p>
     <?php endif; ?>
 
     <?php wp_reset_postdata(); ?>
