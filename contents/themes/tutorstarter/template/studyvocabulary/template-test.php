@@ -149,7 +149,11 @@ foreach ($questions as $question_id) {
 $testname = $data['testname'] ?? "Test name not found";
 // Close the questions array and the main object
 echo "];";
+echo "console.log('Vocabulary List:', vocabList);"; // Debugging line to check vocabList content
+
 echo "</script>";
+
+
 
 
 

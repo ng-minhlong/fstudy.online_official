@@ -118,6 +118,7 @@ echo "<script>
         <button class="button-10" onclick="window.print()">In Bảng</button>
     </div>
     <button class="button-10" onclick="openAddPopup()">Thêm Mới</button>
+    <button class="button-10" onclick="window.location.href='<?php echo $site_url?>/practice/notion/flashcard'">Luyện flashcard</button>
 
     <table class="table" id="notationTable" border="1" cellpadding="10" cellspacing="0">
         <thead>
@@ -167,14 +168,38 @@ echo "<script>
 </div>
 
 
-<div id="addPopup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#fff; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.1); z-index:1000;">
+<div id="addPopup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#fff; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.1); z-index:1000; overflow-y:auto; max-height:80vh;">
     <h3>Thêm Từ Mới</h3>
-    <label for="addWord">Từ được lưu:</label>
-    <input type="text" id="addWord" style="width: 100%; margin-bottom: 10px;">
-    <label for="addMeaning">Nghĩa hoặc Giải thích:</label>
-    <textarea id="addMeaning" class="text-area-meaning" style="width: 100%; margin-bottom: 10px;"></textarea>
+
+    <label>
+        <input type="radio" name="inputMode" value="pair" checked onchange="toggleInputMode(this.value)"> Nhập từng dòng
+    </label>
+    <label>
+        <input type="radio" name="inputMode" value="textarea" onchange="toggleInputMode(this.value)"> Nhập bằng textarea
+    </label>
+
+    <!-- Option 1: Từng dòng -->
+    <div id="pairInputs">
+        <div class="pair-row">
+            <input type="text" placeholder="Từ cần lưu" class="word">
+            <input type="text" placeholder="Nghĩa từ" class="meaning">
+        </div>
+        <button onclick="addNewPair()">+ Thêm dòng</button>
+    </div>
+
+    <!-- Option 2: Textarea -->
+    <div id="bulkTextarea" style="display:none;">
+        <label for="delimiter">Ký tự phân cách từ & nghĩa:</label>
+        <select id="delimiter" onchange="syncFromTextarea()">
+            <option value=" - "> - </option>
+            <option value=" ">dấu cách</option>
+            <option value="\t">tab</option>
+        </select>
+        <textarea id="bulkInput" rows="10" style="width: 100%;" oninput="syncFromTextarea()"></textarea>
+    </div>
+
     <div class="controls">
-        <button class="button-10" onclick="saveNewWord()">Lưu</button>
+        <button class="button-10" onclick="saveAllWords()">Lưu toàn bộ</button>
         <button class="button-10" onclick="closeAddPopup()">Đóng</button>
     </div>
 </div>
@@ -188,7 +213,7 @@ echo "<script>
 const fetchNotations = async (username) => {
     try {
         // URL API mà bạn đã tạo
-        const apiUrl = `${siteUrl}/wp-json/api/v1/notations/`;
+        const apiUrl = `${siteUrl}/api/api/v1/notations/`;
 
         // Gửi yêu cầu POST với username
         const response = await fetch(apiUrl, {
@@ -443,7 +468,92 @@ function saveNewWord() {
     });
 }
 
+function toggleInputMode(mode) {
+    document.getElementById("pairInputs").style.display = mode === "pair" ? "block" : "none";
+    document.getElementById("bulkTextarea").style.display = mode === "textarea" ? "block" : "none";
 
+    if (mode === "textarea") {
+        syncToTextarea();
+    } else {
+        syncFromTextarea();
+    }
+}
+
+function addNewPair(word = "", meaning = "") {
+    const div = document.createElement("div");
+    div.classList.add("pair-row");
+    div.innerHTML = `
+        <input type="text" placeholder="Từ cần lưu" class="word" value="${word}">
+        <input type="text" placeholder="Nghĩa từ" class="meaning" value="${meaning}">
+        <button onclick="this.parentNode.remove()">X</button>
+    `;
+    document.getElementById("pairInputs").appendChild(div);
+}
+
+function syncToTextarea() {
+    const rows = document.querySelectorAll("#pairInputs .pair-row");
+    const delimiter = document.getElementById("delimiter").value;
+    let text = "";
+    rows.forEach(row => {
+        const word = row.querySelector(".word").value.trim();
+        const meaning = row.querySelector(".meaning").value.trim();
+        if (word && meaning) {
+            text += `${word}${delimiter}${meaning}\n`;
+        }
+    });
+    document.getElementById("bulkInput").value = text.trim();
+}
+
+function syncFromTextarea() {
+    const delimiter = document.getElementById("delimiter").value;
+    const lines = document.getElementById("bulkInput").value.trim().split("\n");
+
+    // Clear old
+    document.getElementById("pairInputs").innerHTML = "";
+
+    lines.forEach(line => {
+        const parts = line.split(delimiter);
+        if (parts.length >= 2) {
+            const word = parts[0].trim();
+            const meaning = parts.slice(1).join(delimiter).trim(); // giữ nghĩa dài hơn
+            addNewPair(word, meaning);
+        }
+    });
+}
+
+function saveAllWords() {
+    const rows = document.querySelectorAll("#pairInputs .pair-row");
+    const dataToSave = [];
+
+    rows.forEach(row => {
+        const word = row.querySelector(".word").value.trim();
+        const meaning = row.querySelector(".meaning").value.trim();
+        if (word && meaning) {
+            dataToSave.push({
+                username: "<?php echo esc_js($username); ?>",
+                user_id: <?php echo esc_js($user_id); ?>,
+                word_save: word,
+                meaning_or_explanation: meaning,
+                idtest: "",
+                type: ""
+            });
+        }
+    });
+
+    // Gửi từng từ hoặc gộp lại theo nhu cầu
+    Promise.all(dataToSave.map(data =>
+        fetch(`${siteUrl}/api/v1/add-notation/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        }).then(res => res.json())
+    )).then(results => {
+        alert("Lưu thành công!");
+        closeAddPopup();
+    }).catch(() => {
+        alert("Có lỗi xảy ra!");
+    });
+}
 
 </script>
 
