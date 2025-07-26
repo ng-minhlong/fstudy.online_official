@@ -364,7 +364,9 @@ body {
 
 }
 
-
+ p div {
+    display: inline !important;
+  }
 .content-left {
     width: 50%;
     padding: 20px;
@@ -413,7 +415,7 @@ body {
 table {
   font-family: arial, sans-serif;
   border-collapse: collapse;
-  width: 100%;
+  width: 100% !important;
 }
 
 td, th {
@@ -631,7 +633,7 @@ tr:nth-child(even) {
  }
  
  .form-control{
-   width: 100%;
+   width: 100px;
    position: relative;
    z-index: 3;
    height: 35px;
@@ -1245,7 +1247,7 @@ img{
 
     </script>
     <?php echo'
-     <script src="'.$site_url.'\contents\themes\tutorstarter\ielts-listening-toolkit\test_script1.js"></script>  
+     <script src="'.$site_url.'\contents\themes\tutorstarter\ielts-listening-toolkit\test_script3.js"></script>  
      <script src="'.$site_url.'\contents\themes\tutorstarter\ielts-listening-toolkit\highlight_text.js"></script>'
 ?>
 </body>

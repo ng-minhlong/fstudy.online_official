@@ -25,11 +25,11 @@ do_action( 'tutor_lesson/single/before/video/youtube' );
 		<div class="loading-spinner" area-hidden="true"></div>
 		<div class="<?php echo $disable_default_player_youtube ? 'plyr__video-embed tutorPlayer' : 'tutor-ratio tutor-ratio-16x9'; ?>">
 			<?php if ( ! $disable_default_player_youtube ) : ?>
-				<!--<iframe src="https://www.youtube.com/embed/<?php echo esc_attr( $youtube_video_id ); ?>" frameborder="0" allowfullscreen allowtransparency allow="autoplay"></iframe> -->
-				<iframe src="<?php echo  $site_url; ?>/storage/media/video/y/<?php echo esc_attr( $youtube_video_id ); ?>" frameborder="0" allowfullscreen allowtransparency allow="autoplay"></iframe>
+				<!--<iframe src="https://www.youtube.com/embed/<?php echo esc_attr( $youtube_video_id ); ?>" frameborder="0" allowfullscreen allowtransparency allow="autoplay"></iframe>-->
+				<iframe src="<?php echo  $site_url; ?>/storage/media/video/y/<?php echo esc_attr( $youtube_video_id ); ?>" frameborder="0" allowfullscreen allowtransparency allow="autoplay"></iframe> 
 			<?php else : ?>
-				<!--<iframe src="https://www.youtube.com/embed/<?php echo esc_attr( $youtube_video_id ); ?>?&amp;iv_load_policy=3&amp;modestbranding=1&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1" allowfullscreen allowtransparency allow="autoplay"></iframe> -->
-					<iframe src="<?php echo  $site_url; ?>/storage/media/video/y/<?php echo esc_attr( $youtube_video_id ); ?>?&amp;iv_load_policy=3&amp;modestbranding=1&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1" allowfullscreen allowtransparency allow="autoplay"></iframe> 
+				<!--<iframe src="https://www.youtube.com/embed/<?php echo esc_attr( $youtube_video_id ); ?>?&amp;iv_load_policy=3&amp;modestbranding=1&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1" allowfullscreen allowtransparency allow="autoplay"></iframe>-->
+				<iframe src="<?php echo  $site_url; ?>/storage/media/video/y/<?php echo esc_attr( $youtube_video_id ); ?>?&amp;iv_load_policy=3&amp;modestbranding=1&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1" allowfullscreen allowtransparency allow="autoplay"></iframe> 
 			<?php endif; ?>
 		</div>
 	</div>

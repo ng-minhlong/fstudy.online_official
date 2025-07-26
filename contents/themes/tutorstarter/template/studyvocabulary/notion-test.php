@@ -775,11 +775,6 @@ updateFlashcard();
 
 <?php
 } else {
-    echo "No tests found !";
-    }
+    echo "Bạn chưa có từ nào trong Notion. Vui lòng thêm từ mới trước khi luyện tập flashcard. <a href='" . $site_url . "/dashboard/notion'>Thêm từ mới</a>";
+}
 get_footer();
-/*} else {
-    get_header();
-    echo '<p>Please log in start reading test.</p>';
-    get_footer();
-}*/
