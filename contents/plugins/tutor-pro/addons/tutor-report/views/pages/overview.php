@@ -143,7 +143,7 @@ use \TUTOR_REPORT\Analytics;
 			</div>
 			<div class="tutor-admin-report-frequency-wrapper" style="min-width: 260px;">
 				<?php tutor_load_template_from_custom_path( TUTOR_REPORT()->path . 'templates/elements/frequency.php' ); ?>
-				<div class="tutor-v2-date-range-picker inactive" style="width: 305px; position:absolute; z-index: 99;"></div>
+				<div class="tutor-v2-date-range-picker inactive"></div>
 			</div>
 		</div>
 		<div class="tutor-overview-month-graph">

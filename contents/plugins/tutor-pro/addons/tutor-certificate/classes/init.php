@@ -53,7 +53,7 @@ class Init {
 		add_filter(
 			'tutor_pages',
 			function( array $pages ) {
-				return $pages + array( 'tutor_certificate_page' => __( 'Tutor Certificate', 'tutor' ) );
+				return $pages + array( 'tutor_certificate_page' => __( 'Tutor Certificate', 'tutor-pro' ) );
 			}
 		);
 
@@ -78,7 +78,7 @@ class Init {
 		$certificate_page_id = (int) tutor_utils()->get_option( 'tutor_certificate_page' );
 		if ( in_array( $certificate_page_id, array( 0, -1 ) ) ) {
 			$post_details = array(
-				'post_title'   => __( 'Tutor Certificate', 'tutor' ),
+				'post_title'   => __( 'Tutor Certificate', 'tutor-pro' ),
 				'post_content' => '',
 				'post_status'  => 'publish',
 				'post_type'    => 'page',

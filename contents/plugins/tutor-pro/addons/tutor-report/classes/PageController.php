@@ -12,6 +12,7 @@
 namespace TUTOR_REPORT;
 
 use TUTOR\Input;
+use Tutor\Models\CourseModel;
 use TUTOR_REPORT\Report;
 use TUTOR_REPORT\Analytics;
 
@@ -47,7 +48,7 @@ class PageController {
 		$teachers              = Analytics::get_teachers();
 		$questions             = tutor_utils()->get_qa_questions();
 
-		$time_period = $active = Input::get( 'period', '' );
+		$time_period = $active = Input::get( 'period', 'last30days' );
 		$start_date  = Input::has( 'start_date' ) ? tutor_get_formated_date( 'Y-m-d', Input::get( 'start_date' ) ) : '';
 		$end_date    = Input::has( 'end_date' ) ? tutor_get_formated_date( 'Y-m-d', Input::get( 'end_date' ) ) : '';
 
@@ -193,9 +194,23 @@ class PageController {
 		 * Bulk action & filters
 		 */
 		$filters = array(
-			'bulk_action'     => false,
-			'filters'         => true,
-			'category_filter' => true,
+			'filters' => array(
+				array(
+					'label'      => __( 'Category', 'tutor-pro' ),
+					'field_type' => 'select',
+					'field_name' => 'category',
+					'options'    => CourseModel::get_category_dropdown_options(),
+					'searchable' => true,
+					'value'      => Input::get( 'category', '' ),
+				),
+				array(
+					'label'      => __( 'Date', 'tutor-pro' ),
+					'field_type' => 'date',
+					'field_name' => 'date',
+					'show_label' => true,
+					'value'      => Input::get( 'date', '' ),
+				),
+			),
 		);
 
 		$args = array(
@@ -210,7 +225,7 @@ class PageController {
 		/**
 		 * For admin report course list will show only published course.
 		 */
-		$args['post_status'] = array( 'publish' );
+		$args['post_status'] = array( 'publish', 'private' );
 
 		if ( 'mine' === $active_tab ) {
 			$args['author'] = get_current_user_id();
@@ -257,9 +272,9 @@ class PageController {
 		$the_query = new \WP_Query( $args );
 
 		$available_status = array(
-			'publish' => __( 'Publish', 'tutor' ),
-			'pending' => __( 'Pending', 'tutor' ),
-			'draft'   => __( 'Draft', 'tutor' ),
+			'publish' => __( 'Publish', 'tutor-pro' ),
+			'pending' => __( 'Pending', 'tutor-pro' ),
+			'draft'   => __( 'Draft', 'tutor-pro' ),
 		);
 
 		include TUTOR_REPORT()->path . 'views/pages/courses/course-table.php';
@@ -346,18 +361,33 @@ class PageController {
 		$item_per_page = tutor_utils()->get_option( 'pagination_per_page' );
 		$offset        = ( $item_per_page * $current_page ) - $item_per_page;
 
-		$sales_list  = tutor_utils()->get_students_by_instructor( 0, $offset, $item_per_page, $search, $course_id, $date, $order_by = '', $order );
+		$sales_list  = tutor_utils()->get_students_by_instructor( 0, $offset, $item_per_page, $search, $course_id, $date, $order_by = '', $order, array( 'publish', 'private' ) );
 		$lists       = $sales_list['students'];
 		$total_items = $sales_list['total_students'];
 
 		$filters          = array(
-			'bulk_action'   => true,
-			'bulk_actions'  => $report->student_list_bulk_actions(),
-			'ajax_action'   => 'tutor_admin_student_list_bulk_action',
-			'filters'       => true,
-			'course_filter' => true,
+			'bulk_action'  => true,
+			'bulk_actions' => $report->student_list_bulk_actions(),
+			'ajax_action'  => 'tutor_admin_student_list_bulk_action',
+			'filters'      => array(
+				array(
+					'label'      => __( 'Courses', 'tutor-pro' ),
+					'field_type' => 'select',
+					'field_name' => 'course-id',
+					'options'    => CourseModel::get_course_dropdown_options(),
+					'searchable' => true,
+					'value'      => Input::get( 'course-id', '' ),
+				),
+				array(
+					'label'      => __( 'Date', 'tutor-pro' ),
+					'field_type' => 'date',
+					'field_name' => 'date',
+					'show_label' => true,
+					'value'      => Input::get( 'date', '' ),
+				),
+			),
 		);
-		$filters_template = tutor()->path . 'views/elements/filters.php';
+		$filters_template = tutor()->path . 'views/elements/list-filters.php';
 
 		include TUTOR_REPORT()->path . 'views/pages/students/student-table.php';
 	}
@@ -376,7 +406,7 @@ class PageController {
 		}
 
 		$user_info       = get_userdata( $student_id );
-		$enrolled_course = tutor_utils()->get_enrolled_courses_by_user( $user_info->ID );
+		$enrolled_course = tutor_utils()->get_enrolled_courses_by_user( $user_info->ID, array( 'publish', 'private' ) );
 
 		// Review List.
 		$count         = 0;
@@ -430,12 +460,26 @@ class PageController {
 		$total_items = $sales_list['total'];
 
 		$filters = array(
-			'bulk_action'   => false,
-			'filters'       => true,
-			'course_filter' => true,
+			'filters' => array(
+				array(
+					'label'      => __( 'Courses', 'tutor-pro' ),
+					'field_type' => 'select',
+					'field_name' => 'course-id',
+					'options'    => CourseModel::get_course_dropdown_options(),
+					'searchable' => true,
+					'value'      => Input::get( 'course-id', '' ),
+				),
+				array(
+					'label'      => __( 'Date', 'tutor-pro' ),
+					'field_type' => 'date',
+					'field_name' => 'date',
+					'show_label' => true,
+					'value'      => Input::get( 'date', '' ),
+				),
+			),
 		);
 
-		$filters_template = tutor()->path . 'views/elements/filters.php';
+		$filters_template = tutor()->path . 'views/elements/list-filters.php';
 
 		include TUTOR_REPORT()->path . 'views/pages/sales/sales-page.php';
 	}

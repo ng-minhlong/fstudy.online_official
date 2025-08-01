@@ -13,10 +13,54 @@ use Tutor\Ecommerce\OptionKeys;
 use Tutor\Ecommerce\Settings;
 use TUTOR\Input;
 use Tutor\Models\CourseModel;
-use Tutor\Course;
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+defined( 'ABSPATH' ) || exit;
+
+
+if ( ! function_exists( 'tutor' ) ) {
+	/**
+	 * Tutor helper function to get configuration like version, path etc.
+	 *
+	 * @since 1.0.0
+	 * @since 3.7.0 updated with config class.
+	 *
+	 * @return object
+	 */
+	function tutor() {
+		return \TUTOR\Config::get_instance();
+	}
+}
+
+if ( ! function_exists( 'tutor_utils' ) ) {
+	/**
+	 * Access tutor utils functions
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return \TUTOR\Utils
+	 */
+	function tutor_utils() {
+		if ( ! isset( $GLOBALS['tutor_utils_object'] ) ) {
+			// Use runtime cache.
+			$GLOBALS['tutor_utils_object'] = new \TUTOR\Utils();
+		}
+
+		return $GLOBALS['tutor_utils_object'];
+	}
+}
+
+
+if ( ! function_exists( 'tutils' ) ) {
+	/**
+	 * Alias of tutor_utils()
+	 *
+	 * @since 1.3.4
+	 *
+	 * @return \TUTOR\Utils
+	 */
+	function tutils() {
+		return tutor_utils();
+	}
 }
 
 /**
@@ -565,7 +609,7 @@ if ( ! function_exists( 'tutor_alert' ) ) {
 			return $msg;
 		}
 
-		$html = '<div class="asas tutor-alert tutor-' . esc_attr( $type ) . '">
+		$html = '<div class="tutor-alert tutor-' . esc_attr( $type ) . '">
 					<div class="tutor-alert-text">
 						<span class="tutor-alert-icon tutor-fs-4 tutor-icon-circle-info tutor-mr-12"></span>
 						<span>' . wp_kses( $msg, array( 'div', 'span' ) ) . '</span>
@@ -1213,6 +1257,7 @@ if ( ! function_exists( 'tutor_entry_box_buttons' ) ) {
 		$conditional_buttons = (object) array(
 			'show_enroll_btn'              => false,
 			'show_add_to_cart_btn'         => false,
+			'show_view_cart_btn'           => false,
 			'show_start_learning_btn'      => false,
 			'show_continue_learning_btn'   => false,
 			'show_complete_course_btn'     => false,
@@ -1263,7 +1308,11 @@ if ( ! function_exists( 'tutor_entry_box_buttons' ) ) {
 			} else {
 				$is_paid_course = tutor_utils()->is_course_purchasable( $course_id );
 				if ( $is_paid_course ) {
-					$conditional_buttons->show_add_to_cart_btn = true;
+					if ( tutor_is_item_in_cart( $course_id ) ) {
+						$conditional_buttons->show_view_cart_btn = true;
+					} else {
+						$conditional_buttons->show_add_to_cart_btn = true;
+					}
 				} else {
 					$conditional_buttons->show_enroll_btn = true;
 				}
@@ -1448,6 +1497,13 @@ if ( ! function_exists( 'tutor_global_timezone_lists' ) ) {
 					continue;
 				}
 
+				$name                = $method['name'];
+				$basename            = "tutor-{$name}/tutor-{$name}.php";
+				$is_plugin_activated = is_plugin_active( $basename );
+				if ( ! $is_manual && 'paypal' !== $name && ! $is_plugin_activated ) {
+					continue;
+				}
+
 				$fields = $method['fields'];
 				unset( $method['fields'] );
 
@@ -1467,7 +1523,7 @@ if ( ! function_exists( 'tutor_global_timezone_lists' ) ) {
 		}
 	}
 
-	if ( ! function_exists( 'tutor_get_supported_payment_gateways' ) ) {
+	if ( ! function_exists( 'tutor_get_subscription_supported_payment_gateways' ) ) {
 		/**
 		 * Get all supported gateways
 		 *
@@ -1475,19 +1531,18 @@ if ( ! function_exists( 'tutor_global_timezone_lists' ) ) {
 		 * plan id provided.
 		 *
 		 * @since 3.0.0
-		 *
-		 * @param int $plan_id Plan id.
+		 * @since 3.4.0 plan_id param removed
 		 *
 		 * @return array
 		 */
-		function tutor_get_supported_payment_gateways( int $plan_id = 0 ) {
+		function tutor_get_subscription_supported_payment_gateways() {
 			$payment_gateways = tutor_get_all_active_payment_gateways();
 
 			$supported_gateways = array();
 			foreach ( $payment_gateways as $gateway ) {
 				$support_subscription = $gateway['support_subscription'] ?? false;
 
-				if ( $plan_id && ! $support_subscription ) {
+				if ( ! $support_subscription ) {
 					continue;
 				}
 
@@ -1561,7 +1616,7 @@ if ( ! function_exists( 'tutor_get_course_formatted_price_html' ) ) {
 					<span><?php tutor_print_formatted_price( $price_data->display_price ); ?></span>
 				<?php endif; ?>
 			</div>
-			<?php if ( $price_data->show_price_with_tax ) : ?>
+			<?php if ( $price_data->show_incl_tax_label ) : ?>
 			<div class="tutor-course-price-tax tutor-fs-8 tutor-fw-normal tutor-color-black"><?php esc_html_e( 'Incl. tax', 'tutor' ); ?></div>
 			<?php endif; ?>
 		<?php
@@ -1689,7 +1744,7 @@ if ( ! function_exists( 'tutor_redirect_after_payment' ) ) {
 			}
 		}
 
-		wp_safe_redirect( add_query_arg( $query_params, home_url() ) );
+		wp_safe_redirect( apply_filters( 'tutor_redirect_url_after_checkout', add_query_arg( $query_params, home_url() ), $status, $order_id ) );
 		exit();
 	}
 }
@@ -1747,3 +1802,35 @@ if ( ! function_exists( 'tutor_is_local_env' ) ) {
 }
 
 
+
+if ( ! function_exists( 'get_tutor_post_types') ) {
+	/**
+	 * Get tutor post type list
+	 *
+	 * @since 3.6.0
+	 *
+	 * @param string $post_type the post type to get single tutor valid post type
+	 *
+	 * @return array|string
+	 */
+	function get_tutor_post_types( $post_type = '' ) {
+		$valid_post_types = array(
+			'course'       => tutor()->course_post_type,
+			'bundle'       => tutor()->bundle_post_type,
+			'lesson'       => tutor()->lesson_post_type,
+			'topics'       => tutor()->topics_post_type,
+			'quiz'         => tutor()->quiz_post_type,
+			'assignment'   => tutor()->assignment_post_type,
+			'zoom'         => tutor()->zoom_post_type,
+			'meet'         => tutor()->meet_post_type,
+			'enrollment'   => tutor()->enrollment_post_type,
+			'announcement' => tutor()->announcement_post_type,
+		);
+
+		if ( $post_type && isset( $valid_post_types[ $post_type ] ) ) {
+			return $valid_post_types[ $post_type ];
+		}
+
+		return $valid_post_types;
+	}
+}

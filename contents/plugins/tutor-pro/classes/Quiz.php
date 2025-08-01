@@ -136,7 +136,9 @@ class Quiz {
 	 * @return void
 	 */
 	public function correct_answer_explanation_content( $answer, $answer_status ) {
-		if ( strlen( trim( wp_strip_all_tags( $answer->answer_explanation ) ) ) > 0 && 'pending' !== $answer_status ) :
+		$trimmed_answer = trim( wp_strip_all_tags( $answer->answer_explanation ) );
+		$is_image_answer = preg_match( '/^(<p><img[^>]+src=[\'"]([^\'"]+)[\'"][^>]*><\/p>)/i', $answer->answer_explanation );
+		if ( (strlen( $trimmed_answer ) > 0 || $is_image_answer) && 'pending' !== $answer_status ) :
 			?>
 			<tr>
 				<td colspan="100%" class="column-empty-state data-td-content" id="tutor-question-<?php echo esc_attr( $answer->question_id ); ?>" style="display:none;">

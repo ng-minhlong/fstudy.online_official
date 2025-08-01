@@ -16,6 +16,7 @@ use Tutor\Ecommerce\Ecommerce;
 use Tutor\Ecommerce\OrderController;
 use Tutor\Helpers\DateTimeHelper;
 use TUTOR\Input;
+use Tutor\Models\OrderModel;
 
 /**
  * Determine active tab
@@ -42,6 +43,27 @@ $navbar_data    = array(
 	'button_url'   => $add_course_url,
 );
 
+
+$payment_status_options = array(
+	array(
+		'key'   => '',
+		'title' => __( 'Select', 'tutor' ),
+	),
+);
+
+$payment_status = array_map(
+	function ( $val, $key ) {
+		return array(
+			'key'   => $key,
+			'title' => $val,
+		);
+	},
+	OrderModel::get_payment_status(),
+	array_keys( OrderModel::get_payment_status() )
+);
+
+$payment_status_options = array_merge( $payment_status_options, $payment_status );
+
 /**
  * Bulk action & filters
  */
@@ -49,15 +71,31 @@ $filters = array(
 	'bulk_action'  => true,
 	'bulk_actions' => $order_controller->prepare_bulk_actions(),
 	'ajax_action'  => 'tutor_order_bulk_action',
-	'filters'      => true,
-);
-
-$available_status = array(
-	'publish' => array( __( 'Publish', 'tutor' ), 'select-success' ),
-	'pending' => array( __( 'Pending', 'tutor' ), 'select-warning' ),
-	'trash'   => array( __( 'Trash', 'tutor' ), 'select-danger' ),
-	'draft'   => array( __( 'Draft', 'tutor' ), 'select-default' ),
-	'private' => array( __( 'Private', 'tutor' ), 'select-default' ),
+	'filters'      => array(
+		array(
+			'label'      => __( 'Status', 'tutor' ),
+			'field_type' => 'select',
+			'field_name' => 'data',
+			'options'    => $order_controller->tabs_key_value(),
+			'searchable' => false,
+			'value'      => Input::get( 'data', '' ),
+		),
+		array(
+			'label'      => __( 'Payment Status', 'tutor' ),
+			'field_type' => 'select',
+			'field_name' => 'payment-status',
+			'options'    => $payment_status_options,
+			'show_label' => true,
+			'value'      => Input::get( 'payment-status', '' ),
+		),
+		array(
+			'label'      => __( 'Date', 'tutor' ),
+			'field_type' => 'date',
+			'field_name' => 'date',
+			'show_label' => true,
+			'value'      => Input::get( 'date', '' ),
+		),
+	),
 );
 
 ?>
@@ -67,18 +105,16 @@ $available_status = array(
 		/**
 		 * Load Templates with data.
 		 */
-		$navbar_template  = tutor()->path . 'views/elements/navbar.php';
-		$filters_template = tutor()->path . 'views/elements/filters.php';
+		$navbar_template  = tutor()->path . 'views/elements/list-navbar.php';
+		$filters_template = tutor()->path . 'views/elements/list-filters.php';
 		tutor_load_template_from_custom_path( $navbar_template, $navbar_data );
 		tutor_load_template_from_custom_path( $filters_template, $filters );
 	?>
-	<!-- Search Bar for Order ID -->
-
-	<div class="tutor-admin-body">
-		<div class="tutor-mt-24">
+	<div class="tutor-admin-container tutor-admin-container-lg">
+		<div class="tutor-mt-24 tutor-dashboard-list-table">
 			<div class="tutor-table-responsive">
-
-				<table class="tutor-table tutor-table-middle table-dashboard-course-list">
+				<?php if ( is_array( $orders ) && count( $orders ) ) : ?>
+				<table class="tutor-table tutor-table-middle">
 					<thead class="tutor-text-sm tutor-text-400">
 						<tr>
 							<th>
@@ -89,9 +125,6 @@ $available_status = array(
 							<th class="tutor-table-rows-sorting">
 								<?php esc_html_e( 'ID', 'tutor' ); ?>
 								<span class="a-to-z-sort-icon tutor-icon-ordering-a-z"></span>
-							</th>
-							<th >
-								<?php esc_html_e( 'Order ID', 'tutor' ); ?>
 							</th>
 							<th>
 								<?php esc_html_e( 'Name', 'tutor' ); ?>
@@ -120,7 +153,7 @@ $available_status = array(
 					</thead>
 
 					<tbody>
-						<?php if ( is_array( $orders ) && count( $orders ) ) : ?>
+						
 							<?php
 							foreach ( $orders as $key => $order ) : //phpcs:ignore
 								$user_data = get_userdata( $order->user_id );
@@ -133,14 +166,10 @@ $available_status = array(
 									</td>
 
 									<td>
-										<div class="tutor-fs-7">
+										<a href="<?php echo esc_url( $order_controller->get_order_page_url() . '&action=edit&id=' . $order->id ); ?>" class="tutor-table-link tutor-fs-7">
 											<?php echo esc_html( '#' . $order->id ); ?>
-										</div>
+										</a>
 									</td>
-									<td>
-											<?php echo esc_html($order->vn_paygate_order_content_id ); ?>
-									</td>
-
 
 									<td>
 										<div class="tutor-d-flex tutor-align-center">
@@ -171,7 +200,7 @@ $available_status = array(
 												<br>
 												<span class="tutor-fw-normal tutor-fs-8 tutor-color-muted">
 													<?php
-													/* translators: %s: transaction id */
+													/* translators: %s is the transaction ID */
 													echo esc_html( sprintf( __( 'Trx ID: %s', 'tutor' ), $order->transaction_id ) );
 													?>
 												</span>
@@ -190,21 +219,20 @@ $available_status = array(
 										<?php echo wp_kses_post( tutor_utils()->tutor_price( $order->total_price ) ); ?>
 									</td>
 									<td>
-										<a href="<?php echo esc_url( $order_controller->get_order_page_url() . '&action=edit&id=' . $order->id ); ?>" class="tutor-btn tutor-btn-outline-primary tutor-btn-sm">
-											<?php esc_html_e( 'Edit', 'tutor' ); ?>
-										</a>
+										<div class="tutor-d-flex tutor-align-center tutor-gap-1">
+											<a href="<?php echo esc_url( $order_controller->get_order_page_url() . '&action=edit&id=' . $order->id ); ?>" class="tutor-btn tutor-btn-outline-primary tutor-btn-sm">
+												<?php esc_html_e( 'Edit', 'tutor' ); ?>
+											</a>
+											<?php do_action( 'tutor_after_order_edit_link', $order ); ?>
+										</div>
 									</td>
 								</tr>
 							<?php endforeach; ?>
-						<?php else : ?>
-							<tr>
-								<td colspan="100%" class="column-empty-state">
-									<?php tutor_utils()->tutor_empty_state( tutor_utils()->not_found_text() ); ?>
-								</td>
-							</tr>
-						<?php endif; ?>
 					</tbody>
 				</table>
+				<?php else : ?>
+					<?php tutils()->render_list_empty_state(); ?>
+				<?php endif; ?>
 
 				<div class="tutor-admin-page-pagination-wrapper tutor-mt-32">
 					<?php

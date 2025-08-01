@@ -1216,7 +1216,7 @@ function main() {
         document.getElementById("start_test").style.display="block";
         
         document.getElementById("welcome").style.display="block";
-        hidePreloader();
+        
     }, 1000);
     
     

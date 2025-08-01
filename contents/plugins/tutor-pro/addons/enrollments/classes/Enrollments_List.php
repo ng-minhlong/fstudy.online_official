@@ -30,12 +30,6 @@ class Enrollments_List {
 	 */
 
 	use Backend_Page_Trait;
-	/**
-	 * Page Title
-	 *
-	 * @var $page_title
-	 */
-	public $page_title;
 
 	/**
 	 * Bulk Action
@@ -48,13 +42,27 @@ class Enrollments_List {
 	 * Handle dependencies
 	 */
 	public function __construct() {
-		$this->page_title = __( 'Enrollment', 'tutor' );
 		/**
 		 * Handle bulk action
 		 *
 		 * @since v2.0.0
 		 */
 		add_action( 'wp_ajax_tutor_enrollment_bulk_action', array( $this, 'enrollment_bulk_action' ) );
+	}
+
+	/**
+	 * Page title fallback
+	 *
+	 * @since 3.5.0
+	 *
+	 * @param string $name Property name.
+	 *
+	 * @return string
+	 */
+	public function __get( $name ) {
+		if ( 'page_title' === $name ) {
+			return esc_html__( 'Enrollment', 'tutor-pro' );
+		}
 	}
 
 	/**
@@ -113,7 +121,7 @@ class Enrollments_List {
 			$this->bulk_action_default(),
 			array(
 				'value'  => 'complete',
-				'option' => __( 'Approve', 'tutor' ),
+				'option' => __( 'Approve', 'tutor-pro' ),
 			),
 			$this->bulk_action_cancel(),
 		);
@@ -255,7 +263,8 @@ class Enrollments_List {
 			}
 		}
 
-		$ids_str = QueryHelper::prepare_in_clause( $bulk_ids );
+		$ids_str       = QueryHelper::prepare_in_clause( $bulk_ids );
+		$cancel_status = QueryHelper::prepare_in_clause( array( 'cancel', 'canceled', 'cancelled' ) );
 
 		// Now delete selected cancelled enrollments.
 		global $wpdb;
@@ -265,10 +274,9 @@ class Enrollments_List {
 				"DELETE FROM {$wpdb->posts}
 				WHERE ID IN ($ids_str)
 				AND post_type = %s
-				AND post_status = %s
+				AND post_status IN ($cancel_status)
 			",
 				'tutor_enrolled',
-				'cancel'
 			)
 		);
 		//phpcs:enable

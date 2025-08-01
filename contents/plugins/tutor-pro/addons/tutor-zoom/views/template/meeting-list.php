@@ -15,8 +15,8 @@ is_admin() ? $context = 'backend-dashboard' : '';
 $table_columns = include __DIR__ . '/contexts.php';
 $zoom_object   = new \TUTOR_ZOOM\Zoom( false );
 ?>
-<div class="tutor-table-responsive tutor-mb-24">
-	<table class="tutor-table tutor-table-zoom">
+<div class="tutor-table-responsive tutor-dashboard-list-table">
+	<table class="tutor-table tutor-table-middle">
 		<thead>
 			<tr>
 				<?php foreach ( $table_columns as $key => $column ) : ?>
@@ -226,7 +226,7 @@ $zoom_object   = new \TUTOR_ZOOM\Zoom( false );
 
 							case 'action_backend':
 								$button_text  = __( 'Start Meeting', 'tutor-pro' );
-								$button_class = 'tutor-btn tutor-btn-primary tutor-btn-md tutor-mr-12';
+								$button_class = 'tutor-btn tutor-btn-primary tutor-btn-md tutor-mr-12 tutor-ws-nowrap';
 								if ( $meeting->is_expired ) {
 									$button_text  = __( 'Expired', 'tutor-pro' );
 									$button_class = 'tutor-btn tutor-btn-outline-primary tutor-btn-md tutor-mr-12';
@@ -237,12 +237,12 @@ $zoom_object   = new \TUTOR_ZOOM\Zoom( false );
 								?>
 								<td>
 									<div class="tutor-d-flex tutor-align-center tutor-justify-end">
-										<div class="tutor-flex-wrap tutor-d-inline-flex tutor-align-center td-action-btns">
+										<div class="tutor-d-inline-flex tutor-align-center td-action-btns">
 											<a href="<?php echo ! $meeting->is_expired ? esc_url( $meeting_data['start_url'] ) : 'javascript:void(0)'; ?>" class="<?php echo esc_attr( $button_class ); ?>" <?php echo ! $meeting->is_expired ? 'target="_blank"' : 'disabled="disabled"'; ?>>
 												<i class="tutor-icon-brand-zoom tutor-mr-8"></i> <?php echo esc_html( $button_text ); ?>
 											</a>
 
-											<a href="#" class="tutor-btn tutor-btn-outline-primary tutor-btn-md" data-tutor-modal-target="tutor-zoom-meeting-modal-<?php echo esc_attr( $meeting->ID ); ?>">
+											<a href="#" class="tutor-btn tutor-btn-outline-primary tutor-btn-md tutor-mr-4" data-tutor-modal-target="tutor-zoom-meeting-modal-<?php echo esc_attr( $meeting->ID ); ?>">
 												<?php esc_html_e( 'Edit', 'tutor-pro' ); ?>
 											</a>
 

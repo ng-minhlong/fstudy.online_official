@@ -89,6 +89,44 @@ class ContentDrip {
 
 		add_filter( 'tutor_assignment_details_response', array( $this, 'extend_assignment_details_response' ), 10, 2 );
 		add_filter( 'tutor_lesson_details_response', array( $this, 'extend_lesson_details_response' ), 10, 2 );
+		add_filter( 'tutor_content_drip_assignment_deadline', array( $this, 'set_assignment_deadline' ), 10, 3 );
+	}
+	
+	/**
+	 * Set assignment deadline based on content drip date and days settings.
+	 *
+	 * @since 3.5.0
+	 *
+	 * @param int $deadline the deadline time to compare.
+	 * @param int $course_id the course id.
+	 * @param int $assignment_id the assignment id.
+	 *
+	 * @return int
+	 */
+	public function set_assignment_deadline( $deadline, $course_id, $assignment_id ) {
+		$enable = (bool) get_tutor_course_settings( $course_id, 'enable_content_drip' );
+
+		if ( ! $enable ) {
+			return $deadline;
+		}
+
+		$drip_type = get_tutor_course_settings( $course_id, 'content_drip_type', 'unlock_by_date' );
+
+		if ( 'specific_days' === $drip_type ) {
+			$days            = (int) get_item_content_drip_settings( $assignment_id, 'after_xdays_of_enroll' );
+			$days_in_seconds = DAY_IN_SECONDS * $days;
+			$deadline += $days_in_seconds;
+		}
+
+		if ( 'unlock_by_date' === $drip_type ) {
+			$unlock_timestamp = strtotime( get_item_content_drip_settings( $assignment_id, 'unlock_date' ) );
+
+			if ( $unlock_timestamp ) {
+				$deadline = $unlock_timestamp < $deadline ? $deadline : $unlock_timestamp;
+			}
+		}
+
+		return $deadline;
 	}
 
 	public function check_if_lesson_is_locked( $status ) {
@@ -220,7 +258,8 @@ class ContentDrip {
 		if ( $drip_type === 'unlock_by_date' ) {
 			$unlock_timestamp = strtotime( get_item_content_drip_settings( $content_id, 'unlock_date' ) );
 			if ( $unlock_timestamp ) {
-				$unlock_date          = date_i18n( get_option( 'date_format' ), $unlock_timestamp );
+				$unlock_date = date_i18n( get_option( 'date_format' ), $unlock_timestamp );
+				// Translators: %1s post type %2s unlock date.
 				$this->unlock_message = sprintf( __( 'This %1$s will be available from %2$s', 'tutor-pro' ), $this->singular_post_type, $unlock_date );
 
 				return $unlock_timestamp > current_time( 'timestamp' );
@@ -236,7 +275,8 @@ class ContentDrip {
 
 				$unlock_timestamp = strtotime( $enroll_date ) + $days_in_time;
 
-				$unlock_date          = date_i18n( get_option( 'date_format' ), $unlock_timestamp );
+				$unlock_date = date_i18n( get_option( 'date_format' ), $unlock_timestamp );
+				// Translators: %1s post type %2s unlock date.
 				$this->unlock_message = sprintf( __( 'This %1$s will be available for you from %2$s', 'tutor-pro' ), $this->singular_post_type, $unlock_date );
 
 				return $unlock_timestamp > current_time( 'timestamp' );
@@ -258,6 +298,7 @@ class ContentDrip {
 				if ( $previous_content->post_type === $lesson_post_type ) {
 					$is_lesson_complete = tutor_utils()->is_completed_lesson( $previous_id );
 					if ( ! $is_lesson_complete ) {
+						// Translators: %s name.
 						$this->unlock_message = sprintf( __( 'Please complete previous %s first', 'tutor-pro' ), $obj->labels->singular_name );
 						return true;
 					}
@@ -267,6 +308,7 @@ class ContentDrip {
 				if ( 'tutor_assignments' === $previous_content->post_type ) {
 					$is_submitted = tutor_utils()->is_assignment_submitted( $previous_id );
 					if ( ! $is_submitted ) {
+						// Translators: %s name.
 						$this->unlock_message = sprintf( __( 'Please submit previous %s first', 'tutor-pro' ), $obj->labels->singular_name );
 						return true;
 					}
@@ -281,6 +323,7 @@ class ContentDrip {
 					$this->quiz_pass_req               = false;
 
 					if ( ! $attempts ) {
+						// Translators: %s name.
 						$this->unlock_message = sprintf( __( 'Please complete previous %s first', 'tutor-pro' ), $obj->labels->singular_name );
 						return true;
 					}
@@ -294,6 +337,7 @@ class ContentDrip {
 					$passed_previous_quiz   = QuizModel::is_quiz_passed( $previous_id, get_current_user_id() );
 					$is_retry_mode          = 'retry' === tutor_utils()->get_quiz_option( $previous_id, 'feedback_mode', 'default' );
 					if ( $is_retry_mode && $previous_pass_required && ! $passed_previous_quiz ) {
+						// Translators: %s name.
 						$this->unlock_message              = sprintf( __( 'To access this %s you have to pass the quiz', 'tutor-pro' ), $courseObg->labels->singular_name ) . '<a href="' . esc_url( get_permalink( $previous_id ) ) . '" style="color:#3E64DE" >`' . esc_html( $previous_content->post_title ) . '`</a>';
 						$this->quiz_pass_req               = true;
 						$this->quiz_manual_review_required = QuizModel::is_manual_review_required( $previous_id );
@@ -346,7 +390,8 @@ class ContentDrip {
 				}
 
 				if ( tutor_utils()->count( $required_finish ) ) {
-					$output  = the_title( '<div class="tutor-assignment-title tutor-fs-4 tutor-fw-medium tutor-color-black">', '</div>', false );
+					$output = the_title( '<div class="tutor-assignment-title tutor-fs-4 tutor-fw-medium tutor-color-black">', '</div>', false );
+					// Translators: %s post type.
 					$output .= '<h4>' . sprintf( __( 'You can take this %s after finishing the following prerequisites:', 'tutor-pro' ), $this->singular_post_type ) . '</h4>';
 					$output .= '<ul>';
 					foreach ( $required_finish as $required_finish_item ) {

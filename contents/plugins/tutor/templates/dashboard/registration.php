@@ -57,17 +57,17 @@
 				<div class="tutor-form-col-6">
 					<div class="tutor-form-group">
 						<label>
-							<?php esc_html_e( 'Họ của bạn', 'tutor' ); ?>
+							<?php esc_html_e( 'First Name', 'tutor' ); ?>
 						</label>
 
-						<input type="text" name="first_name" value="<?php echo esc_attr( tutor_utils()->input_old( 'first_name' ) ); ?>" placeholder="<?php esc_attr_e( 'Tên', 'tutor' ); ?>" required autocomplete="given-name">
+						<input type="text" name="first_name" value="<?php echo esc_attr( tutor_utils()->input_old( 'first_name' ) ); ?>" placeholder="<?php esc_attr_e( 'First Name', 'tutor' ); ?>" required autocomplete="given-name">
 					</div>
 				</div>
 
 				<div class="tutor-form-col-6">
 					<div class="tutor-form-group">
 						<label>
-							<?php esc_html_e( 'Tên của bạn', 'tutor' ); ?>
+							<?php esc_html_e( 'Last Name', 'tutor' ); ?>
 						</label>
 
 						<input type="text" name="last_name" value="<?php echo esc_attr( tutor_utils()->input_old( 'last_name' ) ); ?>" placeholder="<?php esc_attr_e( 'Last Name', 'tutor' ); ?>" required autocomplete="family-name">
@@ -80,7 +80,7 @@
 				<div class="tutor-form-col-6">
 					<div class="tutor-form-group">
 						<label>
-							<?php esc_html_e( 'Tên đăng nhập', 'tutor' ); ?>
+							<?php esc_html_e( 'User Name', 'tutor' ); ?>
 						</label>
 
 						<input type="text" name="user_login" class="tutor_user_name" value="<?php echo esc_attr( tutor_utils()->input_old( 'user_login' ) ); ?>" placeholder="<?php esc_html_e( 'User Name', 'tutor' ); ?>" required autocomplete="username">
@@ -90,10 +90,10 @@
 				<div class="tutor-form-col-6">
 					<div class="tutor-form-group">
 						<label>
-							<?php esc_html_e( 'Địa chỉ Email', 'tutor' ); ?>
+							<?php esc_html_e( 'E-Mail', 'tutor' ); ?>
 						</label>
 
-						<input type="text" name="email" value="<?php echo esc_attr( tutor_utils()->input_old( 'email' ) ); ?>" placeholder="<?php esc_html_e( 'Địa chỉ Email', 'tutor' ); ?>" required autocomplete="email">
+						<input type="text" name="email" value="<?php echo esc_attr( tutor_utils()->input_old( 'email' ) ); ?>" placeholder="<?php esc_html_e( 'E-Mail', 'tutor' ); ?>" required autocomplete="email">
 					</div>
 				</div>
 
@@ -105,10 +105,10 @@
 						<div class="tutor-password-strength-checker">
 							<div class="tutor-password-field">
 								<label>
-									<?php esc_html_e( 'Mật khẩu', 'tutor' ); ?>
+									<?php esc_html_e( 'Password', 'tutor' ); ?>
 								</label>
 
-								<input class="password-checker" id="tutor-new-password" type="password" name="password" value="<?php echo esc_attr( tutor_utils()->input_old( 'password' ) ); ?>" placeholder="<?php esc_html_e( 'Mật khẩu', 'tutor' ); ?>" required autocomplete="new-password" style="margin-bottom: 0;">
+								<input class="password-checker" id="tutor-new-password" type="password" name="password" value="<?php echo esc_attr( tutor_utils()->input_old( 'password' ) ); ?>" placeholder="<?php esc_html_e( 'Password', 'tutor' ); ?>" required autocomplete="new-password" style="margin-bottom: 0;">
 								<span class="show-hide-btn"></span>
 							</div>
 
@@ -127,12 +127,12 @@
 				<div class="tutor-form-col-6">
 					<div class="tutor-form-group">
 						<label>
-							<?php esc_html_e( 'Nhập lại mật khẩu', 'tutor' ); ?>
+							<?php esc_html_e( 'Password confirmation', 'tutor' ); ?>
 						</label>
 
 						<div class="tutor-form-wrap">
 							<span class="tutor-validation-icon tutor-icon-mark tutor-color-success tutor-form-icon tutor-form-icon-reverse" style="display: none;"></span>
-							<input type="password" name="password_confirmation" value="<?php echo esc_attr( tutor_utils()->input_old( 'password_confirmation' ) ); ?>" placeholder="<?php esc_html_e( 'Nhập lại mật khẩu', 'tutor' ); ?>" required autocomplete="new-password" style="margin-bottom: 0;">
+							<input type="password" name="password_confirmation" value="<?php echo esc_attr( tutor_utils()->input_old( 'password_confirmation' ) ); ?>" placeholder="<?php esc_html_e( 'Password Confirmation', 'tutor' ); ?>" required autocomplete="new-password" style="margin-bottom: 0;">
 						</div>
 					</div>
 				</div>
@@ -163,7 +163,7 @@
 			<?php endif; ?>
 
 			<div>
-				<button type="submit" name="tutor_register_student_btn" value="register" class="tutor-btn tutor-btn-primary tutor-btn-block"><?php esc_html_e( 'Đăng ký', 'tutor' ); ?></button>
+				<button type="submit" name="tutor_register_student_btn" value="register" class="tutor-btn tutor-btn-primary tutor-btn-block"><?php esc_html_e( 'Register', 'tutor' ); ?></button>
 			</div>
 			<?php do_action( 'tutor_after_register_button' ); ?>
 			

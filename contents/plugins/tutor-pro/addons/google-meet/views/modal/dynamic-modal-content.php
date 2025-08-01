@@ -67,7 +67,7 @@ $course_id = $event->post_parent;
 
 							<div class="tutor-gmi-meeting-time">
 								<div>
-									<div class="tutor-v2-date-picker tutor-v2-date-picker-fd tutor-google-meet-start-date" style="width: 100%;" data-prevent_redirect="1" data-input_name="meeting_start_date" data-input_value="<?php echo esc_attr( $details->start_datetime ? tutor_get_formated_date( 'd-m-Y', $details->start_datetime ) : '' ); ?>" tutor-disable-past-date></div>
+									<div class="tutor-v2-date-picker tutor-v2-date-picker-fd tutor-google-meet-start-date" style="width: 100%;" data-prevent_redirect="1" data-input_name="meeting_start_date" data-input_value="<?php echo esc_attr( $details->start_datetime ? tutor_get_formated_date( 'd-m-Y', $details->start_datetime ) : '' ); ?>" data-disable_past_date="1"></div>
 									<div class="tutor-form-wrap">
 										<span class="tutor-icon-clock-line tutor-form-icon tutor-form-icon-reverse tutor-google-meet-start-time"></span>
 										<input type="text" name="meeting_start_time" class="tutor-form-control tutor-google-meet-timepicker" data-name="meeting_time" autocomplete="off" placeholder="HH:MM PM" value="<?php echo esc_attr( $details->start_datetime ? tutor_get_formated_date( 'h:i A', $details->start_datetime ) : '' ); ?>" >
@@ -75,7 +75,7 @@ $course_id = $event->post_parent;
 								</div>
 								<span class="tutor-icon-minus-o tutor-icon-minus-o tutor-fs-6"></span>
 								<div>
-									<div class="tutor-v2-date-picker tutor-v2-date-picker-fd tutor-google-meet-end-date" style="width: 100%;" data-prevent_redirect="1" data-input_name="meeting_end_date" data-input_value="<?php echo esc_attr( $details->end_datetime ? tutor_get_formated_date( 'd-m-Y', $details->end_datetime ) : '' ); ?>" tutor-disable-past-date></div>
+									<div class="tutor-v2-date-picker tutor-v2-date-picker-fd tutor-google-meet-end-date" style="width: 100%;" data-prevent_redirect="1" data-input_name="meeting_end_date" data-input_value="<?php echo esc_attr( $details->end_datetime ? tutor_get_formated_date( 'd-m-Y', $details->end_datetime ) : '' ); ?>" data-disable_past_date="1"></div>
 									<div class="tutor-form-wrap">
 										<span class="tutor-icon-clock-line tutor-form-icon tutor-form-icon-reverse tutor-google-meet-end-time"></span>
 										<input type="text" name="meeting_end_time" data-name="meeting_time" class="tutor-form-control tutor-google-meet-timepicker" autocomplete="off" placeholder="HH:MM PM" value="<?php echo esc_attr( $details->end_datetime ? tutor_get_formated_date( 'h:i A', $details->end_datetime ) : '' ); ?>">

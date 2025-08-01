@@ -30,12 +30,13 @@ add_filter( 'tutor_addons_lists_config', 'tutor_wcs_config' );
  */
 function tutor_wcs_config( $config ) {
 	$new_config = array(
-		'name'           => __( 'WooCommerce Subscriptions', 'tutor-pro' ),
-		'description'    => __( 'Capture Residual Revenue with Recurring Payments.', 'tutor-pro' ),
-		'depend_plugins' => array(
+		'name'               => __( 'WooCommerce Subscriptions', 'tutor-pro' ),
+		'description'        => __( 'Capture Residual Revenue with Recurring Payments.', 'tutor-pro' ),
+		'depend_plugins'     => array(
 			'woocommerce/woocommerce.php' => 'WooCommerce',
 			'woocommerce-subscriptions/woocommerce-subscriptions.php' => 'WooCommerce Subscriptions',
 		),
+		'required_pro_plugin' => true,
 	);
 
 	$basic_config = (array) TUTOR_WCS();

@@ -307,4 +307,22 @@ class EmailSettings {
 
 		return $defaults;
 	}
+
+	/**
+	 * Get color group labels
+	 *
+	 * @since 3.2.2
+	 *
+	 * @return array
+	 */
+	public static function get_color_group_labels() {
+		$color_group_labels = array(
+			'body_header'      => __( 'Body Header', 'tutor-pro' ),
+			'email_body'       => __( 'Email Body', 'tutor-pro' ),
+			'primary_button'   => __( 'Primary Button', 'tutor-pro' ),
+			'secondary_button' => __( 'Secondary Button', 'tutor-pro' ),
+		);
+
+		return $color_group_labels;
+	}
 }

@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.0.0
  */
-final class Tutor {
+final class Tutor extends Singleton {
 	/**
 	 * Tutor version
 	 *
@@ -58,16 +58,6 @@ final class Tutor {
 	 * @var string
 	 */
 	public $basename;
-
-	/**
-	 * The single instance of the class.
-	 *
-	 * @since 1.2.0
-	 *
-	 * @var object
-	 */
-	protected static $_instance = null;
-
 
 	/**
 	 * Utils class object
@@ -166,7 +156,7 @@ final class Tutor {
 	 *
 	 * @var object
 	 */
-	private $lesson;
+	public $lesson;
 
 	/**
 	 * Rewrite_Rules class object
@@ -353,9 +343,9 @@ final class Tutor {
 	 *
 	 * @since 2.0.0
 	 *
-	 * @var $announcements
+	 * @var object
 	 */
-	private $announcements;
+	public $announcements;
 
 	/**
 	 * Reviews class object
@@ -373,7 +363,7 @@ final class Tutor {
 	 *
 	 * @var object
 	 */
-	private $withdraw_list;
+	public $withdraw_list;
 
 	/**
 	 * Student_List class object
@@ -382,7 +372,7 @@ final class Tutor {
 	 *
 	 * @var object
 	 */
-	private $student_list;
+	public $student_list;
 
 	/**
 	 * Instructor_List class object
@@ -391,7 +381,7 @@ final class Tutor {
 	 *
 	 * @var object
 	 */
-	private $instructor_list;
+	public $instructor_list;
 
 	/**
 	 * Course List
@@ -437,20 +427,6 @@ final class Tutor {
 	private $permalink;
 
 	/**
-	 * Run the TUTOR
-	 *
-	 * @since 1.2.0
-	 *
-	 * @return null|Tutor
-	 */
-	public static function instance() {
-		if ( is_null( self::$_instance ) ) {
-			self::$_instance = new self();
-		}
-		return self::$_instance;
-	}
-
-	/**
 	 * Initialize props & other dependencies
 	 *
 	 * @since 1.0.0
@@ -487,11 +463,6 @@ final class Tutor {
 		 */
 		$this->includes();
 
-		/**
-		 * Loading Auto loader
-		 */
-		spl_autoload_register( array( $this, 'loader' ) );
-
 		do_action( 'tutor_before_load' );
 
 		$this->addons                = new Addons();
@@ -518,7 +489,6 @@ final class Tutor {
 		$this->gutenberg             = new Gutenberg();
 		$this->course_settings_tabs  = new Course_Settings_Tabs();
 		$this->withdraw              = new Withdraw();
-		$this->course_widget         = new Course_Widget();
 		$this->upgrader              = new Upgrader();
 		$this->dashboard             = new Dashboard();
 		$this->form_handler          = new FormHandler();
@@ -622,51 +592,28 @@ final class Tutor {
 	}
 
 	/**
-	 * Auto Load class and the files
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $class_name class name to load.
-	 *
-	 * @return void
-	 */
-	private function loader( $class_name ) {
-		if ( ! class_exists( $class_name ) ) {
-			$class_name = preg_replace(
-				array( '/([a-z])([A-Z])/', '/\\\/' ),
-				array( '$1$2', DIRECTORY_SEPARATOR ),
-				$class_name
-			);
-
-			$class_name = str_replace( 'TUTOR' . DIRECTORY_SEPARATOR, 'classes' . DIRECTORY_SEPARATOR, $class_name );
-			$file_name  = $this->path . $class_name . '.php';
-
-			if ( file_exists( $file_name ) ) {
-				require_once $file_name;
-			}
-		}
-	}
-
-	/**
 	 * Include utility functions
 	 *
 	 * @return void
 	 */
 	public function includes() {
-		include tutor()->path . 'includes/tutor-general-functions.php';
-		include tutor()->path . 'includes/tutor-template-functions.php';
-		include tutor()->path . 'includes/tutor-template-hook.php';
-		include tutor()->path . 'includes/translate-text.php';
-		include tutor()->path . 'includes/country.php';
+		$tutor_path = plugin_dir_path( TUTOR_FILE );
+
+		include $tutor_path . 'includes/tutor-general-functions.php';
+		include $tutor_path . 'includes/tutor-template-functions.php';
+		include $tutor_path . 'includes/tutor-template-hook.php';
+		include $tutor_path . 'includes/translate-text.php';
+		include $tutor_path . 'includes/country.php';
+		include $tutor_path . 'includes/ecommerce-functions.php';
 
 		if ( ! function_exists( 'is_plugin_active' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
 
 		$is_droip_active  = \is_plugin_active( 'droip/droip.php' );
-		$tutor_droip_path = tutor()->path . 'tutor-droip/tutor-droip-elements.php';
+		$tutor_droip_path = $tutor_path . 'includes/droip/droip.php';
 		if ( $is_droip_active && file_exists( $tutor_droip_path ) ) {
-			include tutor()->path . 'tutor-droip/tutor-droip-elements.php';
+			include $tutor_droip_path;
 		}
 	}
 
@@ -1198,6 +1145,8 @@ final class Tutor {
 	 *
 	 * @since 1.0.0
 	 *
+	 * @since 3.4.1 Supported video sources added
+	 *
 	 * @return array
 	 */
 	public static function default_options() {
@@ -1242,6 +1191,14 @@ final class Tutor {
 			'decimal_separator'                 => '.',
 			'number_of_decimals'                => '2',
 			'is_coupon_applicable'              => 'on',
+			'supported_video_sources'           => array(
+				'html5',
+				'external_url',
+				'youtube',
+				'vimeo',
+				'embedded',
+				'shortcode',
+			),
 		);
 
 		return $options;

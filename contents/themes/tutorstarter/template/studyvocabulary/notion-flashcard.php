@@ -400,7 +400,7 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = `${siteUrl}/practice/notion/test/`;
     });
 });
-hidePreloader();
+
 </script>
 
 

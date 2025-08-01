@@ -7,5 +7,4 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'TUTORMATE\\' => array($baseDir . '/inc'),
-    'AwesomeMotive\\WPContentImporter2\\' => array($baseDir . '/lib/awesomemotive/src'),
 );

@@ -62,7 +62,7 @@ class Quiz extends Tutor_Base {
 		add_filter( 'tutor_filter_quiz_answer_data', array( $this, 'filter_quiz_answer_data' ), 10, 5 );
 		add_action( 'tutor_require_question_answer_file', array( $this, 'require_file' ), 10, 3 );
 		add_action( 'tutor_quiz_attempt_after_result_column', array( $this, 'show_question_answer' ), 10, 3 );
-		add_action( 'tutor_quiz_question_desc_render', array( $this, 'filter_h5p_question_description' ), 12, 2 );
+		add_action( 'tutor_filter_quiz_question_description', array( $this, 'filter_h5p_question_description' ), 12, 2 );
 		add_filter( 'tutor_question_type_icon', array( $this, 'add_h5p_question_type_icon' ), 10, 2 );
 	}
 
@@ -90,15 +90,17 @@ class Quiz extends Tutor_Base {
 	 *
 	 * @since 3.0.0
 	 *
-	 * @param mixed  $markup the question description markup.
-	 * @param object $question the question object.
+	 * @param string $description the question description.
 	 *
-	 * @return mixed
+	 * @return string
 	 */
-	public function filter_h5p_question_description( $markup, $question ) {
-		$h5p_short_code = '[h5p id=' . $question->question_description . ']';
-		$markup         = do_shortcode( $h5p_short_code );
-		echo $markup;
+	public function filter_h5p_question_description( $description ) {
+		$content = Utils::addon_config()->h5p_plugin->get_content( $description );
+		if ( ! is_array( $content ) ) {
+			return $description;
+		}
+		$h5p_short_code = '[h5p id=' . $description . ']';
+		return $h5p_short_code;
 	}
 
 	/**
@@ -117,7 +119,7 @@ class Quiz extends Tutor_Base {
 					<div class="tutor-modal-content">
 						<div class="tutor-modal-header">
 							<div class="tutor-modal-title">
-							<?php esc_html_e( 'H5P Question Answer', 'tutor' ); ?>
+							<?php esc_html_e( 'H5P Question Answer', 'tutor-pro' ); ?>
 						</div>
 						<button class="tutor-iconic-btn tutor-modal-close" data-tutor-modal-close>
 							<span class="tutor-icon-times" area-hidden="true"></span>
@@ -163,7 +165,7 @@ class Quiz extends Tutor_Base {
 					data-attempt-id="<?php echo esc_attr( $answer->quiz_attempt_id ); ?>"
 					data-content-id="<?php echo esc_attr( $answer->question_description ); ?>"
 				>
-					<?php esc_html_e( 'View', 'tutor' ); ?>
+					<?php esc_html_e( 'View', 'tutor-pro' ); ?>
 				</a>
 				<?php
 			} else {

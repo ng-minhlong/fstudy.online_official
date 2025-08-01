@@ -10,7 +10,9 @@
 
 namespace TUTOR_PRO;
 
+use Tutor\Ecommerce\OrderController;
 use TUTOR\Input;
+use TutorPro\Ecommerce\GuestCheckout\GuestCheckout;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -31,7 +33,7 @@ class Assets {
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'load_js_translations' ), 100 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'load_js_translations' ), 100 );
-		add_action( 'tutor_course_builder_before_wp_editor_load', array( $this, 'enqueue_prism_assets' ) );
+		add_action( 'tutor_course_builder_before_wp_editor_load', array( $this, 'enqueue_tinymce_codesample_asset' ) );
 	}
 
 	/**
@@ -59,10 +61,21 @@ class Assets {
 
 		// Enqueue TinyMCE codesample assets.
 		self::enqueue_tinymce_codesample_asset();
+
+		// Enqueue html2canvas and jsPDf.
+		$invoice_id   = Input::get( 'invoice', 0, Input::TYPE_INT );
+		$current_page = Input::get( 'page' );
+
+		if ( OrderController::PAGE_SLUG === $current_page && $invoice_id ) {
+			wp_enqueue_script( 'html2canvas', tutor_pro()->url . 'assets/lib/html2canvas/html2canvas.min.js', array( 'jquery' ), TUTOR_VERSION, true );
+			wp_enqueue_script( 'jsPDf', tutor_pro()->url . 'assets/lib/jspdf/jspdf.umd.min.js', array( 'jquery' ), TUTOR_VERSION, true );
+		}
 	}
 
 	/**
 	 * Enqueue style & scripts on the frontend
+	 *
+	 * @since 3.3.0 Guest checkout js enqueued
 	 *
 	 * @return void
 	 */
@@ -98,6 +111,10 @@ class Assets {
 		}
 
 		wp_enqueue_style( 'tutor-pro-front', tutor_pro()->url . 'assets/css/front.css', array(), TUTOR_VERSION );
+
+		if ( tutor_utils()->is_monetize_by_tutor() && GuestCheckout::is_enable() ) {
+			wp_enqueue_script( 'tutor-pro-guest-checkout', tutor_pro()->url . 'assets/js/guest-checkout.js', array( 'jquery', 'wp-i18n' ), TUTOR_PRO_VERSION, true );
+		}
 	}
 
 	/**
@@ -110,8 +127,14 @@ class Assets {
 		global $wp_query;
 		$query_vars        = $wp_query->query_vars;
 		$current_post_type = get_post_type();
-		$current_page      = $query_vars['tutor_dashboard_page'] ?? '';
-		if ( tutor()->course_post_type === $current_post_type || 'create-course' === $current_page ) {
+		$dashboard_page    = $query_vars['tutor_dashboard_page'] ?? '';
+		$page              = Input::get( 'page', '' );
+		$editor_pages      = array( 'create-course', 'course-bundle', 'create-bundle', 'tutor_settings', 'tutor-content-bank' );
+
+		if ( in_array( $current_post_type, array( tutor()->course_post_type, tutor()->bundle_post_type ), true ) ||
+			in_array( $dashboard_page, $editor_pages, true ) ||
+			in_array( $page, $editor_pages, true )
+		) {
 			if ( ! wp_script_is( 'wp-tinymce-root' ) ) {
 				wp_enqueue_script( 'tutor-tiny', includes_url( 'js/tinymce' ) . '/tinymce.min.js', array( 'jquery' ), TUTOR_VERSION, true );
 			}
@@ -124,17 +147,4 @@ class Assets {
 		wp_enqueue_script( 'tutor-prism-script', tutor_pro()->url . 'assets/lib/prism/script.js', array( 'jquery' ), TUTOR_VERSION, true );
 
 	}
-
-	/**
-	 * Enqueue prism assets for codesample
-	 *
-	 * @since 3.0.0
-	 *
-	 * @return void
-	 */
-	public static function enqueue_prism_assets() {
-		wp_enqueue_script( 'prism', tutor()->url . 'assets/lib/prism/prism.min.js', array( 'jquery' ), TUTOR_VERSION, true );
-		wp_enqueue_style( 'prism', tutor()->url . 'assets/lib/prism/prism.css', array(), TUTOR_VERSION );
-	}
-
 }

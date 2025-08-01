@@ -59,7 +59,7 @@ class PaidMembershipsPro {
 			add_action( 'admin_enqueue_scripts', array( $this, 'admin_script' ) );
 
 			add_filter( 'tutor_course_expire_validity', array( $this, 'filter_expire_time' ), 99, 2 );
-			add_action( 'pmpro_subscription_expired', array( $this, 'remove_course_access' ) );
+			add_action( 'pmpro_after_change_membership_level', array( $this, 'remove_course_access' ), 10, 3 );
 		}
 	}
 
@@ -74,10 +74,12 @@ class PaidMembershipsPro {
 	 *
 	 * @return void
 	 */
-	public function remove_course_access( \MemberOrder $old_order ) {
-		$user_id = $old_order->user_id;
-		$level   = pmpro_getMembershipLevelForUser( $user_id );
-		$model   = get_pmpro_membership_level_meta( $level->id, 'tutor_pmpro_membership_model', true );
+	public function remove_course_access( $level_id, $user_id, $cancel_id ) {
+		if ( ! $cancel_id ) {
+			return;
+		}
+
+		$model = get_pmpro_membership_level_meta( $cancel_id, 'tutor_pmpro_membership_model', true );
 
 		$all_models = array( self::FULL_WEBSITE_MEMBERSHIP, self::CATEGORY_WISE_MEMBERSHIP );
 		if ( ! in_array( $model, $all_models, true ) ) {
@@ -92,9 +94,27 @@ class PaidMembershipsPro {
 
 		if ( self::CATEGORY_WISE_MEMBERSHIP === $model ) {
 			$lbl_obj    = new \PMPro_Membership_Level();
-			$categories = (array) $lbl_obj->get_membership_level_categories( $level->id );
+			$categories = $lbl_obj->get_membership_level_categories( $cancel_id );
 			if ( count( $categories ) ) {
-				$enrolled_courses = tutor_utils()->get_enrolled_courses_by_user( $user_id, 'publish', 0, -1, array( 'category__in' => $categories ) );
+				$enrolled_courses_ids = array_unique( tutor_utils()->get_enrolled_courses_ids_by_user( $user_id ) );
+				if ( $enrolled_courses_ids ) {
+					$enrolled_courses = new \WP_Query(
+						array(
+							'post_type'      => tutor()->course_post_type,
+							'post_status'    => 'publish',
+							'posts_per_page' => -1,
+							'tax_query'      => array(
+								array(
+									'taxonomy' => 'course-category',
+									'field'    => 'term_id',
+									'terms'    => $categories,
+									'operator' => 'IN',
+								),
+							),
+							'post__in'       => $enrolled_courses_ids,
+						)
+					);
+				}
 			}
 		}
 
@@ -261,7 +281,7 @@ class PaidMembershipsPro {
 						array(
 							'key'     => 'pmpro_no_commitment_message',
 							'type'    => 'text',
-							'label'   => 'No commitment message',
+							'label'   => __( 'No commitment message', 'tutor-pro' ),
 							'default' => '',
 							'desc'    => __( 'Keep empty to hide', 'tutor-pro' ),
 						),

@@ -15,8 +15,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use Tutor\Helpers\DateTimeHelper;
 use TUTOR\Input;
+use Tutor\Models\CourseModel;
 use TutorPro\Subscription\Controllers\SubscriptionListController;
 use TutorPro\Subscription\Models\PlanModel;
+use TutorPro\Subscription\Models\SubscriptionModel;
 
 // Pagination.
 $current_page = max( Input::get( 'paged', 1, Input::TYPE_INT ), 1 );
@@ -76,6 +78,9 @@ foreach ( $page_tabs as $index => $item ) {
 									<?php esc_html_e( 'Next Payment Date', 'tutor-pro' ); ?>
 								</th>
 								<th>
+									<?php esc_html_e( 'Auto-Renewal', 'tutor-pro' ); ?>
+								</th>
+								<th>
 									<?php esc_html_e( 'Status', 'tutor-pro' ); ?>
 								</th>
 								<th></th>
@@ -91,13 +96,23 @@ foreach ( $page_tabs as $index => $item ) {
 									<td>
 										<?php
 										echo esc_html( $subscription->plan_name );
-										$course_id = $controller->plan_model->get_course_id_by_plan( $subscription->plan_id );
-										if ( $course_id ) :
+										if ( $controller->plan_model->is_membership_plan( $plan ) ) {
 											?>
-												<div class="tutor-fs-7 tutor-fw-normal tutor-color-secondary tutor-mt-8">
-												<strong class="tutor-fs-7 tutor-fw-medium"><?php esc_html_e( 'Course:', 'tutor-pro' ); ?> </strong><?php echo esc_html( get_the_title( $course_id ) ); ?></div>
+											<div class="tutor-fs-8 tutor-fw-normal tutor-color-secondary tutor-mt-8">
+												<?php echo esc_html( $controller->plan_model->get_type_label( $plan->plan_type, __( 'Access', 'tutor-pro' ) ) ); ?>
+											</div>
+											<?php
+										} else {
+											$object_id = $controller->plan_model->get_object_id_by_plan( $subscription->plan_id );
+											if ( $object_id ) :
+												?>
+												<div class="tutor-fs-8 tutor-fw-normal tutor-color-secondary tutor-mt-8">
+													<?php echo esc_html( $controller->plan_model->get_type_label( $plan->plan_type ) ); ?>:
+													<a target="_blank" href="<?php echo esc_url( get_the_permalink( $object_id ) ); ?>"><?php echo esc_html( get_the_title( $object_id ) ); ?></a>
+												</div>
 												<?php
 											endif;
+										}
 										?>
 									</td>
 
@@ -118,14 +133,27 @@ foreach ( $page_tabs as $index => $item ) {
 									</td>
 
 									<td>
-										<?php echo wp_kses_post( tutor_utils()->translate_dynamic_text( $subscription->status, true ) ); ?>
+										<span class="tutor-fw-normal tutor-fs-7">
+											<?php
+												$subscription->auto_renew
+												? esc_html_e( 'Enabled', 'tutor-pro' )
+												: esc_html_e( 'Disabled', 'tutor-pro' );
+											?>
+										</span>
+									</td>
+
+									<td>
+									<?php
+										$text_key = $subscription->is_trial_enabled && SubscriptionModel::STATUS_ACTIVE === $subscription->status ? 'trial' : $subscription->status;
+										echo wp_kses_post( tutor_utils()->translate_dynamic_text( $text_key, true ) );
+									?>
 									</td>
 
 									<td class="tutor-text-right">
 										<a 
 											href="<?php echo esc_url( add_query_arg( array( 'id' => $subscription->id ), $page_link ) ); ?>" 
 											class="tutor-btn tutor-btn-outline-primary tutor-btn-sm">
-										<?php esc_html_e( 'Details', 'tutor' ); ?>
+										<?php esc_html_e( 'Details', 'tutor-pro' ); ?>
 										</a>
 									</td>
 								</tr>

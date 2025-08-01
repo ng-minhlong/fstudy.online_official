@@ -13,6 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use Tutor\Ecommerce\CheckoutController;
 use Tutor\Ecommerce\Ecommerce;
 use Tutor\Helpers\DateTimeHelper;
 use TUTOR\Input;
@@ -24,6 +25,7 @@ use TutorPro\Subscription\Models\SubscriptionModel;
 
 // Pagination.
 
+$user_id      = get_current_user_id();
 $current_page = Input::get( 'current_page', 1, Input::TYPE_INT );
 $limit        = (int) tutor_utils()->get_option( 'pagination_per_page', 10 );
 $offset       = ( $limit * max( $current_page, 1 ) ) - $limit;
@@ -32,14 +34,21 @@ $page_link = tutor_utils()->get_tutor_dashboard_page_permalink( 'subscriptions' 
 
 $subscription_id = max( Input::get( 'id', 1, Input::TYPE_INT ), 1 );
 $controller      = new SubscriptionListController( false );
-$subscription    = $controller->subscription_model->get_subscription( $subscription_id );
+$subscription    = $controller->subscription_model->get_row(
+	array(
+		'user_id' => $user_id,
+		'id'      => $subscription_id,
+	)
+);
+
 if ( ! $subscription ) {
 	tutor_utils()->tutor_empty_state( tutor_utils()->not_found_text() );
 	return;
 }
 
 $plan                = $controller->plan_model->get_plan( $subscription->plan_id );
-$order_history_query = $controller->subscription_model->get_subscription_orders( $subscription, $limit, $offset );
+$payment_types       = $controller->plan_model->get_payment_type_list();
+$order_history_query = $controller->subscription_model->get_subscription_order_history( $subscription_id, $limit, $offset );
 $order_history       = $order_history_query['results'];
 $total_items         = $order_history_query['total_count'];
 $date_format         = 'd M, Y h:i a';
@@ -48,13 +57,16 @@ $date_format         = 'd M, Y h:i a';
 $can_cancel_anytime = (bool) tutor_utils()->get_option( 'subscription_cancel_anytime', true );
 $can_early_renewal  = (bool) tutor_utils()->get_option( 'subscription_early_renewal', false );
 
-$order_model = new OrderModel();
+$active_payment_method = $controller->subscription_model->get_active_payment_method( $subscription );
+$show_start_date       = $subscription->start_date_gmt !== $subscription->next_payment_date_gmt;
+
+$order_type_list = $controller->order_model->get_order_type_list();
 ?>
 
 <div class="tutor-subscription-info tutor-mb-32">
 	<a class="tutor-btn tutor-btn-ghost" href="<?php echo esc_url( $page_link ); ?>">
 		<span class="tutor-icon-previous tutor-mr-8" area-hidden="true"></span>
-		<?php esc_html_e( 'Back', 'tutor-pro ' ); ?>
+		<?php esc_html_e( 'Back', 'tutor-pro' ); ?>
 	</a>
 
 	<div class="tutor-card tutor-mt-20 tutor-mb-48">
@@ -65,52 +77,133 @@ $order_model = new OrderModel();
 						<?php echo esc_html( $plan->plan_name ); ?>
 					</div>
 					<?php echo wp_kses_post( tutor_utils()->translate_dynamic_text( $subscription->status, true ) ); ?>
+					<?php if ( $subscription->is_trial_enabled ) : ?>
+						<span class="tutor-badge-label label-warning"><?php esc_html_e( 'Trial', 'tutor-pro' ); ?></span>
+					<?php endif; ?>
 				</div>
 
 				<?php
-				$course_id = $controller->plan_model->get_course_id_by_plan( $subscription->plan_id );
-				if ( $course_id ) :
+				if ( $controller->plan_model->is_membership_plan( $plan ) ) {
 					?>
-					<div class="tutor-fs-7 tutor-fw-normal tutor-mb-16">
-						<a href="<?php echo esc_url( get_permalink( $course_id ) ); ?>" target="_blank" class="tutor-color-primary">
-							<?php echo esc_html( get_the_title( $course_id ) ); ?>
-						</a>
-					</div>
-					<?php
-				endif;
+						<div class="tutor-fs-7 tutor-fw-normal">
+							<?php
+							if ( PlanModel::TYPE_FULL_SITE === $plan->plan_type ) {
+								esc_html_e( 'Full Site Access', 'tutor-pro' );
+							} else {
+								?>
+								<div class="tutor-d-flex tutor-gap-4px">
+									<div class="tutor-color-subdued"><?php esc_html_e( 'Category:', 'tutor-pro' ); ?></div>
+									<div>
+									<?php
+									$categories     = $controller->plan_model->get_plan_categories( $plan->id );
+									$category_links = array();
+									foreach ( $categories as $category ) {
+										$category_links[] = '<a href="' . esc_url( get_term_link( $category ) ) . '" target="_blank" class="tutor-color-primary">' . esc_html( $category->name ) . '</a>';
+									}
+
+									echo wp_kses(
+										implode( ', ', $category_links ),
+										array(
+											'a' => array(
+												'href'   => true,
+												'target' => true,
+												'class'  => true,
+											),
+										)
+									);
+									?>
+									</div>
+								</div>
+								<?php
+							}
+							?>
+						</div>
+						<?php
+				} else {
+					$object_id = $controller->plan_model->get_object_id_by_plan( $subscription->plan_id );
+					if ( $object_id ) :
+						?>
+						<div class="tutor-fs-7 tutor-fw-normal">
+							<?php echo esc_html( $controller->plan_model->get_type_label( $plan->plan_type ) ); ?>:
+							<a href="<?php echo esc_url( get_permalink( $object_id ) ); ?>" target="_blank" class="tutor-color-primary">
+							<?php echo esc_html( get_the_title( $object_id ) ); ?>
+							</a>
+						</div>
+						<?php
+					endif;
+				}
 				?>
 
-				<div class="tutor-d-flex tutor-gap-3 tutor-fs-7">
+				<?php
+				if ( SubscriptionModel::STATUS_ACTIVE === $subscription->status
+							&& ! in_array( $active_payment_method, array( OrderModel::PAYMENT_METHOD_MANUAL, OrderModel::PAYMENT_METHOD_FREE ) )
+						) :
+					?>
+				<div class="tutor-mt-12">
+					<label class="tutor-d-flex tutor-gap-1 tutor-align-start" for="auto_renew">
+						<input
+							type="checkbox" 
+							name="auto_renew" 
+							id="auto_renew"
+							class="tutor-form-check-input"
+							data-subscription-id="<?php echo esc_attr( $subscription_id ); ?>"
+							<?php echo $subscription->auto_renew ? 'checked' : ''; ?>
+						>
+						<div>
+							<div class="tutor-fs-7 tutor-fw-medium"><?php esc_html_e( 'Enable Auto-Renewal', 'tutor-pro' ); ?></div>
+							<div class="tutor-fs-7 tutor-color-hints tutor-mt-4" style="font-size: 13px;"><?php esc_html_e( 'Automatically renew your subscription for continued course access.', 'tutor-pro' ); ?></div>
+						</div>
+					</label>
+				</div>
+				<?php endif; ?>
+
+				<div class="tutor-d-flex tutor-gap-3 tutor-fs-7 tutor-mt-20 tutor-color-secondary" style="font-size: 13px;">
 					<div>
-						<?php esc_html_e( 'Subscription ID:' ); ?> <span class="tutor-fw-bold">#<?php echo esc_html( $subscription->id ); ?></span>
+						<?php esc_html_e( 'Subscription ID:', 'tutor-pro' ); ?> <span class="tutor-fw-bold">#<?php echo esc_html( $subscription->id ); ?></span>
 					</div>
 					<div>
-					<?php esc_html_e( 'Timezone:' ); ?> <span class="tutor-fw-bold"><?php echo esc_html( User::get_user_timezone_string() ); ?></span>
+					<?php esc_html_e( 'Timezone:', 'tutor-pro' ); ?> <span class="tutor-fw-bold"><?php echo esc_html( User::get_user_timezone_string() ); ?></span>
 					</div>
 					<div>
-						<?php esc_html_e( 'Activated on:' ); ?> <span class="tutor-fw-bold"><?php echo empty( $subscription->start_date_gmt ) ? '' : esc_attr( DateTimeHelper::get_gmt_to_user_timezone_date( $subscription->start_date_gmt, $date_format ) ); ?></span>
+						<?php esc_html_e( 'Activated on:', 'tutor-pro' ); ?> <span class="tutor-fw-bold"><?php echo empty( $subscription->start_date_gmt ) ? '' : esc_attr( DateTimeHelper::get_gmt_to_user_timezone_date( $subscription->start_date_gmt, $date_format ) ); ?></span>
 					</div>
 				</div>
 			</div>
 
 			<div class="tutor-d-flex tutor-gap-2">
-				<?php if ( $can_cancel_anytime && ( SubscriptionModel::STATUS_ACTIVE === $subscription->status || SubscriptionModel::STATUS_PENDING === $subscription->status ) ) : ?>
+			<?php if ( $can_cancel_anytime && ( SubscriptionModel::STATUS_ACTIVE === $subscription->status || SubscriptionModel::STATUS_PENDING === $subscription->status ) ) : ?>
 				<button id="tutor-subscription-cancel-plan-button" class="tutor-btn tutor-btn-sm tutor-btn-outline-primary">
 					<?php esc_html_e( 'Cancel Plan', 'tutor-pro' ); ?>
 				</button>
 				<?php endif; ?>
-				<?php if ( $can_early_renewal && SubscriptionModel::STATUS_ACTIVE === $subscription->status && $controller->subscription_model->should_renew_subscription( $subscription ) ) : ?>
+				<?php
+				if ( $can_early_renewal
+						&& SubscriptionModel::STATUS_ACTIVE === $subscription->status
+						&& $controller->subscription_model->should_renew_subscription( $subscription )
+						&& $controller->subscription_model->can_process_silent_payment( $subscription )
+					) :
+					?>
 				<button class="tutor-btn tutor-btn-sm tutor-btn-secondary" data-tutor-modal-target="tutor-subscription-early-renewal-modal">
 					<?php esc_html_e( 'Renew Now', 'tutor-pro' ); ?>
 				</button>
 				<?php endif; ?>
+
+				<?php
+				if ( in_array( $subscription->status, array( SubscriptionModel::STATUS_CANCELLED, SubscriptionModel::STATUS_EXPIRED ), true ) ) :
+					$plan_buy_link = add_query_arg( array( 'plan' => $plan->id ), CheckoutController::get_page_url() );
+					?>
+				<a href="<?php echo esc_url( $plan_buy_link ); ?>" class="tutor-btn tutor-btn-sm tutor-btn-secondary">
+					<?php esc_html_e( 'Resubscribe', 'tutor-pro' ); ?>
+				</a>
+				<?php endif; ?>
+
 				<!-- <button class="tutor-btn tutor-btn-sm tutor-btn-primary">
 					<?php esc_html_e( 'Change Plan', 'tutor-pro' ); ?>
 				</button> -->
 			</div>
 		</div>
 
-		<div class="tutor-p-24">
+		<div class="tutor-p-24" style="font-size: 15px; line-height: 24px">
 			<div class="tutor-row tutor-g-4">
 				<div class="tutor-col-3">
 					<div class="tutor-color-subdued tutor-mb-4"><?php esc_html_e( 'Amount', 'tutor-pro' ); ?></div>
@@ -124,36 +217,29 @@ $order_model = new OrderModel();
 				<div class="tutor-col-3">
 					<div class="tutor-color-subdued tutor-mb-4"><?php esc_html_e( 'Payment', 'tutor-pro' ); ?></div>
 					<div class="tutor-fw-medium tutor-text-capitalize">
-						<?php echo esc_html( $plan->payment_type ); ?>
+						<?php echo esc_html( $payment_types[ $plan->payment_type ] ?? $plan->payment_type ); ?>
 					</div>
 				</div>
 
 				<div class="tutor-col-3">
 					<div class="tutor-color-subdued tutor-mb-4"><?php esc_html_e( 'Subscription Status', 'tutor-pro' ); ?></div>
 					<div class="tutor-fw-medium tutor-text-capitalize">
-						<?php echo esc_html( $subscription->status ); ?>
+						<?php echo wp_kses_post( tutor_utils()->translate_dynamic_text( $subscription->status ) ); ?>
 					</div>
 				</div>
 
-				<?php if ( PlanModel::PAYMENT_RECURRING === $plan->payment_type ) : ?>
-					<?php
-					// TODO: later will implement trial.
-					if ( false ) :
-						?>
+				<?php if ( ! empty( $subscription->trial_end_date_gmt ) ) : ?>
 				<div class="tutor-col-3">
 					<div class="tutor-color-subdued tutor-mb-4"><?php esc_html_e( 'Trial End', 'tutor-pro' ); ?></div>
 					<div class="tutor-fw-medium">
 						<?php
-						if ( ! empty( $subscription->trial_end_date_gmt ) ) :
 							echo esc_html( DateTimeHelper::get_gmt_to_user_timezone_date( $subscription->trial_end_date_gmt, $date_format ) );
-						endif;
 						?>
 					</div>
 				</div>
 				<?php endif; ?>
-				<?php endif; ?>
 
-				<?php if ( PlanModel::PAYMENT_RECURRING === $plan->payment_type ) : ?>
+				<?php if ( $show_start_date ) : ?>
 				<div class="tutor-col-3">
 					<div class="tutor-color-subdued tutor-mb-4"><?php esc_html_e( 'Start Date', 'tutor-pro' ); ?></div>
 					<div class="tutor-fw-medium">
@@ -192,10 +278,18 @@ $order_model = new OrderModel();
 					</div>
 				</div>
 				<?php endif; ?>
+
+				<div class="tutor-col-3">
+					<div class="tutor-color-subdued tutor-mb-4"><?php esc_html_e( 'Active Payment Method', 'tutor-pro' ); ?></div>
+					<div class="tutor-fw-medium">
+						<?php echo esc_html( Ecommerce::get_payment_method_label( $active_payment_method ) ); ?>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
 </div>
+
 <?php if ( count( $order_history ) ) : ?>
 		<div class="tutor-subscription-payment-history">
 				<div class="tutor-fs-5 tutor-fw-medium tutor-color-black tutor-mb-16 tutor-text-capitalize"><?php esc_html_e( 'Payment History', 'tutor-pro' ); ?></div>
@@ -217,7 +311,7 @@ $order_model = new OrderModel();
 								</th>
 								<th><?php esc_html_e( 'Payment Method', 'tutor-pro' ); ?></th>
 								<th>
-									<?php esc_html_e( 'Status', 'tutor-pro' ); ?>
+									<?php esc_html_e( 'Payment Status', 'tutor-pro' ); ?>
 								</th>
 								<th class="tutor-text-center"></th>
 							</tr>
@@ -226,14 +320,14 @@ $order_model = new OrderModel();
 						<tbody>
 							<?php
 							foreach ( $order_history as $item ) :
-								$order_details = $order_model->get_order_by_id( $item->id );
+								$order_details = $controller->order_model->get_order_by_id( $item->id );
 								?>
 								<tr>
 									<td>
 										<?php echo esc_html( '#' . $item->id ); ?>
 									</td>
 									<td>
-										<?php echo esc_html( ucwords( $item->order_type ) ); ?>
+										<?php echo esc_html( $order_type_list[ $item->order_type ] ?? $item->order_type ); ?>
 									</td>
 									<td>
 										<?php echo empty( $item->created_at_gmt ) ? '' : esc_attr( DateTimeHelper::get_gmt_to_user_timezone_date( $item->created_at_gmt ) ); ?>
@@ -245,7 +339,7 @@ $order_model = new OrderModel();
 										<?php echo esc_html( Ecommerce::get_payment_method_label( $item->payment_method ?? '' ) ); ?>
 									</td>
 									<td>
-										<?php echo wp_kses_post( tutor_utils()->translate_dynamic_text( $item->order_status, true ) ); ?>
+										<?php echo wp_kses_post( tutor_utils()->translate_dynamic_text( $item->payment_status, true ) ); ?>
 									</td>
 									<td class="tutor-text-center">
 										<?php

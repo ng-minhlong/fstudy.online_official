@@ -11,10 +11,12 @@
 
 namespace TUTOR_REPORT;
 
-use TUTOR\Backend_Page_Trait;
 use TUTOR\Input;
-use \TUTOR_REPORT\Analytics;
 use TUTOR\Tutor_Base;
+use TUTOR\Students_List;
+use TUTOR_REPORT\Analytics;
+use TUTOR\Backend_Page_Trait;
+use TutorPro\Subscription\Controllers\ReportController;
 
 class Report extends Tutor_Base {
 
@@ -25,7 +27,7 @@ class Report extends Tutor_Base {
 	use Backend_Page_Trait;
 
 	public function __construct() {
-		 parent::__construct();
+		parent::__construct();
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ) );
 		add_action( 'tutor_admin_register', array( $this, 'register_menu' ) );
@@ -59,10 +61,9 @@ class Report extends Tutor_Base {
 		/**
 		 * Scripts
 		 */
-		if ( $page === 'tutor-lms-pro_page_tutor_report' ) {
-			// wp_enqueue_style('tutor-report', TUTOR_REPORT()->url.'assets/css/report.css', array(), TUTOR_REPORT()->version);
-			wp_enqueue_script( 'tutor-cahrt-js', TUTOR_REPORT()->url . 'assets/js/lib/Chart.bundle.min.js', array(), TUTOR_REPORT()->version );
-			wp_enqueue_script( 'tutor-report', TUTOR_REPORT()->url . 'assets/js/report.js', array( 'tutor-admin' ), TUTOR_REPORT()->version, true );
+		if ( 'tutor_report' === Input::get( 'page' ) ) {
+			wp_enqueue_script( 'tutor-pro-chart-js', tutor_pro()->url . 'assets/lib/Chart.bundle.min.js', array(), TUTOR_REPORT()->version, true );
+			wp_enqueue_script( 'tutor-report', TUTOR_REPORT()->url . 'assets/js/report.js', array( 'tutor-admin', 'tutor-pro-chart-js' ), TUTOR_REPORT()->version, true );
 		}
 	}
 
@@ -98,7 +99,7 @@ class Report extends Tutor_Base {
 
 		$time_period = Input::get( 'time_period', 'this_year' );
 
-		$course_id   = Input::get( 'course_id', 0 );
+		$course_id = Input::get( 'course_id', 0 );
 
 		$date_range_from = Input::get( 'date_range_from', '' );
 		$date_range_to   = Input::get( 'date_range_to', '' );
@@ -417,9 +418,9 @@ class Report extends Tutor_Base {
 	 * @since v2.0.0
 	 */
 	public static function total_enrolled_students() {
-		$period     = Input::post( 'period', '');
-		$start_date = Input::post( 'start_date', ''); 
-		$end_date   = Input::post( 'end_date', ''); 
+		$period     = Input::post( 'period', '' );
+		$start_date = Input::post( 'start_date', '' );
+		$end_date   = Input::post( 'end_date', '' );
 
 		if ( '' !== $start_date ) {
 			$start_date = tutor_get_formated_date( 'Y-m-d', $start_date );
@@ -462,9 +463,12 @@ class Report extends Tutor_Base {
 				true
 			);
 
+			$sub_page   = Input::get( 'sub_page', 'overview' );
+			$chart_data = $this->get_chart_data( $sub_page );
+
 			wp_add_inline_script(
 				'tutor-pro-analytics',
-				'const _tutor_analytics = ' . json_encode( self::chart_dependent_data() ),
+				'const _tutor_analytics = ' . wp_json_encode( $chart_data ),
 				'before'
 			);
 		}
@@ -478,9 +482,9 @@ class Report extends Tutor_Base {
 	 */
 	public static function chart_dependent_data(): array {
 
-		$time_period = Input::post( 'period', '');
-		$start_date  = Input::post( 'start_date', ''); 
-		$end_date    = Input::post( 'end_date', ''); 
+		$time_period = Input::get( 'period', 'last30days' );
+		$start_date  = Input::get( 'start_date', '' );
+		$end_date    = Input::get( 'end_date', '' );
 
 		if ( '' !== $start_date ) {
 			$start_date = tutor_get_formated_date( 'Y-m-d', $start_date );
@@ -490,7 +494,7 @@ class Report extends Tutor_Base {
 			$end_date = tutor_get_formated_date( 'Y-m-d', $end_date );
 		}
 
-		$current_page = Input::get( 'page', '');
+		$current_page = Input::get( 'page', '' );
 		$sub_page     = Input::get( 'sub_page', 'overview' );
 
 		/**
@@ -542,12 +546,12 @@ class Report extends Tutor_Base {
 	public static function sales_list( int $offset = 0, int $limit = 10, $course_id = '', $date = '', $order = '', $search = '' ): array {
 		global $wpdb;
 
-		$offset     = sanitize_text_field($offset);
-		$limit      = sanitize_text_field($limit);
-		$course_id  = sanitize_text_field($course_id);
-		$date       = sanitize_text_field($date);
-		$order      = sanitize_sql_orderby($order);
-		$search 	= sanitize_text_field($search);
+		$offset    = sanitize_text_field( $offset );
+		$limit     = sanitize_text_field( $limit );
+		$course_id = sanitize_text_field( $course_id );
+		$date      = sanitize_text_field( $date );
+		$order     = sanitize_sql_orderby( $order );
+		$search    = sanitize_text_field( $search );
 
 		$search_term = '%' . $wpdb->esc_like( $search ) . '%';
 
@@ -667,33 +671,37 @@ class Report extends Tutor_Base {
 	 * @since v2.0.0
 	 */
 	public function bulk_action() {
-		 tutor_utils()->checking_nonce();
+		tutor_utils()->checking_nonce();
 		$bulk_action = Input::post( 'bulk-action', '' );
 		$bulk_ids    = Input::post( 'bulk-ids', '' );
 
 		if ( 'delete' === $bulk_action ) {
-			return self::delete_students( $bulk_ids );
+			return Students_List::delete_students( $bulk_ids );
 		}
 		exit;
 	}
 
 	/**
-	 * Delete student
+	 * Retrieves chart data based on the specified subpage.
 	 *
-	 * @param string $student_ids, ids that need to delete.
-	 * @param int    $reassign_id, reassign to other user.
-	 * @return bool
-	 * @since v2.0.0
+	 * @since 3.6.0
+	 *
+	 * @param string $sub_page The subpage name.
+	 *
+	 * @return array The filtered chart data based on the subpage.
 	 */
-	public static function delete_students( string $student_ids, $reassign_id = null ): bool {
-		$student_ids = explode( ',', $student_ids );
-		foreach ( $student_ids as $id ) {
-			if ( null === $reassign_id ) {
-				wp_delete_user( $id );
-			} else {
-				wp_delete_user( $id, $reassign_id );
-			}
+	private function get_chart_data( $sub_page ) {
+
+		switch ( $sub_page ) {
+			case 'subscriptions':
+				return apply_filters( 'tutor_report_graph_data', ( new ReportController() )->chart_dependent_data() );
+
+			case 'courses':
+			case 'overview':
+				return apply_filters( 'tutor_report_graph_data', self::chart_dependent_data() );
+
+			default:
+				return array();
 		}
-		return true;
 	}
 }

@@ -123,6 +123,7 @@ class Template extends Tutor_Base {
 			if ( ( $post_type === $this->course_post_type || ! empty( $course_category ) ) ) {
 				$query->set( 'posts_per_page', $courses_per_page );
 				$query->set( 'post_type', apply_filters( 'tutor_course_archive_post_types', array( $this->course_post_type ) ) );
+				$query = apply_filters( 'tutor_limit_course_archive_list_filter', $query );
 
 				$course_filter = 'newest_first';
 				if ( ! empty( Input::get( 'tutor_course_filter', '' ) ) ) {
@@ -130,11 +131,11 @@ class Template extends Tutor_Base {
 				}
 				switch ( $course_filter ) {
 					case 'newest_first':
-						$query->set( 'orderby', 'ID' );
+						$query->set( 'orderby', 'post_date' );
 						$query->set( 'order', 'desc' );
 						break;
 					case 'oldest_first':
-						$query->set( 'orderby', 'ID' );
+						$query->set( 'orderby', 'post_date' );
 						$query->set( 'order', 'asc' );
 						break;
 					case 'course_title_az':
@@ -197,7 +198,11 @@ class Template extends Tutor_Base {
 	public function load_single_lesson_template( $template ) {
 		global $wp_query;
 
-		if ( $wp_query->is_single && ! empty( $wp_query->query_vars['post_type'] ) && $wp_query->query_vars['post_type'] === $this->lesson_post_type ) {
+		$post_type = get_query_var( 'post_type' );
+
+		$is_lesson_post_type = apply_filters( 'tutor_is_lesson_post_type', $wp_query->query_vars['post_type'] === $this->lesson_post_type, $post_type );
+
+		if ( $wp_query->is_single && ! empty( $post_type ) && $is_lesson_post_type ) {
 			$page_id = get_the_ID();
 
 			do_action( 'tutor_lesson_load_before', $template );
@@ -208,7 +213,7 @@ class Template extends Tutor_Base {
 				if ( $has_content_access ) {
 					$template = tutor_get_template( 'single-lesson' );
 				} else {
-					$template = tutor_get_template( 'single.lesson.required-enroll' ); // You need to enroll first
+					$template = tutor_get_template( 'single.lesson.required-enroll' ); // You need to enroll first.
 				}
 			} else {
 				$template = tutor_get_template( 'login' );
@@ -432,7 +437,7 @@ class Template extends Tutor_Base {
 				if ( $has_content_access ) {
 					$template = tutor_get_template( 'single-assignment' );
 				} else {
-					$template = tutor_get_template( 'single.lesson.required-enroll' ); // You need to enroll first
+					$template = tutor_get_template( 'single.lesson.required-enroll' ); // You need to enroll first.
 				}
 			} else {
 				$template = tutor_get_template( 'login' );

@@ -22,7 +22,7 @@
 		<div class="tutor-email-wrapper">
 			<?php require TUTOR_PRO()->path . 'templates/email/email_header.php'; ?>
 			<div class="tutor-email-content">
-				<div class="tutor-mr-160">
+				<div>
 					<h6 data-source="email-heading" class="tutor-email-heading">{email_heading}</h6>
 				</div>
 				<br>

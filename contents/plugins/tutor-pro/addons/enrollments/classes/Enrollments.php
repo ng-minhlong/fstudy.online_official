@@ -11,20 +11,21 @@
 
 namespace TUTOR_ENROLLMENTS;
 
+use Exception;
+use TUTOR\Input;
 use TUTOR\Course;
 use TUTOR\Earnings;
-use Tutor\Ecommerce\OrderController;
-use Tutor\Helpers\HttpHelper;
-use Tutor\Helpers\ValidationHelper;
-use TUTOR\Input;
-use Tutor\Models\CourseModel;
 use Tutor\Models\UserModel;
-use Tutor\Models\OrderActivitiesModel;
 use Tutor\Models\OrderModel;
+use Tutor\Helpers\HttpHelper;
+use Tutor\Models\CourseModel;
 use Tutor\Traits\JsonResponse;
-use TUTOR\User;
-use TutorPro\CourseBundle\CustomPosts\CourseBundle;
+use Tutor\Helpers\ValidationHelper;
+use Tutor\Ecommerce\OrderController;
+use Tutor\Models\OrderActivitiesModel;
 use TutorPro\CourseBundle\Models\BundleModel;
+use WpOrg\Requests\Exception\InvalidArgument;
+use TutorPro\CourseBundle\CustomPosts\CourseBundle;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -42,9 +43,18 @@ class Enrollments {
 	/**
 	 * Register hooks.
 	 *
+	 * @since 3.5.0 param register_hooks added.
+	 *
+	 * @param bool $register_hooks whether to register hooks or not.
+	 *
 	 * @return void
 	 */
-	public function __construct() {
+	public function __construct( $register_hooks = true ) {
+
+		if ( ! $register_hooks ) {
+			return;
+		}
+
 		add_action( 'tutor_admin_register', array( $this, 'register_menu' ) );
 
 		add_action( 'wp_ajax_tutor_json_search_students', array( $this, 'tutor_json_search_students' ) );
@@ -54,6 +64,72 @@ class Enrollments {
 
 		add_action( 'wp_ajax_tutor_unenrolled_users', array( $this, 'ajax_get_unenrolled_users' ) );
 		add_action( 'wp_ajax_tutor_course_bundle_list', array( $this, 'ajax_course_bundle_list' ) );
+
+		// @since: 3.3.0
+		add_action( 'tutor_course/single/entry/after', array( $this, 'show_enrollment_period_status' ) );
+		add_action( 'tutor_course_loop_footer_bottom', array( $this, 'show_enrollment_period_status' ) );
+		add_filter( 'tutor_guest_password_reset_email_heading_text', array( $this, 'set_password_reset_email_text' ) );
+
+		add_filter( 'tutor_add_to_cart_btn', array( $this, 'restrict_enrollment' ), 10, 2 );
+		add_filter( 'tutor_course_loop_add_to_cart_button', array( $this, 'restrict_enrollment' ), 10, 2 );
+		add_filter( 'tutor_course_restrict_new_entry', array( $this, 'restrict_enrollment' ), 10, 2 );
+		add_filter( 'tutor/course/single/entry-box/free', array( $this, 'restrict_enrollment' ), 10, 2 );
+		add_filter( 'tutor_pro_subscription_enrollment', array( $this, 'restrict_enrollment' ), 10, 2 );
+		add_filter( 'tutor_allow_guest_attempt_enrollment', array( $this, 'restrict_guest_attempt_enrollment' ), 10, 3 );
+	}
+
+	/**
+	 * Prevent users from enrolling after registration.
+	 *
+	 * @since 3.4.0
+	 *
+	 * @param bool $can_enroll whether can user enroll.
+	 * @param int  $course_id the course id.
+	 * @param int  $user_id the user id.
+	 *
+	 * @return bool
+	 */
+	public function restrict_guest_attempt_enrollment( $can_enroll, $course_id, $user_id ) {
+		list( $pause_enrollment, $course_enrollment_period, $enrollment_starts_at, $enrollment_ends_at ) = array_values( $this->get_course_enrollment_settings( $course_id ) );
+
+		$current_time = time();
+
+		$start_time = strtotime( $enrollment_starts_at );
+		$end_time   = strtotime( $enrollment_ends_at );
+
+		if ( $pause_enrollment ) {
+			$can_enroll = false;
+		} elseif ( 'yes' === $course_enrollment_period ) {
+			if ( $start_time && $end_time ) {
+				$not_started = $current_time < $start_time;
+				$ended       = $current_time > $end_time;
+				if ( $not_started || $ended ) {
+					$can_enroll = false;
+				}
+			} elseif ( $enrollment_starts_at && ! $enrollment_ends_at ) {
+				if ( $current_time < strtotime( $enrollment_starts_at ) ) {
+					$can_enroll = false;
+				}
+			}
+		}
+
+		return $can_enroll;
+	}
+
+	/**
+	 * Set reset password email heading text.
+	 *
+	 * @since 3.3.0
+	 *
+	 * @param string $email_text the reset email heading text.
+	 *
+	 * @return string
+	 */
+	public function set_password_reset_email_text( $email_text ) {
+		if ( is_admin() ) {
+			$email_text = __( "As part of your course enrollment, we've created an account for you to access all the learning resources and course content. Please set up your account password to access your courses.", 'tutor-pro' );
+		}
+		return $email_text;
 	}
 
 	/**
@@ -99,24 +175,29 @@ class Enrollments {
 	 *
 	 * Multiple course enrollment support added
 	 *
+	 * @since 3.3.0
+	 *
+	 * Bulk enrollment with csv file support added.
+	 *
+	 * @since 3.4.0
+	 *
+	 * Bulk subscription support added.
+	 *
 	 * @return void
 	 */
 	public function tutor_enroll_bulk_student() {
 
 		$required_fields = array(
-			'student_ids',
 			'object_ids',
 			'payment_status',
 			'order_type',
 		);
 
-		tutor_utils()->checking_nonce();
+		tutor_utils()->check_nonce();
 
-		if ( ! User::is_admin() ) {
-			wp_send_json_error( tutor_utils()->error_message() );
-		}
+		tutor_utils()->check_current_user_capability();
 
-		$request = Input::sanitize_array( $_POST );
+		$request = Input::sanitize_array( $_POST ); //phpcs:ignore --safe data
 		foreach ( $required_fields as $field ) {
 			if ( ! isset( $request[ $field ] ) ) {
 				$request[ $field ] = '';
@@ -134,25 +215,49 @@ class Enrollments {
 
 		$request = (object) $request;
 
-		$student_ids    = $request->student_ids;
+		$student_ids    = $request->student_ids ?? null;
 		$payment_status = $request->payment_status;
 		$order_type     = $request->order_type;
 		$object_ids     = $request->object_ids;
+		$csv_students   = $request->csv_students ?? null;
 
-		if ( empty( $student_ids ) ) {
-			$this->json_response(
-				__( 'Please select at least one student', 'tutor-pro' ),
-				null,
-				HttpHelper::STATUS_BAD_REQUEST
-			);
+		if ( empty( $student_ids ) && empty( $csv_students ) ) {
+			$this->response_bad_request( __( 'Please select at least one student', 'tutor-pro' ) );
 		}
 
 		if ( empty( $object_ids ) ) {
-			$this->json_response(
-				__( 'Please select a course or subscription plan', 'tutor-pro' ),
-				null,
-				HttpHelper::STATUS_BAD_REQUEST
-			);
+			$this->response_bad_request( __( 'Please select a course or subscription plan', 'tutor-pro' ) );
+		}
+
+		$failed_enrollments = array();
+		$total_enrollments  = 0;
+		$response_message   = __( 'Enrollment done for selected students', 'tutor-pro' );
+		$enrollment_data    = array(
+			'failed_enrollment_list'  => $failed_enrollments,
+			'total_enrolled_students' => $total_enrollments,
+		);
+
+		if ( ! empty( $csv_students ) ) {
+			$csv_students = array_map( fn ( $val ) => json_decode( $val ), $csv_students );
+			$result       = $this->get_student_ids_from_csv( $csv_students, $student_ids );
+
+			if ( is_wp_error( $result ) ) {
+				$this->response_bad_request( $result->get_error_message() );
+			}
+
+			$student_ids        = $result->student_ids;
+			$failed_enrollments = array_merge( $failed_enrollments, $result->failed_enrollments );
+
+			if ( 0 === count( $student_ids ) ) {
+				$enrollment_data['failed_enrollment_list'] = $failed_enrollments;
+				$this->json_response( $response_message, $enrollment_data );
+			}
+		}
+
+		// Handle manual subscription enrollment.
+		$enrollment_data = apply_filters( 'tutor_manual_enrollment', $enrollment_data, $object_ids, $student_ids, $payment_status );
+		if ( isset( $enrollment_data['is_subscription_enrollment'] ) ) {
+			$this->json_response( $enrollment_data['message'] ?? $response_message, $enrollment_data );
 		}
 
 		/**
@@ -170,10 +275,15 @@ class Enrollments {
 				// Check all selected student are not enrolled before.
 				$is_already_enrolled = false;
 				foreach ( $student_ids as $student_id ) {
-					$is_already_enrolled = tutor_utils()->is_enrolled( $object_id, $student_id, false );
+					if ( CourseBundle::POST_TYPE === $post->post_type ) {
+						$is_already_enrolled = BundleModel::is_enrolled_to_bundle_courses( $post->ID, $student_id );
+					} else {
+						$is_already_enrolled = tutor_utils()->is_enrolled( $object_id, $student_id, false );
+					}
 
 					if ( $is_already_enrolled ) {
 						// Skip already enrolled student.
+						$failed_enrollments[] = $this->get_failed_user_data( $student_id );
 						continue;
 					}
 
@@ -218,7 +328,7 @@ class Enrollments {
 					if ( ! $generate_invoice && $is_paid_course && 'wc' === $monetize_by ) {
 						add_filter(
 							'tutor_enroll_data',
-							function( $data ) {
+							function ( $data ) {
 								$data['post_status'] = 'completed';
 								return $data;
 							}
@@ -228,7 +338,7 @@ class Enrollments {
 					if ( $is_paid_course && tutor_utils()->is_monetize_by_tutor() && OrderModel::PAYMENT_PAID === $payment_status ) {
 						add_filter(
 							'tutor_enroll_data',
-							function( $data ) {
+							function ( $data ) {
 								$data['post_status'] = 'completed';
 								return $data;
 							}
@@ -236,7 +346,15 @@ class Enrollments {
 					}
 
 					// Enroll to course/bundle.
-					tutor_utils()->do_enroll( $object_id, $order_id, $student_id );
+					$enrolled = tutor_utils()->do_enroll( $object_id, $order_id, $student_id );
+
+					if ( $enrolled ) {
+						$total_enrollments++;
+					}
+
+					if ( 0 === $enrolled ) {
+						$failed_enrollments[] = $this->get_failed_user_data( $student_id );
+					}
 
 					/**
 					 * Enrol to bundle courses when WC order create disabled from tutor settings.
@@ -251,6 +369,11 @@ class Enrollments {
 						BundleModel::enroll_to_bundle_courses( $object_id, $student_id );
 					}
 
+					// Enroll to free bundle courses.
+					if ( CourseBundle::POST_TYPE === $post->post_type && ! $is_paid_course ) {
+						BundleModel::enroll_to_bundle_courses( $object_id, $student_id );
+					}
+
 					do_action( 'tutor_after_enrollment', $order_type, $object_id, $student_id, $payment_status );
 
 					if ( OrderModel::PAYMENT_UNPAID === $payment_status && tutor_utils()->is_monetize_by_tutor() ) {
@@ -261,8 +384,110 @@ class Enrollments {
 			}
 		}
 
-		$this->json_response( __( 'Enrollment done for selected students', 'tutor-pro' ) );
+		$this->json_response(
+			$response_message,
+			array(
+				'failed_enrollment_list'  => $failed_enrollments,
+				'total_enrolled_students' => $total_enrollments,
+			)
+		);
+	}
 
+
+	/**
+	 * Get failed user data for failed enrollments.
+	 *
+	 * @since 3.4.0
+	 *
+	 * @param int $student_id the student id.
+	 *
+	 * @return array
+	 */
+	public function get_failed_user_data( $student_id ) {
+		$user        = get_userdata( $student_id );
+		$failed_user = array(
+			'first_name' => $user->user_login,
+			'last_name'  => '',
+			'email'      => $user->user_email,
+		);
+
+		return $failed_user;
+	}
+
+	/**
+	 * Get student ids from csv file.
+	 *
+	 * @since 3.3.0
+	 *
+	 * @param array $students_from_csv the students array from csv file.
+	 *
+	 * @param array $student_ids the array of student ids.
+	 *
+	 * @return array|WP_Error
+	 */
+	public function get_student_ids_from_csv( $students_from_csv, $student_ids ) {
+		$failed_users = array();
+
+		if ( ! is_array( $student_ids ) ) {
+			$student_ids = array();
+		}
+
+		if ( is_array( $students_from_csv ) && count( $students_from_csv ) ) {
+
+			foreach ( $students_from_csv as $student ) {
+				if ( ! $student ) {
+					continue;
+				}
+
+				if ( ! array_intersect_key( (array) $student, array_flip( array( 'first_name', 'last_name', 'email' ) ) ) ) {
+					return new \WP_Error( 'invalid_data', __( 'Invalid data found in csv file', 'tutor-pro' ) );
+				}
+
+				// Check if user exists.
+				if ( email_exists( $student->email ) ) {
+					$user = get_user_by( 'email', $student->email );
+					if ( ! in_array( $user->ID, $student_ids ) ) {
+						$student_ids[] = $user->ID;
+					} else {
+						$failed_user    = array(
+							'first_name' => $user->user_login,
+							'last_name'  => '',
+							'email'      => $user->user_email,
+						);
+						$failed_users[] = $failed_user;
+					}
+				} else {
+					$user_login = tutor_utils()->create_unique_username( $student->email );
+					$userdata   = array(
+						'user_login' => $user_login,
+						'first_name' => $student->first_name,
+						'last_name'  => $student->last_name,
+						'user_email' => $student->email,
+						'user_pass'  => wp_generate_password(),
+					);
+
+					$student_id = wp_insert_user( $userdata );
+
+					if ( is_wp_error( $student_id ) ) {
+						$failed_users[] = $student;
+						continue;
+					}
+
+					$user_data = get_userdata( $student_id );
+
+					if ( $user_data ) {
+						( new \TUTOR_PRO\GuestEmail() )->send_password_reset_email( $user_data );
+					}
+
+					$student_ids[] = $student_id;
+				}
+			}
+		}
+
+		return (object) array(
+			'student_ids'        => $student_ids,
+			'failed_enrollments' => $failed_users,
+		);
 	}
 
 	/**
@@ -283,7 +508,7 @@ class Enrollments {
 			return;
 		}
 
-		$order_controller = new OrderController();
+		$order_controller = new OrderController( false );
 		$order_model      = new OrderModel();
 		$earnings         = Earnings::get_instance();
 
@@ -337,7 +562,7 @@ class Enrollments {
 		$object_id = Input::post( 'object_id', 0, Input::TYPE_INT );
 
 		$search_clause = array();
-		$filter        = isset( $_POST['filter'] ) ? json_decode( wp_unslash( $_POST['filter'] ) ) : '';
+		$filter        = isset( $_POST['filter'] ) ? json_decode( wp_unslash( $_POST['filter'] ) ) : ''; //phpcs:ignore --safe data
 		if ( ! empty( $filter ) && is_object( $filter ) && property_exists( $filter, 'search' ) ) {
 			$search_term   = Input::sanitize( $filter->search );
 			$search_clause = array(
@@ -352,6 +577,20 @@ class Enrollments {
 		$total_items = $response['total_count'];
 		unset( $response['total_count'] );
 		$response['total_items'] = $total_items;
+
+		// Check if user is enrolled in bundle.
+		if ( CourseBundle::POST_TYPE === get_post_type( $object_id ) ) {
+			$response['results'] = array_map(
+				function ( $val ) use ( $object_id ) {
+					$is_enrolled      = BundleModel::is_enrolled_to_bundle_courses( $object_id, $val->ID );
+					$val->is_enrolled = $is_enrolled;
+					return $val;
+				},
+				$response['results']
+			);
+		}
+
+		$response = apply_filters( 'tutor_unenrolled_users_response', $response, $object_id );
 
 		$this->json_response(
 			__( 'User retrieved successfully!', 'tutor-pro' ),
@@ -388,7 +627,7 @@ class Enrollments {
 			$args['post_type'] = array( tutor()->course_post_type, 'course-bundle' );
 		}
 
-		$filter = isset( $_POST['filter'] ) ? json_decode( wp_unslash( $_POST['filter'] ) ) : '';
+		$filter = isset( $_POST['filter'] ) ? json_decode( wp_unslash( $_POST['filter'] ) ) : ''; //phpcs:ignore --safe data
 		if ( ! empty( $filter ) && is_object( $filter ) && property_exists( $filter, 'search' ) ) {
 			$args['s'] = Input::sanitize( $filter->search );
 		}
@@ -401,6 +640,10 @@ class Enrollments {
 				* @since 3.0.0
 				*
 				* @TODO manual subscription will implement later.
+				*
+				* @since 3.3.0
+				*
+				* Added membership filter.
 				*/
 				$args['meta_query'] = array(
 					'relation' => 'OR',
@@ -410,8 +653,8 @@ class Enrollments {
 					),
 					array(
 						'key'     => Course::COURSE_SELLING_OPTION_META,
-						'value'   => Course::SELLING_OPTION_SUBSCRIPTION,
-						'compare' => '!=',
+						'value'   => array( Course::SELLING_OPTION_SUBSCRIPTION, Course::SELLING_OPTION_MEMBERSHIP ),
+						'compare' => 'NOT IN',
 					),
 				);
 			}
@@ -419,7 +662,20 @@ class Enrollments {
 			$query = CourseModel::get_courses_by_args( $args );
 			if ( is_a( $query, 'WP_Query' ) ) {
 				foreach ( $query->get_posts() as $post ) {
-					$response['results'][] = Course::get_card_data( $post );
+					$maximum_students         = tutor_utils()->get_course_settings( $post->ID, 'maximum_students' );
+					$course_enrollment_period = tutor_utils()->get_course_settings( $post->ID, 'course_enrollment_period' );
+					$enrollment_ends_at       = tutor_utils()->get_course_settings( $post->ID, 'enrollment_ends_at' );
+					$pause_enrollment         = tutor_utils()->get_course_settings( $post->ID, 'pause_enrollment' );
+					$course_data              = array_merge(
+						Course::get_card_data( $post ),
+						array(
+							'maximum_students'         => $maximum_students,
+							'enrollment_ends_at'       => $enrollment_ends_at,
+							'pause_enrollment'         => $pause_enrollment,
+							'course_enrollment_period' => $course_enrollment_period,
+						)
+					);
+					$response['results'][]    = $course_data;
 				}
 
 				$response['total_items'] = $query->found_posts;
@@ -452,6 +708,7 @@ class Enrollments {
 
 		$validation_rules = array(
 			'student_ids'    => 'required',
+			'csv_students'   => 'required',
 			'object_ids'     => 'required',
 			'order_type'     => 'required',
 			'payment_status' => "required|match_string:{$allowed_payment_status}",
@@ -465,6 +722,196 @@ class Enrollments {
 		}
 
 		return ValidationHelper::validate( $validation_rules, $data );
+	}
+
+	/**
+	 * Alter tutor enroll box to show enrollment period status
+	 *
+	 * @since 3.3.0
+	 *
+	 * @param string $course_id  current course id.
+	 *
+	 * @return void
+	 */
+	public function show_enrollment_period_status( $course_id ) {
+		$user_id = get_current_user_id();
+		if ( tutor_utils()->is_enrolled( $course_id, $user_id ) || tutor()->course_post_type !== get_post_type( $course_id ) || 'yes' === get_post_meta( $course_id, '_tutor_is_public_course', true ) ) {
+			return;
+		}
+
+		$content = '';
+
+		list( $pause_enrollment, $course_enrollment_period, $enrollment_starts_at, $enrollment_ends_at ) = array_values( $this->get_course_enrollment_settings( $course_id ) );
+
+		if ( 'yes' === $pause_enrollment ) {
+			ob_start();
+			?>
+			<div class="tutor-enrollment-status-wrapper tutor-enrollment-status-paused">
+				<i class="tutor-icon-warning"></i>
+				<?php esc_attr_e( 'Enrollment is now paused', 'tutor-pro' ); ?>
+			</div>
+			<?php
+			$content = ob_get_clean();
+		} elseif ( 'yes' === $course_enrollment_period && $enrollment_starts_at ) {
+			$current_time = time();
+
+			if ( ! $enrollment_ends_at ) {
+				if ( $current_time < strtotime( $enrollment_starts_at ) ) {
+					ob_start();
+					?>
+					<div class="tutor-enrollment-status-wrapper">
+						<i class="tutor-icon-book-open-line"></i>
+						<span>
+							<?php
+							printf(
+								/* translators: %s: from date */
+								esc_html__( 'Enrollment opens on %1$s', 'tutor-pro' ),
+								'<span class="tutor-utc-date-time tutor-color-success">' . esc_html( $enrollment_starts_at ) . '</span>'
+							);
+							?>
+						</span>
+					</div>
+					<?php
+					$content = ob_get_clean();
+				}
+			} elseif ( $current_time < strtotime( $enrollment_starts_at ) ) {
+					ob_start();
+				?>
+					<div class="tutor-enrollment-status-wrapper">
+						<i class="tutor-icon-book-open-line"></i>
+						<span>
+							<?php
+							printf(
+								/* translators: %s: from date %s: to date */
+								esc_html__( 'Enrollment Period %1$s - %2$s', 'tutor-pro' ),
+								'<span class="tutor-utc-date-time tutor-color-success">' . esc_html( $enrollment_starts_at ) . '</span>',
+								'<span class="tutor-utc-date-time tutor-color-success">' . esc_html( $enrollment_ends_at ) . '</span>'
+							);
+							?>
+						</span>
+					</div>
+					<?php
+					$content = ob_get_clean();
+			} elseif ( $current_time > strtotime( $enrollment_starts_at ) && $current_time < strtotime( $enrollment_ends_at ) ) {
+				ob_start();
+				?>
+					<div class="tutor-enrollment-status-wrapper">
+						<i class="tutor-icon-book-open-line"></i>
+						<span>
+							<?php
+							printf(
+								/* translators: %s: from date */
+								esc_html__( 'Enrollment closes on %1$s', 'tutor-pro' ),
+								'<span class="tutor-utc-date-time tutor-color-primary">' . esc_html( $enrollment_ends_at ) . '</span>'
+							);
+							?>
+						</span>
+					</div>
+					<?php
+					$content = ob_get_clean();
+			} elseif ( $current_time > strtotime( $enrollment_ends_at ) ) {
+				ob_start();
+				?>
+					<div class="tutor-enrollment-status-wrapper tutor-enrollment-status-closed">
+						<i class="tutor-icon-circle-info-o"></i>
+					<?php esc_html_e( 'Enrollment is now closed', 'tutor-pro' ); ?>
+					</div>
+					<?php
+					$content = ob_get_clean();
+			}
+		}
+		echo wp_kses_post( $content );
+	}
+
+	/**
+	 * Remove add to cart button based on enrollment period settings
+	 *
+	 * @since 3.3.0
+	 *
+	 * @param string $btn Button HTML.
+	 * @param int    $course_id Course ID.
+	 *
+	 * @return string Modified button HTML
+	 */
+	public function restrict_enrollment( $btn, $course_id ) {
+		$user_id = get_current_user_id();
+		if ( tutor_utils()->is_enrolled( $course_id, $user_id ) || tutor()->course_post_type !== get_post_type( $course_id ) ) {
+			return $btn;
+		}
+
+		list( $pause_enrollment, $course_enrollment_period, $enrollment_starts_at, $enrollment_ends_at ) = array_values( $this->get_course_enrollment_settings( $course_id ) );
+
+		$current_time = time();
+
+		$start_time = strtotime( $enrollment_starts_at );
+		$end_time   = strtotime( $enrollment_ends_at );
+
+		if ( 'yes' === $pause_enrollment ) {
+			$btn = '';
+		} elseif ( 'yes' === $course_enrollment_period ) {
+			if ( $start_time && $end_time ) {
+				$not_started = $current_time < $start_time;
+				$ended       = $current_time > $end_time;
+				if ( $not_started || $ended ) {
+					$btn = '';
+				}
+			} elseif ( $enrollment_starts_at && ! $enrollment_ends_at ) {
+
+				if ( $current_time < strtotime( $enrollment_starts_at ) ) {
+					$btn = '';
+				}
+			}
+		}
+
+		return $btn;
+	}
+
+	/**
+	 * Get course enrollment settings data
+	 *
+	 * @since 3.3.0
+	 *
+	 * @param integer $course_id Course id.
+	 *
+	 * @return array
+	 */
+	public function get_course_enrollment_settings( int $course_id ): array {
+		$pause_enrollment         = get_tutor_course_settings( $course_id, 'pause_enrollment' );
+		$course_enrollment_period = get_tutor_course_settings( $course_id, 'course_enrollment_period' );
+		$enrollment_starts_at     = get_tutor_course_settings( $course_id, 'enrollment_starts_at' );
+		$enrollment_ends_at       = get_tutor_course_settings( $course_id, 'enrollment_ends_at' );
+
+		return array(
+			'pause_enrollment'         => $pause_enrollment,
+			'course_enrollment_period' => $course_enrollment_period,
+			'enrollment_starts_at'     => $enrollment_starts_at,
+			'enrollment_ends_at'       => $enrollment_ends_at,
+		);
+	}
+
+	/**
+	 * Check if the enrollment is active
+	 *
+	 * @since 3.3.0
+	 *
+	 * @param int|WP_Post $enrollment Enrollment ID or WP_Post object.
+	 *
+	 * @throws InvalidArgument If the argument is in invalid.
+	 * @throws Exception If the enrollment is invalid.
+	 *
+	 * @return bool
+	 */
+	public static function is_active( $enrollment ) {
+		if ( ! $enrollment ) {
+			throw new InvalidArgument( __( 'Invalid argument passed', 'tutor-pro' ) );
+		}
+
+		$enrollment = is_int( $enrollment ) ? get_post( $enrollment ) : $enrollment;
+		if ( ! $enrollment ) {
+			throw new Exception( __( 'Invalid enrollment', 'tutor-pro' ) );
+		}
+
+		return in_array( $enrollment->post_status, array( 'complete', 'completed', 'approved' ), true );
 	}
 
 }

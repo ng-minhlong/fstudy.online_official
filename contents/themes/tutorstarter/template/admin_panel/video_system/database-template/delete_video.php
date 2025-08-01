@@ -1,6 +1,6 @@
 <?php
 // Include WordPress functions
-require_once('C:\xampp\htdocs\wordpress\wp-load.php'); // Adjust the path as necessary
+require_once(__DIR__ . '/../../../admin_panel/config-custom.php');
 
 global $wpdb;
 
@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $number = intval($_POST['number']); // Sanitize the input
 
     // Prepare the SQL statement for deletion
-    $deleted = $wpdb->delete('video_link_generator', array('number' => $number));
+    $deleted = $wpdb->delete('lessons_management', array('number' => $number));
 
     if ($deleted) {
         echo "Record deleted successfully";

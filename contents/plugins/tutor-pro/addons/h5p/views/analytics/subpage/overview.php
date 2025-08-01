@@ -99,7 +99,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</div>
 			<div class="tutor-admin-report-frequency-wrapper" style="min-width: 260px;">
 				<?php require_once Utils::addon_config()->path . 'views/analytics/graph/frequency.php'; ?>
-				<div class="tutor-v2-date-range-picker inactive" style="width: 305px; position:absolute; z-index: 99;"></div>
+				<div class="tutor-v2-date-range-picker inactive"></div>
 			</div>
 		</div>
 		<div class="tutor-overview-month-graph">

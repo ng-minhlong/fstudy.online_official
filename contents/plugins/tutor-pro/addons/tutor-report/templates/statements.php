@@ -10,8 +10,9 @@
  */
 
 use TUTOR\Input;
-use Tutor\Models\CourseModel;
+use Tutor\Ecommerce\Tax;
 use TUTOR_REPORT\Analytics;
+use Tutor\Models\CourseModel;
 
 //phpcs:disable WordPress.WP.GlobalVariablesOverride.Prohibited
 global $wp_query, $wp;
@@ -57,7 +58,14 @@ $enable_fees_deducting = tutor_utils()->get_option( 'enable_fees_deducting' );
 
 		<div class="tutor-col-lg-4">
 			<label class="tutor-form-label"><?php esc_html_e( 'Date', 'tutor-pro' ); ?></label>
-			<div class="tutor-v2-date-picker"></div>
+			<div class="tutor-v2-date-picker">
+				<div class="tutor-form-wrap">
+					<span class="tutor-form-icon tutor-form-icon-reverse">
+						<span class="tutor-icon-calender-line" aria-hidden="true"></span>
+					</span>
+					<input class="tutor-form-control" placeholder="<?php esc_attr_e( 'Loading...', 'tutor-pro' ); ?>">
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -69,23 +77,25 @@ $enable_fees_deducting = tutor_utils()->get_option( 'enable_fees_deducting' );
 						<?php esc_html_e( 'Statement Info', 'tutor-pro' ); ?>
 					</th>
 					<th>
+						<?php esc_html_e( 'Breakdown', 'tutor-pro' ); ?>
+					</th>
+					<th>
 						<?php esc_html_e( 'My Earnings', 'tutor-pro' ); ?>
 					</th>
 					<th>
 						<?php esc_html_e( 'Admin Gets', 'tutor-pro' ); ?>
 					</th>
-					<?php if ( $enable_fees_deducting ) : ?>
-					<th>
-						<?php esc_html_e( 'Fees', 'tutor-pro' ); ?>
-					</th>
-					<?php endif; ?>
 				</thead>
 
 				<tbody>
 					<?php foreach ( $statements['statements'] as $statement ) : ?>
 						<?php
-							$wc_order = function_exists( 'wc_get_order' ) ? wc_get_order( $statement->order_id ) : false;
-							$customer = $wc_order ? $wc_order->get_user() : null;
+							$wc_order                 = function_exists( 'wc_get_order' ) ? wc_get_order( $statement->order_id ) : false;
+							$customer                 = $wc_order ? $wc_order->get_user() : null;
+							$is_inclusive_tax         = Tax::TYPE_INCLUSIVE === $statement->order_tax_type;
+							$course_price_grand_total = $is_inclusive_tax ? max( $statement->course_price_grand_total - $statement->order_tax_amount, 0 ) : $statement->course_price_grand_total;
+							$instructor_amount        = $is_inclusive_tax ? ( $course_price_grand_total * ( $statement->instructor_rate / 100 ) ) : $statement->instructor_amount;
+							$admin_amount             = $is_inclusive_tax ? ( $course_price_grand_total * ( $statement->admin_rate / 100 ) ) : $statement->admin_amount;
 						?>
 						<tr>
 							<td>
@@ -118,14 +128,78 @@ $enable_fees_deducting = tutor_utils()->get_option( 'enable_fees_deducting' );
 									</div>
 								</div>
 							</td>
+							
+							<td>
+								<!-- Order Amount -->
+								<div class="tutor-meta tutor-mt-8">
+									<span >
+										<span class="tutor-meta-key">
+											<?php esc_html_e( 'Order Amount: ', 'tutor-pro' ); ?>
+										</span>
+										<span class="tutor-meta-value">
+											<?php echo wp_kses_post( tutor_utils()->tutor_price( $statement->order_total_price ) ); ?>
+										</span>
+									</span>
+								</div>
+								<!-- Tax Amount -->
+								<?php
+								if ( tutor_utils()->is_monetize_by_tutor() ) :
+									?>
+								<div class="tutor-meta tutor-mt-8">
+									<span >
+										<span class="tutor-meta-key">											
+											<?php
+											$tax_type = ucfirst( $statement->order_tax_type );
+											esc_html_e( "Tax Amount ($tax_type): ", 'tutor-pro' ); //phpcs:ignore
+											?>
+										</span>
+										<span class="tutor-meta-value">
+											<?php echo wp_kses_post( tutor_utils()->tutor_price( $statement->order_tax_amount ) ); ?>
+										</span>
+									</span>
+								</div>
+								<?php endif; ?>
+								<!-- Deducted Fees -->
+								<div class="tutor-meta tutor-mt-8">
+									<span>
+										<span class="tutor-meta-key">
+											<?php
+
+											if ( empty( $statement->deduct_fees_name ) ) {
+												echo esc_html( 'Maintenance Fees: ' );
+											} else {
+												esc_html_e( $statement->deduct_fees_name, 'tutor-pro' ); //phpcs:ignore
+											}
+
+											echo ! empty( $statement->deduct_fees_type ) ? ' (' . esc_html( ucfirst( $statement->deduct_fees_type ) ) . '): ' : '';
+											?>
+										</span>
+										<span class="tutor-meta-value">
+											<?php echo wp_kses_post( tutor_utils()->tutor_price( $statement->deduct_fees_amount ) ); ?>
+										</span>
+									</span>
+								</div>
+								
+								<!-- Net Amount -->
+								<div class="tutor-meta tutor-mt-8">
+									<span>
+										<span class="tutor-meta-key">
+											<?php esc_html_e( 'Net Amount: ', 'tutor-pro' ); ?>
+										</span>
+										<span class="tutor-meta-value">
+											<?php echo wp_kses_post( tutor_utils()->tutor_price( $course_price_grand_total ) ); ?>
+										</span>
+									</span>
+								</div>
+							</td>
 
 							<td>
 								<?php $instructor_commission_type = 'percent' === $statement->commission_type ? '%' : ''; ?>
 								<div class="tutor-fs-7 tutor-fw-medium tutor-color-black">
-									<?php echo wp_kses_post( tutor_utils()->tutor_price( $statement->instructor_amount ) ); ?> <br />
+									<?php echo wp_kses_post( tutor_utils()->tutor_price( $instructor_amount ) ); ?> <br />
 									<span class="tutor-fs-7 tutor-color-muted">
 										<?php
-											echo wp_kses_post( $statement->instructor_rate . $instructor_commission_type . __( ' of ', 'tutor-pro' ) . tutor_utils()->tutor_price( $statement->course_price_total ) );
+											echo wp_kses_post( $statement->instructor_rate . $instructor_commission_type . __( ' of ', 'tutor-pro' ) . tutor_utils()->tutor_price( $course_price_grand_total ) );
 										?>
 									</span>
 								</div>
@@ -134,7 +208,7 @@ $enable_fees_deducting = tutor_utils()->get_option( 'enable_fees_deducting' );
 							<td>
 								<?php $admin_rate_type = 'percent' === $statement->commission_type ? '%' : ''; ?>
 								<div class="tutor-fs-7 tutor-fw-medium tutor-color-black">
-									<?php echo wp_kses_post( tutor_utils()->tutor_price( $statement->admin_amount ) ); ?> <br />
+									<?php echo wp_kses_post( tutor_utils()->tutor_price( $admin_amount ) ); ?> <br />
 									<span class="tutor-fs-7 tutor-color-muted">
 										<?php
 											/* translators: 1: rate 2: rate type */
@@ -142,25 +216,7 @@ $enable_fees_deducting = tutor_utils()->get_option( 'enable_fees_deducting' );
 										?>
 									</span>
 								</div>
-							</td>
-
-							<?php if ( $enable_fees_deducting ) : ?>
-							<td>
-								<?php $service_rate_type = 'percent' === $statement->deduct_fees_type ? '%' : ''; ?>
-								<div class="tutor-fs-7 tutor-fw-medium tutor-color-black">
-									<?php echo wp_kses_post( tutor_utils()->tutor_price( $statement->deduct_fees_amount ) ); ?> <br />
-									<span class="tutor-fs-7 tutor-color-muted">
-										<?php
-										if ( empty( $statement->deduct_fees_name ) ) {
-											esc_html_e( 'Maintenance Fees', 'tutor-pro' );
-										} else {
-											esc_html_e( $statement->deduct_fees_name, 'tutor-pro' ); //phpcs:ignore
-										}
-										?>
-									</span>
-								</div>
-							</td>
-							<?php endif; ?>
+							</td>						
 						</tr>
 					<?php endforeach; ?>
 				</tbody>

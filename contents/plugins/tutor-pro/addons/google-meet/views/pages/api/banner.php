@@ -38,7 +38,7 @@ $plugin_data = GoogleMeet::meta_data();
 					<button class="tutor-btn tutor-btn-outline-primary tutor-btn-sm tutor-copy" data-tutor-clipboard-copy-target="tutor-google-meet-redirect-url">
 						<?php esc_html_e( 'Copy', 'tutor-pro' ); ?>
 					</button>
-					<input type="text" class="tutor-form-control" placeholder="" value="<?php echo esc_url( admin_url() . 'admin.php?page=google-meet&tab=set-api' ); ?>" id="tutor-google-meet-redirect-url" />
+					<input type="text" class="tutor-form-control" placeholder="" value="<?php echo esc_url( is_admin() ? admin_url() . 'admin.php?page=google-meet&tab=set-api' : tutor_utils()->tutor_dashboard_url( 'google-meet/set-api' ) ); ?>" id="tutor-google-meet-redirect-url" />
 				</div>
 			</div>
 		</div>

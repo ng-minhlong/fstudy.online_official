@@ -63,7 +63,9 @@ $course_id         = tutor_utils()->get_course_id_by( 'lesson', $course_content_
 						<div>
 							<div>
 								<span><?php esc_html_e( 'Meeting Date', 'tutor-pro' ); ?>:</span>
-								<p><?php echo esc_html( $zoom_meeting->start_date ); ?></p>
+								<p title="<?php echo esc_attr( $zoom_meeting->timezone ); ?>">
+									<?php echo esc_html( tutor_i18n_get_formated_date( $zoom_meeting->start_date ) ); ?>
+								</p>
 							</div>
 							<div>
 								<span><?php esc_html_e( 'Host Email', 'tutor-pro' ); ?>:</span>
@@ -89,7 +91,9 @@ $course_id         = tutor_utils()->get_course_id_by( 'lesson', $course_content_
 					<div class="meeting-details tutor-mt-32">
 						<div>
 							<span><?php esc_html_e( 'Meeting Date', 'tutor-pro' ); ?></span>
-							<p><?php echo esc_html( $zoom_meeting->start_date ); ?></p>
+							<p title="<?php echo esc_attr( $zoom_meeting->timezone ); ?>">
+								<?php echo esc_html( tutor_i18n_get_formated_date( $zoom_meeting->start_date ) ); ?>
+							</p>
 						</div>
 						<?php if ( isset( $zoom_meeting->data['duration'] ) ) : ?>
 						<div>

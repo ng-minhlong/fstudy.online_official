@@ -28,6 +28,8 @@ class ComposerStaticInitc18103565856f32e28eb477a2478695b
         'T' => 
         array (
             'TutorPro\\TutorAI\\' => 17,
+            'TutorPro\\Tools\\' => 15,
+            'TutorPro\\TemplateImport\\' => 24,
             'TutorPro\\Subscription\\' => 22,
             'TutorPro\\SocialLogin\\' => 21,
             'TutorPro\\RestAPI\\' => 17,
@@ -36,8 +38,10 @@ class ComposerStaticInitc18103565856f32e28eb477a2478695b
             'TutorPro\\GoogleMeet\\' => 20,
             'TutorPro\\Ecommerce\\' => 19,
             'TutorPro\\CourseBundle\\' => 22,
+            'TutorPro\\ContentBank\\' => 21,
             'TutorPro\\ChatGPT\\' => 17,
             'TutorPro\\Auth\\' => 14,
+            'TUTOR_PRO\\' => 10,
         ),
         'P' => 
         array (
@@ -93,6 +97,14 @@ class ComposerStaticInitc18103565856f32e28eb477a2478695b
         array (
             0 => __DIR__ . '/../..' . '/tutorai',
         ),
+        'TutorPro\\Tools\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/tools',
+        ),
+        'TutorPro\\TemplateImport\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/template-import',
+        ),
         'TutorPro\\Subscription\\' => 
         array (
             0 => __DIR__ . '/../..' . '/addons/subscription/src',
@@ -125,6 +137,10 @@ class ComposerStaticInitc18103565856f32e28eb477a2478695b
         array (
             0 => __DIR__ . '/../..' . '/addons/course-bundle/src',
         ),
+        'TutorPro\\ContentBank\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/addons/content-bank/src',
+        ),
         'TutorPro\\ChatGPT\\' => 
         array (
             0 => __DIR__ . '/../..' . '/addons/tutor-chatgpt/classes',
@@ -132,6 +148,10 @@ class ComposerStaticInitc18103565856f32e28eb477a2478695b
         'TutorPro\\Auth\\' => 
         array (
             0 => __DIR__ . '/../..' . '/addons/auth/classes',
+        ),
+        'TUTOR_PRO\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/classes',
         ),
         'Psr\\Log\\' => 
         array (

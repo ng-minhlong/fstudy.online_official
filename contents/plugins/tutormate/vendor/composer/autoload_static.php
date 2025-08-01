@@ -11,20 +11,12 @@ class ComposerStaticInitd6b331cf2cd5aa2c06dc022a984bd3dc
         array (
             'TUTORMATE\\' => 10,
         ),
-        'A' => 
-        array (
-            'AwesomeMotive\\WPContentImporter2\\' => 33,
-        ),
     );
 
     public static $prefixDirsPsr4 = array (
         'TUTORMATE\\' => 
         array (
             0 => __DIR__ . '/../..' . '/inc',
-        ),
-        'AwesomeMotive\\WPContentImporter2\\' => 
-        array (
-            0 => __DIR__ . '/../..' . '/lib/awesomemotive/src',
         ),
     );
 

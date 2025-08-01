@@ -58,7 +58,12 @@ class NotificationPreference {
 
 		add_action(
 			'tutor_email_addon_loaded',
-			function() {
+			function () {
+
+				if ( ! function_exists( 'wp_get_current_user' ) ) {
+					include ABSPATH . 'wp-includes/pluggable.php';
+				}
+
 				if ( class_exists( 'TUTOR_EMAIL\EmailNotification' ) && User::is_student() ) {
 					add_filter( 'tutor_dashboard/nav_items/settings/nav_items', array( $this, 'register_nav' ) );
 					add_filter( 'load_dashboard_template_part_from_other_location', array( $this, 'load_template' ) );
@@ -388,6 +393,8 @@ class NotificationPreference {
 			'label' => __( 'Disable all notification', 'tutor-pro' ),
 			'value' => $is_all_disabled ? 'on' : 'off',
 		);
+
+		$prepared_list['email'] = array();
 
 		$available_email_trigger_list = ( new EmailData() )->get_recipients();
 

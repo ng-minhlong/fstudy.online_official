@@ -167,12 +167,12 @@ class RestrictContent extends Tutor_Base {
 					<input type="hidden" name="tutor_course_id" value="<?php echo esc_attr( get_the_ID() ); ?>">
 					<input type="hidden" name="tutor_course_action" value="_tutor_course_enroll_now">
 					<button type="submit" class="tutor-btn tutor-btn-primary tutor-btn-lg tutor-btn-block tutor-mt-24 tutor-enroll-course-button">
-						<?php esc_html_e( 'Enroll Now', 'tutor' ); ?>
+						<?php esc_html_e( 'Enroll Now', 'tutor-pro' ); ?>
 					</button>
 				</form>
 			</div>
 			<div class="tutor-fs-7 tutor-color-muted tutor-mt-20 tutor-text-center">
-				<?php esc_html_e( 'This course is under your membership plan', 'tutor' ); ?>
+				<?php esc_html_e( 'This course is under your membership plan', 'tutor-pro' ); ?>
 			</div>
 				<?php
 				return;

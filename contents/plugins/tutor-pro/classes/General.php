@@ -9,8 +9,14 @@
 
 namespace TUTOR_PRO;
 
+use Tutor\Helpers\PluginInstaller;
+use Tutor\Helpers\HttpHelper;
+
 use TUTOR\Input;
 use Tutor\Models\CourseModel;
+use Tutor\Traits\JsonResponse;
+use TUTOR\User;
+use WP_Error;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -22,6 +28,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since 2.0.0
  */
 class General {
+
+	use JsonResponse;
 
 	/**
 	 * Register hooks
@@ -39,6 +47,13 @@ class General {
 		add_filter( 'tutor_pages', array( $this, 'add_login_page' ), 10, 1 );
 
 		add_action( 'tutor_after_lesson_completion_button', array( $this, 'add_course_completion_button' ), 10, 4 );
+
+		add_action( 'tutor_is_error_before_course_update', array( $this, 'tutor_is_error_before_course_update' ), 10, 2 );
+		add_action( 'wp_ajax_tutor_install_plugin', array( $this, 'ajax_tutor_install_plugin' ) );
+
+		add_filter( 'tutor_addons_lists_config', array( $this, 'manage_addon_depend_plugins' ), PHP_INT_MAX );
+
+		add_filter( 'init', array( $this, 'disable_author_support_for_instructors' ), 10, 2 );
 	}
 
 	/**
@@ -63,9 +78,7 @@ class General {
 					<?php wp_nonce_field( tutor()->nonce_action, tutor()->nonce, false ); ?>
 					<input type="hidden" name="course_id" value="<?php echo esc_attr( $course_id ); ?>"/>
 					<input type="hidden" name="tutor_action" value="tutor_complete_course"/>
-					<button type="submit" 
-						class="tutor-topbar-mark-btn tutor-btn tutor-btn-primary tutor-ws-nowrap"
-						name="complete_course" value="complete_course">
+					<button type="submit" class="tutor-topbar-mark-btn tutor-btn tutor-btn-primary tutor-ws-nowrap" name="complete_course" value="complete_course">
 						<span class="tutor-icon-circle-mark-line tutor-mr-8" area-hidden="true"></span>
 						<span><?php esc_html_e( 'Complete Course', 'tutor-pro' ); ?></span>
 					</button>
@@ -85,7 +98,7 @@ class General {
 	 * @return array
 	 */
 	public function add_login_page( array $pages ) {
-		return array( 'tutor_login_page' => __( 'Tutor Login', 'tutor' ) ) + $pages;
+		return array( 'tutor_login_page' => __( 'Tutor Login', 'tutor-pro' ) ) + $pages;
 	}
 
 	/**
@@ -277,9 +290,9 @@ class General {
 				'key'   => 'tutor_frontend_course_page_logo_id',
 				'type'  => 'upload_full',
 				'label' => __( 'Course Builder Page Logo', 'tutor-pro' ),
-				'desc'  => __(
-					'<p>Size: <strong>700x430 pixels;</strong> File Support:<strong>jpg, .jpeg or .png.</strong></p>',
-					'tutor'
+				'desc'  => array(
+					'file_size'    => __( '700x430 pixels', 'tutor-pro' ),
+					'file_support' => __( '.jpg, .jpeg, or .png', 'tutor-pro' ),
 				),
 			)
 		);
@@ -345,10 +358,10 @@ class General {
 		$login_option = array(
 			'key'        => 'tutor_login_page',
 			'type'       => 'select',
-			'label'      => __( 'Login Page', 'tutor' ),
+			'label'      => __( 'Login Page', 'tutor-pro' ),
 			'default'    => '0',
 			'options'    => $pages,
-			'desc'       => __( 'This page will be used as the login page for both the students and the instructors.', 'tutor' ),
+			'desc'       => __( 'This page will be used as the login page for both the students and the instructors.', 'tutor-pro' ),
 			'searchable' => true,
 		);
 		/**
@@ -362,7 +375,7 @@ class General {
 			'label'       => __( 'Generate WooCommerce Order', 'tutor-pro' ),
 			'label_title' => '',
 			'default'     => 'off',
-			'desc'        => __( 'If you want to create an WooCommerce Order to keep Track of your Sales Report for Manual Enrolment', 'tutor' ),
+			'desc'        => __( 'If you want to create an WooCommerce Order to keep Track of your Sales Report for Manual Enrolment', 'tutor-pro' ),
 		);
 
 		tutor_utils()->add_option_after(
@@ -427,6 +440,20 @@ class General {
 				'max'         => 100,
 				'desc'        => __( 'Specify the minimum video watch % learners must watch to mark the lesson as complete.', 'tutor-pro' ),
 			)
+		);
+
+		/**
+		 * New option added to restrict instructors from changing author
+		 *
+		 * @since 3.2.0
+		 */
+		$attr['general']['blocks'][3]['fields'][] = array(
+			'key'         => 'instructor_can_change_course_author',
+			'type'        => 'toggle_switch',
+			'label'       => __( 'Allow Instructors to Change Course Author', 'tutor-pro' ),
+			'label_title' => '',
+			'default'     => 'on',
+			'desc'        => __( 'If enabled, instructors can change the course author for their courses.', 'tutor-pro' ),
 		);
 
 		return $attr;
@@ -496,6 +523,127 @@ class General {
 			set_post_thumbnail( $product_id, $thumbnail_id );
 		} else {
 			delete_post_meta( $post_id, '_thumbnail_id' );
+		}
+	}
+
+	/**
+	 * Restriction added for instructors to change author
+	 *
+	 * @param mixed $is_error error.
+	 *
+	 * @param array $params course params.
+	 *
+	 * @since 3.2.0
+	 */
+	public function tutor_is_error_before_course_update( $is_error, $params ) {
+		if ( ! isset( $params['course_id'] ) ) {
+			return $is_error;
+		}
+
+		$course_id                            = (int) $params['course_id'];
+		$course                               = get_post( $course_id );
+		$is_course_author_modified            = $course->post_author !== $params['post_author'];
+		$can_instructors_change_course_author = (bool) tutor_utils()->get_option( 'instructor_can_change_course_author', true );
+		if ( $is_course_author_modified && User::is_only_instructor() && ! $can_instructors_change_course_author ) {
+			$is_error = new WP_Error( '401', __( 'You don\'t have permission to change author.', 'tutor-pro' ) );
+		}
+		return $is_error;
+	}
+
+	/**
+	 * Checks if a plugin is available, installed, and active.
+	 *
+	 * @return void
+	 *
+	 * @since 3.2.0
+	 */
+	public function ajax_tutor_install_plugin() {
+
+		tutor_utils()->checking_nonce();
+		tutor_utils()->check_current_user_capability();
+
+		$plugin_slug = sanitize_text_field( Input::post( 'plugin_slug', '' ) );
+
+		if ( empty( $plugin_slug ) ) {
+			$this->json_response( __( 'Plugin slug is required', 'tutor-pro' ), '', HttpHelper::STATUS_BAD_REQUEST );
+		}
+
+		// If Plugin doesn't exist, install it.
+		if ( ! file_exists( WP_PLUGIN_DIR . '/' . $plugin_slug ) ) {
+
+			list( $is_successful, $response ) = array_values( PluginInstaller::get_downloadable_url( $plugin_slug ) );
+
+			if ( ! $is_successful ) {
+				$this->json_response( $response, '', HttpHelper::STATUS_BAD_REQUEST );
+			}
+
+			if ( PluginInstaller::install_or_upgrade_plugin( $response ) ) {
+				$this->json_response( __( 'Plugin installed successfully', 'tutor-pro' ), '', HttpHelper::STATUS_OK );
+			}
+
+			$this->json_response( __( 'Plugin installation failed', 'tutor-pro' ), '', HttpHelper::STATUS_BAD_REQUEST );
+		}
+
+		// If plugin exists but not activated, activate it.
+		if ( ! is_plugin_active( $plugin_slug ) ) {
+
+			$activate = activate_plugin( $plugin_slug, '', false, true );
+
+			if ( is_wp_error( $activate ) ) {
+				$this->json_response( $activate->get_error_message(), '', HttpHelper::STATUS_BAD_REQUEST );
+			}
+
+			$this->json_response( __( 'Plugin activated successfully', 'tutor-pro' ), '', HttpHelper::STATUS_OK );
+		}
+
+		$this->json_response( __( 'Plugin is already activated', 'tutor-pro' ), '', HttpHelper::STATUS_OK );
+	}
+
+	/**
+	 * Set depend_plugins empty if required plugin already active
+	 *
+	 * @since 3.2.0
+	 *
+	 * @param array $addons Addon config array.
+	 *
+	 * @return array Addon config array
+	 */
+	public function manage_addon_depend_plugins( $addons ) {
+		$addons = array_map(
+			function( $addon ) {
+				if ( ! empty( $addon['depend_plugins'] ) ) {
+					$addon['is_dependents_installed'] = true;
+
+					$dependent_plugins = $addon['depend_plugins'];
+					foreach ( $dependent_plugins as $basename => $value ) {
+						$depended_plugin_dir = WP_PLUGIN_DIR . '/' . $basename;
+						if ( ! file_exists( $depended_plugin_dir ) ) {
+							$addon['is_dependents_installed'] = false;
+						}
+
+						if ( is_plugin_active( $basename ) ) {
+							unset( $addon['depend_plugins'][ $basename ] );
+						}
+					}
+				}
+
+				return $addon;
+			},
+			$addons
+		);
+
+		return $addons;
+	}
+
+	/**
+	 * Restriction added for instructors to change course author,
+	 *
+	 * @since 3.2.0
+	 */
+	public function disable_author_support_for_instructors() {
+		$can_instructors_change_course_author = (bool) tutor_utils()->get_option( 'instructor_can_change_course_author', true );
+		if ( User::is_only_instructor() && ! $can_instructors_change_course_author ) {
+			remove_post_type_support( 'courses', 'author' );
 		}
 	}
 }

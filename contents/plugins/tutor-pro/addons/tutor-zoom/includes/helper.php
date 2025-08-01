@@ -31,16 +31,16 @@ function tutor_zoom_check_api_connection() {
  * @return object
  */
 function tutor_zoom_meeting_data( $meeting_id ) {
-	$meeting_data   = get_post_meta( $meeting_id, '_tutor_zm_data', true );
-	$meeting_data   = json_decode( stripslashes( $meeting_data ), true );
-	$meeting_date   = isset( $meeting_data['start_time'] ) ? new DateTime( $meeting_data['start_time'], new DateTimeZone( 'UTC' ) ) : new DateTime();
-	$countdown_date = $meeting_date->format( 'Y/m/d H:i:s' );
-	$timezone       = isset( $meeting_data['timezone'] ) ? $meeting_data['timezone'] : 'UTC';
+	$meeting_data = get_post_meta( $meeting_id, '_tutor_zm_data', true );
+	$meeting_data = json_decode( stripslashes( $meeting_data ), true );
+	$meeting_date = isset( $meeting_data['start_time'] ) ? new DateTime( $meeting_data['start_time'], new DateTimeZone( 'UTC' ) ) : new DateTime();
+	$timezone     = isset( $meeting_data['timezone'] ) ? $meeting_data['timezone'] : 'UTC';
 	$meeting_date->setTimezone( new DateTimeZone( $timezone ) );
-	$start_date   = $meeting_date->format( 'j M, Y - h:i A' );
-	$meeting_unix = $meeting_date->format( 'U' );
-	$is_started   = ( $meeting_unix > time() ) ? false : true;
-	$is_expired   = true;
+	$countdown_date = $meeting_date->format( 'Y-m-d H:i:s' );
+	$start_date     = $meeting_date->format( 'Y-m-d H:i:s' );
+	$meeting_unix   = $meeting_date->format( 'U' );
+	$is_started     = ( $meeting_unix > time() ) ? false : true;
+	$is_expired     = true;
 	if ( isset( $meeting_data['duration'] ) ) {
 		$is_expired = ( $meeting_unix + ( $meeting_data['duration'] * 60 ) > time() ) ? false : true;
 	}

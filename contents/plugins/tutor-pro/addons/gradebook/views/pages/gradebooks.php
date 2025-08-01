@@ -41,18 +41,9 @@ $navbar_data                = array(
 	'tabs'         => $gradebook->tabs_key_value( $course_id ),
 	'active'       => $active_tab,
 	'add_button'   => true,
-	'button_title' => __( 'Add New', 'tutor' ),
+	'button_title' => __( 'Add New', 'tutor-pro' ),
 	'button_url'   => $add_gradebook_url,
 	'modal_target' => 'tutor-add-new-grade',
-);
-
-$filters = array(
-	'bulk_action'   => false,
-	'bulk_actions'  => $gradebook->prpare_bulk_actions(),
-	'ajax_action'   => 'tutor_gradebook_bulk_action',
-	'filters'       => true,
-	'course_filter' => true,
-	'course_filter' => true,
 );
 
 ?>
@@ -65,12 +56,12 @@ $filters = array(
 	tutor_load_template_from_custom_path( $navbar_template, $navbar_data );
 	$gradebooks = tutor_utils()->get_gradebooks();
 	?>
-	<div class="tutor-admin-body">
-		<div class="tutor-mt-24">
+	<div class="tutor-admin-container tutor-admin-container-lg">
+		<div class="tutor-mt-16">
 			<div class="tutor_admin_gradebook_list tutor-table-wrapper">
 				<?php tutor_alert( null, 'success' ); ?>
 				<?php if ( tutor_utils()->count( $gradebooks ) ) { ?>
-					<div class="tutor-table-responsive">
+					<div class="tutor-table-responsive tutor-dashboard-list-table">
 						<table class="tutor-table tutor-gradebooks-lists">
 							<thead>
 								<tr>
@@ -150,7 +141,7 @@ $filters = array(
 					if ( file_exists( $alert_template ) && function_exists( 'tutor_load_template_from_custom_path' ) ) {
 						$args = array(
 							'alert_class'  => 'tutor-alert tutor-warning',
-							'message'      => __( 'No grading system has been defined to manage student grades.' ),
+							'message'      => __( 'No grading system has been defined to manage student grades.', 'tutor-pro' ),
 							'icon'         => 'tutor-icon-circle-info',
 							'button_text'  => 'Import Sample Grade Data',
 							'button_class' => 'tutor-btn tutor-btn-sm',

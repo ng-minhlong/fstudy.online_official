@@ -208,7 +208,7 @@ class Admin {
 		}
 
 		//phpcs:ignore WordPress.WP.I18n.MissingTranslatorsComment
-		$title = sprintf( __( 'Installing Plugin: %s' ), $api->name . ' ' . $api->version );
+		$title = sprintf( __( 'Installing Plugin: %s', 'tutor-pro' ), $api->name . ' ' . $api->version );
 		$nonce = 'install-plugin_' . $plugin;
 		$url   = 'update.php?action=install-plugin&plugin=' . urlencode( $plugin );
 

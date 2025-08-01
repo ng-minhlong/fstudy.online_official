@@ -74,7 +74,7 @@ class Enqueue {
 		if ( 'create-course' === $page || 'google-meet' === $page || tutor()->course_post_type === $post_type || EventsModel::POST_TYPE === $post_type ) {
 			wp_enqueue_script(
 				'tutor-pro-google-meet-ui-timepicker',
-				$plugin_data['assets'] . 'js/lib/jquery-ui-timepicker.js',
+				$plugin_data['assets'] . 'lib/jquery-ui-timepicker.js',
 				array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ),
 				TUTOR_PRO_VERSION,
 				true
@@ -106,16 +106,16 @@ class Enqueue {
 				'tutor-pro-google-meet-ui-timepicker',
 				'_tutor_google_meet',
 				array(
-					'tutor_pro_now' 		=> __('Now', 'tutor-pro'),
-					'tutor_pro_done' 		=> __('Done', 'tutor-pro'),
-					'tutor_pro_choose_time' => __('Choose Time', 'tutor-pro'),
-					'tutor_pro_time' 		=> __('Time', 'tutor-pro'),
-					'tutor_pro_hour' 		=> __('Hour', 'tutor-pro'),
-					'tutor_pro_minute' 		=> __('Minute', 'tutor-pro'),
-					'tutor_pro_second' 		=> __('Second', 'tutor-pro'),
-					'tutor_pro_millisecond' => __('Millisecond', 'tutor-pro'),
-					'tutor_pro_microsecond' => __('Microsecond', 'tutor-pro'),
-					'tutor_pro_time_zone' 	=> __('Time Zone', 'tutor-pro'),
+					'tutor_pro_now'         => __( 'Now', 'tutor-pro' ),
+					'tutor_pro_done'        => __( 'Done', 'tutor-pro' ),
+					'tutor_pro_choose_time' => __( 'Choose Time', 'tutor-pro' ),
+					'tutor_pro_time'        => __( 'Time', 'tutor-pro' ),
+					'tutor_pro_hour'        => __( 'Hour', 'tutor-pro' ),
+					'tutor_pro_minute'      => __( 'Minute', 'tutor-pro' ),
+					'tutor_pro_second'      => __( 'Second', 'tutor-pro' ),
+					'tutor_pro_millisecond' => __( 'Millisecond', 'tutor-pro' ),
+					'tutor_pro_microsecond' => __( 'Microsecond', 'tutor-pro' ),
+					'tutor_pro_time_zone'   => __( 'Time Zone', 'tutor-pro' ),
 				)
 			);
 		}

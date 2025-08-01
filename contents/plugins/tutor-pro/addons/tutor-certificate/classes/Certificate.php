@@ -129,6 +129,9 @@ class Certificate {
 		// @since 3.0.0
 		add_action( 'wp_ajax_tutor_course_certificate_list', array( $this, 'ajax_course_certificate_list' ) );
 		add_filter( 'tutor_course_details_response', array( $this, 'extend_course_details_response' ) );
+
+		// @since 3.2.2
+		add_action( 'tutor_draft_course_created', array( $this, 'draft_course_created' ) );
 	}
 
 	/**
@@ -320,8 +323,20 @@ class Certificate {
 	public function extend_course_details_response( array $data ) {
 		$course_id    = $data['ID'];
 		$template_key = get_post_meta( $course_id, self::$template_meta_key, true );
+		$template_key = $template_key ? $template_key : 'default';
 
 		$templates = $this->get_templates( false, true );
+
+		$hide_default_certificates_for_instructors = (bool) tutor_utils()->get_option( 'hide_default_certificates_for_instructors', false );
+		if ( User::is_only_instructor() && $hide_default_certificates_for_instructors ) {
+			$templates = array_filter(
+				$templates,
+				function( $template ) use ( $template_key ) {
+					return ( $template['key'] === $template_key ) || ! isset( $template['is_default'] );
+				}
+			);
+		}
+
 		$templates = array_values( $templates );
 
 		$data['course_certificate_template']   = $template_key;
@@ -351,7 +366,10 @@ class Certificate {
 	public function load_script() {
 		if ( ! empty( Input::get( 'cert_hash', '' ) ) ) {
 			$base = tutor_pro()->url . 'addons/tutor-certificate/assets/js/';
-			wp_enqueue_script( 'html-to-image', $base . 'html-to-image.js', array( 'jquery', 'wp-i18n' ), TUTOR_PRO_VERSION, true );
+
+			wp_enqueue_script( 'html2canvas', tutor_pro()->url . 'assets/lib/html2canvas/html2canvas.min.js', array( 'jquery' ), TUTOR_PRO_VERSION, true );
+			wp_enqueue_script( 'jsPDf', tutor_pro()->url . 'assets/lib/jspdf/jspdf.umd.min.js', array( 'jquery' ), TUTOR_PRO_VERSION, true );
+			wp_enqueue_script( 'html-to-image', $base . 'html-to-image.js', array( 'jquery', 'wp-i18n', 'html2canvas', 'jsPDf' ), TUTOR_PRO_VERSION, true );
 		}
 	}
 
@@ -411,6 +429,7 @@ class Certificate {
 								'cert_hash'   => $cert_hash,
 								'course_id'   => $course_id,
 								'orientation' => $this->template['orientation'],
+								'size'        => $this->template['size'],
 								'format'      => Input::post( 'format', 'jpg' ),
 							)
 						),
@@ -424,7 +443,7 @@ class Certificate {
 			wp_send_json_success( array( 'html' => $content ) );
 		}
 
-		wp_send_json_error( array( 'message' => __( 'Invalid Course ID', 'tutor' ) ) );
+		wp_send_json_error( array( 'message' => __( 'Invalid Course ID', 'tutor-pro' ) ) );
 	}
 
 	/**
@@ -1021,5 +1040,19 @@ class Certificate {
 		}
 
 		return $meta;
+	}
+
+	/**
+	 * Draft certificate created callback.
+	 *
+	 * @param int $course_id course id.
+	 *
+	 * @return void
+	 */
+	public function draft_course_created( $course_id ) {
+		$hide_default_certificates_for_instructors = (bool) tutor_utils()->get_option( 'hide_default_certificates_for_instructors', false );
+		if ( User::is_only_instructor() && $hide_default_certificates_for_instructors ) {
+			update_post_meta( $course_id, 'tutor_course_certificate_template', 'none' );
+		}
 	}
 }

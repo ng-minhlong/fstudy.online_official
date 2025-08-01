@@ -13,7 +13,6 @@ namespace TutorPro\CourseBundle\Frontend;
 
 use TutorPro\CourseBundle\CustomPosts\CourseBundle;
 use TutorPro\CourseBundle\CustomPosts\ManagePostMeta;
-use TutorPro\CourseBundle\MetaBoxes\BundlePrice;
 use TutorPro\CourseBundle\Models\BundleModel;
 use TutorPro\CourseBundle\Utils;
 
@@ -37,7 +36,7 @@ class BundleDetails {
 		add_filter( 'tutor/course/single/sidebar/metadata', array( $this, 'add_bundle_metadata' ), 11, 2 );
 		add_filter( 'tutor_course_single_tags', array( $this, 'bundle_tags' ), 10, 2 );
 		add_action( 'tutor_after_course_details_wc_cart_price', array( $this, 'add_discount_info' ), 10, 2 );
-		add_filter( 'tutor_load_single_sidebar_actions', array( $this, 'load_single_sidebar_actions' ), 10, 2 );
+		add_action( 'tutor_after_course_details_tutor_cart_price', array( $this, 'add_bundle_discount_info' ), 10, 1 );
 		add_filter( 'tutor/course/single/entry-box/is_enrolled', array( $this, 'content_for_enrolled_user' ), 10, 2 );
 
 		/**
@@ -89,32 +88,6 @@ class BundleDetails {
 			 *
 			 * @since 2.2.0
 			 */
-			return false;
-		}
-
-		return $bool;
-	}
-
-	/**
-	 * Load_single_sidebar_actions
-	 *
-	 * @since 2.2.0
-	 *
-	 * @param  boolean $bool bool value.
-	 * @param  int     $post_id post id.
-	 *
-	 * @return boolean
-	 */
-	public function load_single_sidebar_actions( $bool, $post_id ) {
-		$post_type = get_post_type( $post_id );
-		if ( CourseBundle::POST_TYPE !== $post_type ) {
-			return $bool;
-		}
-
-		$user_id        = get_current_user_id();
-		$post_author_id = get_the_author_meta( 'ID' );
-
-		if ( $user_id === $post_author_id ) {
 			return false;
 		}
 
@@ -176,10 +149,14 @@ class BundleDetails {
 		}
 
 		ob_start();
-		$enrolled_courses_link = tutor_utils()->get_tutor_dashboard_page_permalink( 'enrolled-courses' );
+		$link       = '#';
+		$has_access = tutor_utils()->has_user_course_content_access( get_current_user_id(), $post_id );
+		if ( tutor_utils()->is_enrolled( $post_id ) || $has_access ) {
+			$link = get_the_permalink( $post_id ) . '#tutor-bundle-course-list';
+		}
 		?>
-		<div class="tutor-course-progress-wrapper tutor-mb-32">
-			<a href="<?php echo esc_url( $enrolled_courses_link ); ?>" class="tutor-btn tutor-btn-outline-primary tutor-btn-block">
+		<div>
+			<a href="<?php echo esc_url( $link ); ?>" class="tutor-btn tutor-btn-outline-primary tutor-btn-block">
 				<?php esc_html_e( 'Explore Courses', 'tutor-pro' ); ?>
 			</a>
 		</div>
@@ -208,8 +185,8 @@ class BundleDetails {
 			return;
 		}
 
-		$discount          = BundlePrice::get_bundle_discount_by_ribbon( $bundle_id, $ribbon_type );
-		$bundle_sale_price = BundlePrice::get_bundle_sale_price( $bundle_id );
+		$discount          = BundleModel::get_bundle_discount_by_ribbon( $bundle_id, $ribbon_type );
+		$bundle_sale_price = BundleModel::get_bundle_sale_price( $bundle_id );
 
 		if ( $bundle_sale_price <= 0 ) {
 			return;
@@ -222,6 +199,20 @@ class BundleDetails {
 				?>
 			</div>
 		<?php
+	}
+
+
+	/**
+	 * Add discount ribbon info for tutor course bundle.
+	 *
+	 * @since 3.2.0
+	 *
+	 * @param int $bundle_id bundle id.
+	 *
+	 * @return void
+	 */
+	public function add_bundle_discount_info( $bundle_id ) {
+		$this->add_discount_info( null, $bundle_id );
 	}
 
 	/**
@@ -285,12 +276,12 @@ class BundleDetails {
 			array(
 				'icon_class' => 'tutor-icon-clock-line',
 				'label'      => __( 'Duration', 'tutor-pro' ),
-				'value'      => sprintf( __( '%s Duration', 'tutor-pro' ), BundleModel::convert_seconds_into_human_readable_time( $overview['total_duration'] ?? 0, false ) ),
+				'value'      => sprintf( __( '%s Duration', 'tutor-pro' ), $overview['total_duration'] ?? 0 ),
 			),
 			array(
 				'icon_class' => 'tutor-icon-video-camera-o',
-				'label'      => __( 'Video Content', 'tutor-pro' ),
-				'value'      => sprintf( __( '%s Video Content', 'tutor-pro' ), $overview['total_video_contents'] ?? 0 ),
+				'label'      => __( 'Lesson Content', 'tutor-pro' ),
+				'value'      => sprintf( __( '%s Lesson Content', 'tutor-pro' ), $overview['total_video_contents'] ?? 0 ),
 			),
 			array(
 				'icon_class' => 'tutor-icon-download',

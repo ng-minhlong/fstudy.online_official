@@ -1645,7 +1645,7 @@ function isOperaBrowser() {
         
         setTimeout(function() {
             console.log("Show Test!");
-            hidePreloader();
+            
             document.getElementById("start_test").style.display = "block";
             document.getElementById("welcome").style.display = "block";
         }, 1000);

@@ -1139,7 +1139,7 @@ function detailsAns(){
   window.location.href = currentLink + "/detail";
 
 }
-hidePreloader();
+
 
 </script>
 </html>

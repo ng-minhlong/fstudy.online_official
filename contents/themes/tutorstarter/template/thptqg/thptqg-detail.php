@@ -702,7 +702,7 @@ allParts.forEach((part) => {
 });
 // Create log button
            
-        hidePreloader();
+        
         showQuestion(0);
         logQuestionsInfo();
         createCheckboxes();  // Tạo checkbox tương ứng

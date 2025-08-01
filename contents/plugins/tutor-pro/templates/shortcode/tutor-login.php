@@ -30,7 +30,7 @@ add_filter(
 	<div class="tutor-template-segment tutor-login-wrap">
 		<div class="tutor-login-form-wrapper">
 			<div class="tutor-fs-5 tutor-color-black tutor-mb-32">
-				<?php esc_html_e( 'Hi, Welcome back!', 'tutor' ); ?>
+				<?php esc_html_e( 'Hi, Welcome back!', 'tutor-pro' ); ?>
 			</div>
 			<?php
 				$login_form = trailingslashit( tutor()->path ) . 'templates/login-form.php';

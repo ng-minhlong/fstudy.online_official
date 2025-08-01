@@ -10,6 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use TUTOR\Input;
+use Tutor\Models\CourseModel;
 use TUTOR_GB\GradeBook;
 $gradebook = new GradeBook();
 
@@ -36,9 +37,24 @@ $add_gradebook_url          = $url . '&sub_page=add_new_gradebook';
 $add_gradebook_settings_url = $url . '&sub_page=gradebooks';
 
 $filters = array(
-	'bulk_action'   => false,
-	'filters'       => true,
-	'course_filter' => true,
+	'bulk_action' => false,
+	'filters'     => array(
+		array(
+			'label'      => __( 'Courses', 'tutor-pro' ),
+			'field_type' => 'select',
+			'field_name' => 'course-id',
+			'options'    => CourseModel::get_course_dropdown_options(),
+			'searchable' => true,
+			'value'      => Input::get( 'course-id', '' ),
+		),
+		array(
+			'label'      => __( 'Date', 'tutor-pro' ),
+			'field_type' => 'date',
+			'field_name' => 'date',
+			'show_label' => true,
+			'value'      => Input::get( 'date', '' ),
+		),
+	),
 );
 
 $per_page     = get_tutor_option( 'pagination_per_page', 10 );
@@ -69,13 +85,13 @@ $navbar_data = array(
 		 */
 		$navbar_template = tutor()->path . 'views/elements/navbar.php';
 		tutor_load_template_from_custom_path( $navbar_template, $navbar_data );
-		$filters_template = tutor()->path . 'views/elements/filters.php';
+		$filters_template = tutor()->path . 'views/elements/list-filters.php';
 		tutor_load_template_from_custom_path( $filters_template, $filters );
 	?>
-	<div class="tutor-admin-body">
-		<div class="tutor-mt-24">
+	<div  class="tutor-admin-container tutor-admin-container-lg">
+		<div class="tutor-mt-16">
 			<?php if ( is_array( $gradebooks->res ) && count( $gradebooks->res ) ) : ?>
-				<div class="tutor-table-responsive">
+				<div class="tutor-table-responsive tutor-dashboard-list-table">
 					<table class="tutor-table tutor-table-middle table-gradebook">
 						<thead>
 							<tr>
@@ -136,12 +152,12 @@ $navbar_data = array(
 
 										<div class="tutor-meta tutor-mt-8">
 											<div>
-												<?php esc_html_e( 'Quiz Complete: ' ); ?>
+												<?php esc_html_e( 'Quiz Complete: ', 'tutor-pro' ); ?>
 												<span class="tutor-meta-value"><?php echo esc_html( $gradebook->quiz_count . '/' . $total_quiz ); ?></span>
 											</div>
 
 											<div>
-												<?php esc_html_e( 'Assignment Complete: ' ); ?>
+												<?php esc_html_e( 'Assignment Complete: ', 'tutor-pro' ); ?>
 												<span class="tutor-meta-value"><?php echo esc_html( $gradebook->assignment_count . '/' . $total_assignment ); ?></span>
 											</div>
 										</div>
@@ -198,7 +214,7 @@ $navbar_data = array(
 					</table>
 				</div>
 			<?php else : ?>
-				<?php tutor_utils()->tutor_empty_state( tutor_utils()->not_found_text() ); ?>
+				<?php tutils()->render_list_empty_state(); ?>
 			<?php endif; ?>
 		</div>
 

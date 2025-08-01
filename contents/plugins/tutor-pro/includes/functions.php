@@ -10,8 +10,35 @@
 
 use TUTOR\Input;
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+defined( 'ABSPATH' ) || exit;
+
+if ( ! function_exists( 'tutor_pro' ) ) {
+	/**
+	 * Tutor Pro helper function
+	 *
+	 * @return object
+	 */
+	function tutor_pro() {
+		if ( isset( $GLOBALS['tutor_pro_plugin_info'] ) ) {
+			return $GLOBALS['tutor_pro_plugin_info'];
+		}
+
+		$path = plugin_dir_path( TUTOR_PRO_FILE );
+		$info = array(
+			'path'         => $path,
+			'templates'    => trailingslashit( $path . 'templates' ),
+			'languages'    => trailingslashit( $path . 'languages' ),
+			'url'          => plugin_dir_url( TUTOR_PRO_FILE ),
+			'icon_dir'     => plugin_dir_url( TUTOR_PRO_FILE ) . 'assets/images/',
+			'basename'     => plugin_basename( TUTOR_PRO_FILE ),
+			'version'      => TUTOR_PRO_VERSION,
+			'nonce_action' => 'tutor_pro_nonce_action',
+			'nonce'        => '_wpnonce',
+		);
+
+		$GLOBALS['tutor_pro_plugin_info'] = (object) $info;
+		return $GLOBALS['tutor_pro_plugin_info'];
+	}
 }
 
 if ( ! function_exists( 'get_generated_gradebook' ) ) {

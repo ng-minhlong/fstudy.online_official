@@ -421,7 +421,7 @@ $conn->close();
     </div>
        
     <script>
-        hidePreloader();
+        
             // function save data qua ajax
             jQuery('#saveTopikListeningResult').submit(function(event) {
             event.preventDefault(); // Prevent the default form submission

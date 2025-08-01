@@ -212,10 +212,14 @@ if (!empty($results)) {
 
     // Lấy liên kết của bài viết hiện tại
     $post_link = get_permalink($post_id);
+   
+
     echo '
     <script>
         var permissionLink = "' . $permissionLink . '";
         console.log("Permission Link:", permissionLink);
+        var linkTestMain = "'.$site_url .'/test/ielts/l/' . $custom_number . '";
+
         
         var linkTest = "' . $post_link . '";
         var currentUsername = "' . $test_username . '";
@@ -1002,7 +1006,7 @@ input:checked + .slider:before {
  
 
     </body>
-    <?php echo'<script src="'. $site_url .'/contents/themes/tutorstarter/ielts-listening-toolkit/script_result_3.js"></script>'?>
+    <?php echo'<script src="'. $site_url .'/contents/themes/tutorstarter/ielts-listening-toolkit/script_result_4.js"></script>'?>
     
 
 <script>
@@ -1050,8 +1054,15 @@ input:checked + .slider:before {
             generateQRCode(currentUrl);
         }
 
+function redirectToTest(){
+    
+    window.location.href = `${linkTestMain}`;
+//    console.log(`Linh ${linkTestMain}`);
+
+}
 
 </script>
+
 </html>
 
 <?php

@@ -256,7 +256,7 @@ class Zoom extends Tutor_Base {
 	 * @since 1.9.4
 	 */
 	public function register_admin_scripts() {
-		wp_register_script( 'tutor_zoom_timepicker_js', TUTOR_ZOOM()->url . 'assets/js/lib/jquery-ui-timepicker.js', array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), TUTOR_PRO_VERSION, true );
+		wp_register_script( 'tutor_zoom_timepicker_js', TUTOR_ZOOM()->url . 'assets/lib/jquery-ui-timepicker.js', array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), TUTOR_PRO_VERSION, true );
 		wp_register_script( 'tutor_zoom_admin_js', TUTOR_ZOOM()->url . 'assets/js/admin.js', array( 'jquery' ), TUTOR_PRO_VERSION, true );
 		wp_register_script( 'tutor_zoom_common_js', TUTOR_ZOOM()->url . 'assets/js/common.js', array( 'jquery', 'jquery-ui-datepicker' ), TUTOR_PRO_VERSION, true );
 		wp_register_style( 'tutor_zoom_timepicker_css', TUTOR_ZOOM()->url . 'assets/css/jquery-ui-timepicker.css', false, TUTOR_PRO_VERSION );
@@ -299,16 +299,16 @@ class Zoom extends Tutor_Base {
 		$is_single_zoom_page        = ( is_single() && ! empty( $wp_query->query['post_type'] ) && $wp_query->query['post_type'] === 'tutor_zoom_meeting' );
 
 		if ( $wp_query->is_page && $is_frontend_course_builder ) {
-			wp_enqueue_script( 'tutor_zoom_timepicker_js', TUTOR_ZOOM()->url . 'assets/js/lib/jquery-ui-timepicker.js', array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), TUTOR_PRO_VERSION, true );
+			wp_enqueue_script( 'tutor_zoom_timepicker_js', TUTOR_ZOOM()->url . 'assets/lib/jquery-ui-timepicker.js', array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-slider' ), TUTOR_PRO_VERSION, true );
 			wp_enqueue_style( 'tutor_zoom_timepicker_css', TUTOR_ZOOM()->url . 'assets/css/jquery-ui-timepicker.css', false, TUTOR_PRO_VERSION );
 			wp_enqueue_script( 'tutor_zoom_common_js', TUTOR_ZOOM()->url . 'assets/js/common.js', array( 'jquery', 'jquery-ui-datepicker' ), TUTOR_PRO_VERSION, true );
 			wp_enqueue_style( 'tutor_zoom_common_css', TUTOR_ZOOM()->url . 'assets/css/common.css', false, TUTOR_PRO_VERSION );
 		}
 
 		if ( is_single_course() || $is_single_zoom_page ) {
-			wp_enqueue_script( 'tutor_zoom_moment_js', TUTOR_ZOOM()->url . 'assets/js/lib/moment.min.js', array(), TUTOR_PRO_VERSION, true );
-			wp_enqueue_script( 'tutor_zoom_moment_tz_js', TUTOR_ZOOM()->url . 'assets/js/lib/moment-timezone-with-data.min.js', array(), TUTOR_PRO_VERSION, true );
-			wp_enqueue_script( 'tutor_zoom_countdown_js', TUTOR_ZOOM()->url . 'assets/js/lib/jquery.countdown.min.js', array( 'jquery' ), TUTOR_PRO_VERSION, true );
+			wp_enqueue_script( 'tutor_zoom_moment_js', TUTOR_ZOOM()->url . 'assets/lib/moment.min.js', array(), TUTOR_PRO_VERSION, true );
+			wp_enqueue_script( 'tutor_zoom_moment_tz_js', TUTOR_ZOOM()->url . 'assets/lib/moment-timezone-with-data.min.js', array(), TUTOR_PRO_VERSION, true );
+			wp_enqueue_script( 'tutor_zoom_countdown_js', TUTOR_ZOOM()->url . 'assets/lib/jquery.countdown.min.js', array( 'jquery' ), TUTOR_PRO_VERSION, true );
 		}
 
 		if ( is_single_course() || $is_single_zoom_page || $is_frontend_course_builder || ( isset( $wp_query->query_vars['tutor_dashboard_page'] ) && $wp_query->query_vars['tutor_dashboard_page'] == 'zoom' ) ) {
@@ -389,6 +389,15 @@ class Zoom extends Tutor_Base {
 
 		$meeting_data['duration_unit'] = $duration_unit;
 
+		if ( 'hr' === $duration_unit ) {
+			$meeting_data['duration'] = $meeting_data['duration'] / 60;
+		}
+
+		$start_datetime = get_post_meta( $meeting_id, '_tutor_zm_start_datetime', true );
+		if ( false !== $start_datetime ) {
+			$post->meeting_starts_at = $start_datetime;
+		}
+
 		$post->meeting_data = $meeting_data;
 
 		$data = apply_filters( 'tutor_zoom_meeting_details_response', $post, $meeting_id );
@@ -467,9 +476,20 @@ class Zoom extends Tutor_Base {
 		$course_id           = Input::post( 'course_id', 0, Input::TYPE_INT );
 		$click_form          = Input::post( 'click_form', '');
 
-		// Prepare auth data
-		$user_id    = get_current_user_id();
-		$settings   = json_decode( get_user_meta( $user_id, $this->api_key, true ), true );
+		// Prepare auth data.
+		$current_user  = get_current_user_id();
+		$zoom_settings = null;
+
+		$course        = get_post( $course_id );
+		$user_id       = $course->post_author;
+		$user_settings = get_user_meta( $user_id, $this->api_key, true );
+		if ( $user_settings ) {
+			$zoom_settings = $user_settings;
+		} else {
+			$zoom_settings = get_user_meta( $current_user, $this->api_key, true );
+		}
+
+		$settings   = json_decode( $zoom_settings, true );
 		$api_key    = ( ! empty( $settings['api_key'] ) ) ? $settings['api_key'] : '';
 		$api_secret = ( ! empty( $settings['api_secret'] ) ) ? $settings['api_secret'] : '';
 
@@ -564,6 +584,7 @@ class Zoom extends Tutor_Base {
 			'post_parent'  => $topic_id ? $topic_id : $course_id,
 			'post_status'  => 'publish',
 			'menu_order'   => $menu_order,
+			'post_author'  => $user_id,
 		);
 
 		// save zoom meeting
@@ -732,10 +753,10 @@ class Zoom extends Tutor_Base {
 
 			$context_clause = ' AND ((
 				_meta_unit.meta_value=\'min\'
-				AND (_meta_start.meta_value + INTERVAL _meta_duration.meta_value MINUTE)' . $math_operator . 'NOW()
+				AND (JSON_UNQUOTE(JSON_EXTRACT(_meta_zm_data.meta_value, "$.start_time")) + INTERVAL _meta_duration.meta_value MINUTE)' . $math_operator . 'UTC_TIMESTAMP()
 			) OR (
 				_meta_unit.meta_value=\'hr\'
-				AND (_meta_start.meta_value + INTERVAL _meta_duration.meta_value HOUR)' . $math_operator . 'NOW()
+				AND (JSON_UNQUOTE(JSON_EXTRACT(_meta_zm_data.meta_value, "$.start_time")) + INTERVAL _meta_duration.meta_value HOUR)' . $math_operator . 'UTC_TIMESTAMP()
 			))';
 		}
 
@@ -743,17 +764,19 @@ class Zoom extends Tutor_Base {
 		$meetings = $wpdb->get_results(
 			"SELECT DISTINCT _meeting.*,
 				_meta_start.meta_value AS meeting_starts_at,
-				(_meta_start.meta_value + INTERVAL _meta_duration.meta_value MINUTE)<NOW() AS is_expired,
-				(NOW()>_meta_start.meta_value AND NOW()<_meta_start.meta_value + INTERVAL _meta_duration.meta_value MINUTE) AS is_running,
-				_meta_start.meta_value>NOW() AS is_upcoming
+				(JSON_UNQUOTE(JSON_EXTRACT(_meta_zm_data.meta_value, '$.start_time')) + INTERVAL JSON_UNQUOTE(JSON_EXTRACT(_meta_zm_data.meta_value, '$.duration')) MINUTE) < UTC_TIMESTAMP() AS is_expired,
+				(UTC_TIMESTAMP() > JSON_UNQUOTE(JSON_EXTRACT(_meta_zm_data.meta_value, '$.start_time')) AND UTC_TIMESTAMP() < JSON_UNQUOTE(JSON_EXTRACT(_meta_zm_data.meta_value, '$.start_time')) + INTERVAL JSON_UNQUOTE(JSON_EXTRACT(_meta_zm_data.meta_value, '$.duration')) MINUTE) AS is_running,
+				(JSON_UNQUOTE(JSON_EXTRACT(_meta_zm_data.meta_value, '$.start_time')) > UTC_TIMESTAMP()) AS is_upcoming
 			FROM {$wpdb->posts} _meeting
 				INNER JOIN {$wpdb->postmeta} _meta_start ON _meeting.ID=_meta_start.post_id
 				INNER JOIN {$wpdb->postmeta} _meta_duration ON _meeting.ID=_meta_duration.post_id
 				INNER JOIN {$wpdb->postmeta} _meta_unit ON _meeting.ID=_meta_unit.post_id
+				INNER JOIN {$wpdb->postmeta} _meta_zm_data ON _meeting.ID=_meta_zm_data.post_id
 			WHERE _meeting.post_type='tutor_zoom_meeting'
 				AND _meta_start.meta_key='_tutor_zm_start_datetime'
 				AND _meta_unit.meta_key='_tutor_zm_duration_unit'
 				AND _meta_duration.meta_key='_tutor_zm_duration'
+				AND _meta_zm_data.meta_key='_tutor_zm_data'
 				{$filter_clause}
 				{$context_clause}
 				{$limit_offset}"
@@ -809,7 +832,7 @@ class Zoom extends Tutor_Base {
 		if ( empty( $api_data['api_key'] ) || empty( $api_data['api_secret'] ) || empty( $api_data['account_id'] ) ) {
 			wp_send_json_error(
 				array(
-					'message' => 'Please fill up all the fields',
+					'message' => __( 'Please fill up all the fields', 'tutor-pro' ),
 					'tutor-pro',
 				)
 			);
@@ -817,6 +840,7 @@ class Zoom extends Tutor_Base {
 
 		do_action( 'tutor_save_zoom_api_before' );
 		$user_id = get_current_user_id();
+		$existing_zoom_meta = get_user_meta( $user_id, $this->api_key );
 		update_user_meta( $user_id, $this->api_key, json_encode( $api_data ) );
 		do_action( 'tutor_save_zoom_api_after' );
 
@@ -827,7 +851,12 @@ class Zoom extends Tutor_Base {
 			return;
 		}
 
-		wp_send_json_success( array( 'message' => __( 'You can now add live classes to any course!', 'tutor-pro' ) ) );
+		wp_send_json_success( 
+			array( 
+				'message' => __( 'You can now add live classes to any course!', 'tutor-pro' ),
+				'reload_page' => empty( $existing_zoom_meta ),
+			)
+		);
 	}
 
 	public function tutor_save_zoom_settings() {
@@ -1086,6 +1115,10 @@ class Zoom extends Tutor_Base {
 				$duration_unit = 'min';
 			}
 			$meeting_data['duration_unit'] = $duration_unit;
+
+			if ( 'hr' === $duration_unit ) {
+				$meeting_data['duration'] = $meeting_data['duration'] / 60;
+			}
 
 			$item->meeting_data = $meeting_data;
 		}

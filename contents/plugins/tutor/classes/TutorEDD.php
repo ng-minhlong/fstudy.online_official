@@ -59,12 +59,12 @@ class TutorEDD extends Tutor_Base {
 	 */
 	public function add_options( $attr ) {
 		$attr['tutor_edd'] = array(
-			'label'    => __( 'EDD', 'tutor-edd' ),
+			'label'    => __( 'EDD', 'tutor' ),
 
 			'sections' => array(
 				'general' => array(
-					'label'  => __( 'General', 'tutor-edd' ),
-					'desc'   => __( 'Tutor Course Attachments Settings', 'tutor-edd' ),
+					'label'  => __( 'General', 'tutor' ),
+					'desc'   => __( 'Tutor Course Attachments Settings', 'tutor' ),
 					'fields' => array(
 						'enable_tutor_edd' => array(
 							'type'  => 'checkbox',
@@ -117,6 +117,8 @@ class TutorEDD extends Tutor_Base {
 		} else {
 			delete_post_meta( $post_ID, '_tutor_course_product_id' );
 		}
+
+		do_action( 'save_tutor_course', $post_ID, get_post( $post_ID ) );
 	}
 
 	/**

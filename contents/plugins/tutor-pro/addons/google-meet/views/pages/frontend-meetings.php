@@ -9,6 +9,14 @@
 
 use TutorPro\GoogleMeet\Utilities\Utilities;
 
+$filters = array(
+	'bulk_action'   => false,
+	'bulk_actions'  => false,
+	'filters'       => true,
+	'course_filter' => true,
+	'sort_by'       => false,
+);
+
 ?>
 <div class="tutor-google-meet-meetings tutor-mt-32" id="tutor-google-meet-meta-box-wrapper">
 	<?php
@@ -161,28 +169,28 @@ use TutorPro\GoogleMeet\Utilities\Utilities;
 					<?php endif; ?>
 				</tbody>
 			</table>
-		</div>
-		<!-- pagination  -->
-		<div class="tutor-admin-page-pagination-wrapper tutor-mt-32">
-			<?php
-			/**
-			 * Prepare pagination data & load template
-			 */
-			if ( $meetings['total_found'] > $posts_per_page ) {
-				$pagination_data = array(
-					'total_items' => $meetings['total_found'],
-					'per_page'    => $posts_per_page,
-					'paged'       => $current_page,
-				);
+			<!-- pagination  -->
+			<div class="tutor-admin-page-pagination-wrapper tutor-mt-32">
+				<?php
+				/**
+				 * Prepare pagination data & load template
+				 */
+				if ( $meetings['total_found'] > $posts_per_page ) {
+					$pagination_data = array(
+						'total_items' => $meetings['total_found'],
+						'per_page'    => $posts_per_page,
+						'paged'       => $current_page,
+					);
 
-				tutor_load_template_from_custom_path(
-					tutor()->path . 'templates/dashboard/elements/pagination.php',
-					$pagination_data
-				);
-			}
-			?>
-		</div>    
-		<!-- pagination end -->
+					tutor_load_template_from_custom_path(
+						tutor()->path . 'templates/dashboard/elements/pagination.php',
+						$pagination_data
+					);
+				}
+				?>
+			</div>    
+			<!-- pagination end -->
+		</div>
 		<?php wp_reset_postdata(); ?>
 	</div>
 </div>

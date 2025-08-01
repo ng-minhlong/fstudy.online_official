@@ -1,14 +1,12 @@
 <?php return array(
     'root' => array(
         'name' => 'tutor-pro/dependencies',
-        'pretty_version' => 'dev-master',
-        'version' => 'dev-master',
-        'reference' => 'cace95a557f43d0161dee76e1caf23ff401b3fee',
+        'pretty_version' => '3.7.0.x-dev',
+        'version' => '3.7.0.9999999-dev',
+        'reference' => '43bb0e509d663957cff14df4dbfeceb9c7f8e699',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
-        'aliases' => array(
-            0 => '2.x-dev',
-        ),
+        'aliases' => array(),
         'dev' => false,
     ),
     'versions' => array(
@@ -220,14 +218,12 @@
             'dev_requirement' => false,
         ),
         'tutor-pro/dependencies' => array(
-            'pretty_version' => 'dev-master',
-            'version' => 'dev-master',
-            'reference' => 'cace95a557f43d0161dee76e1caf23ff401b3fee',
+            'pretty_version' => '3.7.0.x-dev',
+            'version' => '3.7.0.9999999-dev',
+            'reference' => '43bb0e509d663957cff14df4dbfeceb9c7f8e699',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
-            'aliases' => array(
-                0 => '2.x-dev',
-            ),
+            'aliases' => array(),
             'dev_requirement' => false,
         ),
         'web-token/jwt-core' => array(

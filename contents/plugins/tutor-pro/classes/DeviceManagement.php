@@ -432,7 +432,7 @@ class DeviceManagement {
 
 		$new_tab = array(
 			'url'   => esc_url( $nav_link ),
-			'title' => __( 'Manage Login Sessions', 'tutor' ),
+			'title' => __( 'Manage Login Sessions', 'tutor-pro' ),
 			'role'  => false,
 		);
 
@@ -694,7 +694,7 @@ class DeviceManagement {
 			$delete = QueryHelper::delete( $table, $where );
 
 			if ( $delete ) {
-				$response['msg'] = __( 'Device removed successfully!' );
+				$response['msg'] = __( 'Device removed successfully!', 'tutor-pro' );
 
 				$device_fingerprint = str_replace( self::LOGIN_INFO_KEY, '', $meta->meta_key );
 
@@ -706,7 +706,7 @@ class DeviceManagement {
 
 				wp_send_json_success( $response );
 			} else {
-				$response['msg'] = __( 'Device removed failed!' );
+				$response['msg'] = __( 'Device removed failed!', 'tutor-pro' );
 				wp_send_json_error( $response );
 			}
 		} else {

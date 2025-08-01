@@ -13,6 +13,7 @@ namespace TUTOR_ASSIGNMENTS;
 
 use TUTOR\Course;
 use Tutor\Helpers\HttpHelper;
+use Tutor\Helpers\QueryHelper;
 use TUTOR\Input;
 use Tutor\Models\CourseModel;
 use Tutor\Traits\JsonResponse;
@@ -72,7 +73,7 @@ class Assignments extends Tutor_Base {
 	public function extend_settings_option( $attr ) {
 		$assignment_url = site_url() . '/' . $this->course_base_permalink . '/sample-course/<code>' . $this->assignment_base_permalink . '</code>/sample-assignment/';
 
-		$attr['advanced']['blocks'][1]['fields'][] = array(
+		$attr['advanced']['blocks'][2]['fields'][] = array(
 			'key'     => 'assignment_permalink_base',
 			'type'    => 'text',
 			'label'   => __( 'Assignment Permalink', 'tutor-pro' ),
@@ -337,26 +338,15 @@ class Assignments extends Tutor_Base {
 	}
 
 	/**
-	 * Get assignment details
+	 * Get assignment details by ID
 	 *
-	 * @return void
+	 * @since 3.7.0
+	 *
+	 * @param int $assignment_id assignment id.
+	 *
+	 * @return mixed
 	 */
-	public function ajax_assignment_details() {
-		if ( ! tutor_utils()->is_nonce_verified() ) {
-			$this->json_response( tutor_utils()->error_message( 'nonce' ), null, HttpHelper::STATUS_BAD_REQUEST );
-		}
-
-		$topic_id      = Input::post( 'topic_id', 0, Input::TYPE_INT );
-		$assignment_id = Input::post( 'assignment_id', 0, Input::TYPE_INT );
-
-		if ( ! tutor_utils()->can_user_manage( 'topic', $topic_id ) ) {
-			$this->json_response(
-				tutor_utils()->error_message(),
-				null,
-				HttpHelper::STATUS_FORBIDDEN
-			);
-		}
-
+	public static function get_assignment_details( $assignment_id ) {
 		$post = get_post( $assignment_id, ARRAY_A );
 		if ( $post ) {
 			$post['attachments']       = tutor_utils()->get_attachments( $assignment_id, '_tutor_assignment_attachments' );
@@ -367,8 +357,29 @@ class Assignments extends Tutor_Base {
 
 		$data = apply_filters( 'tutor_assignment_details_response', $post, $assignment_id );
 
+		return $data;
+	}
+	/**
+	 * Get assignment details
+	 *
+	 * @return void
+	 */
+	public function ajax_assignment_details() {
+		if ( ! tutor_utils()->is_nonce_verified() ) {
+			$this->response_bad_request( tutor_utils()->error_message( 'nonce' ) );
+		}
+
+		$topic_id      = Input::post( 'topic_id', 0, Input::TYPE_INT );
+		$assignment_id = Input::post( 'assignment_id', 0, Input::TYPE_INT );
+
+		if ( ! tutor_utils()->can_user_manage( 'topic', $topic_id ) ) {
+			$this->response_bad_request( tutor_utils()->error_message() );
+		}
+
+		$data = self::get_assignment_details( $assignment_id );
+
 		$this->json_response(
-			__( 'Assignment data fetched successfully', 'tutor' ),
+			__( 'Assignment data fetched successfully', 'tutor-pro' ),
 			$data
 		);
 	}
@@ -427,7 +438,7 @@ class Assignments extends Tutor_Base {
 		$user_id       = get_current_user_id();
 		$user          = get_userdata( $user_id );
 		$gmdate        = gmdate( 'Y-m-d H:i:s' );
-		$site_date 	   = wp_date( 'Y-m-d H:i:s' );
+		$site_date     = wp_date( 'Y-m-d H:i:s' );
 
 		$is_enrolled = tutor_utils()->is_enrolled( $course_id, $user_id );
 		if ( ! $is_enrolled ) {
@@ -514,6 +525,8 @@ class Assignments extends Tutor_Base {
 		$course_id            = $store_data->course_id;
 		$student_id           = $store_data->student_id;
 
+		$user = get_userdata( $student_id );
+
 		if ( in_array( $assignment_answer, array( '', '<p>&nbsp;</p>', '<p><br data-mce-bogus="1"></p>' ), true ) ) {
 			tutor_utils()->redirect_to( get_permalink( $assignment_id ), __( 'Assignment answer is required', 'tutor-pro' ), 'error' );
 			exit;
@@ -525,9 +538,9 @@ class Assignments extends Tutor_Base {
 
 		$data_array = array(
 			'comment_post_ID'  => $assignment_id,
-			'comment_author'   => 'student',
-			'comment_date'     => $date, // Submit Finished.
-			'comment_date_gmt' => wp_date( 'Y-m-d H:i:s' ), // Submit Started.
+			'comment_author'   => $user->user_login,
+			'comment_date'     => wp_date( 'Y-m-d H:i:s' ), // Submit Finished.
+			'comment_date_gmt' => $date, // Submit Started.
 			'comment_agent'    => 'TutorLMSPlugin',
 			'comment_type'     => 'tutor_assignment',
 			'comment_parent'   => $course_id,
@@ -589,7 +602,7 @@ class Assignments extends Tutor_Base {
 
 		do_action( 'tutor_assignment/before/submit', $assignment_submit_id );
 
-		$date = gmdate( 'Y-m-d H:i:s' );
+		$date = wp_date( 'Y-m-d H:i:s' );
 
 		$data_array = array(
 			'comment_content'  => $assignment_answer,
@@ -733,12 +746,25 @@ class Assignments extends Tutor_Base {
 			$submitted_assignment = tutor_utils()->get_assignment_submit_info( $submitted_id );
 			$course_id            = $submitted_assignment->comment_parent;
 			$student_id           = $submitted_assignment->user_id;
+			$assignment_info      = get_post( $submitted_assignment->comment_post_ID );
+			$total_mark           = (int) get_post_meta( $assignment_info->ID, '_tutor_assignment_total_mark', true );
 
 			if ( ! tutor_utils()->can_user_edit_course( get_current_user_id(), $course_id ) ) {
 				wp_send_json_error( tutor_utils()->error_message() );
 			}
 
 			foreach ( $evaluate_fields as $field_key => $field_value ) {
+				if ( 'assignment_mark' === $field_key ) {
+					$assignment_mark = (int) $field_value;
+					if ( $assignment_mark > $total_mark ) {
+						wp_send_json_error( __( 'Evaluation mark must be less than total mark', 'tutor-pro' ) );
+					}
+
+					if ( $assignment_mark < 0 ) {
+						wp_send_json_error( __( 'Evaluation mark cannot be less than zero', 'tutor-pro' ) );
+					}
+				}
+
 				update_comment_meta( $submitted_id, $field_key, $field_value );
 			}
 
@@ -746,7 +772,14 @@ class Assignments extends Tutor_Base {
 
 			// Assignment mark meta update @since v2.0.0.
 			$assignment_post_id = Input::post( 'assignment_post_id', 0, Input::TYPE_INT );
-			$assignment_mark    = isset( $evaluate_fields['assignment_mark'] ) ? sanitize_text_field( $evaluate_fields['assignment_mark'] ) : 0;
+			$assignment_mark    = isset( $evaluate_fields['assignment_mark'] ) ? Input::sanitize( $evaluate_fields['assignment_mark'], 0, INPUT::TYPE_INT ) : 0;
+			if ( $assignment_mark > $total_mark ) {
+				wp_send_json_error( __( 'Evaluation mark must be less than total mark', 'tutor-pro' ) );
+			}
+
+			if ( $assignment_mark < 0 ) {
+				wp_send_json_error( __( 'Evaluation mark cannot be less than zero', 'tutor-pro' ) );
+			}
 			update_post_meta( $assignment_post_id, '_tutor_assignment_evaluate_mark', $assignment_mark );
 
 			do_action( 'tutor_assignment/evaluate/after', $submitted_id, $course_id, $student_id );
@@ -997,5 +1030,52 @@ class Assignments extends Tutor_Base {
 		} else {
 			return 'fail';
 		}
+	}
+
+	/**
+	 * Get total assignments count
+	 *
+	 * @since 3.6.0
+	 *
+	 * @return int
+	 */
+	public function get_total_assignment() {
+		global $wpdb;
+
+		$assignment_type = tutor()->assignment_post_type;
+
+		$primary_table = "{$wpdb->posts} AS a";
+		$join_tables   = array(
+			array(
+				'type'  => 'INNER',
+				'table' => "$wpdb->posts t",
+				'on'    => 'a.post_parent=t.ID',
+			),
+			array(
+				'type'  => 'INNER',
+				'table' => "{$wpdb->posts} c",
+				'on'    => "c.ID=t.post_parent AND c.post_status='publish'",
+			),
+		);
+
+		$where = array(
+			'a.post_type' => $assignment_type,
+		);
+
+		$search = array();
+
+		try {
+			$count = QueryHelper::get_joined_count(
+				$primary_table,
+				$join_tables,
+				$where,
+				$search,
+				'a.ID'
+			);
+		} catch ( \Throwable $th ) {
+			return 0;
+		}
+
+		return $count;
 	}
 }

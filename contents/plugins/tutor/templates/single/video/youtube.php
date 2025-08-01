@@ -33,6 +33,7 @@ do_action( 'tutor_lesson/single/before/video/youtube' );
 			<?php endif; ?>
 		</div>
 	</div>
+	<button class="tutor-video-close-btn tutor-icon-close" aria-label="<?php esc_attr_e( 'Close Video', 'tutor' ); ?>"></button>
 <?php endif; ?>
 
 <?php do_action( 'tutor_lesson/single/after/video/youtube' ); ?>

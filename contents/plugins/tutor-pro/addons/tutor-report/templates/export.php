@@ -33,8 +33,8 @@ if ( count( $students ) || count( $earnings ) || count( $discounts ) || count( $
 					<?php esc_html_e( 'Export to keep a copy of your analytics data.', 'tutor-pro' ); ?>
 				</div>
 				<div class="tutor-mt-28">
-					<button type="button" id="download_analytics" class="<?php esc_attr_e( 'tutor-btn tutor-btn-primary' ); ?>"<?php echo esc_attr( $disabled ? ' disabled' : '' ); ?>>
-						<i class="tutor-icon-import-o tutor-mr-12"></i> <?php esc_html_e( 'Download CSV' ); ?>
+					<button type="button" id="download_analytics" class="<?php echo esc_attr( 'tutor-btn tutor-btn-primary' ); ?>"<?php echo esc_attr( $disabled ? ' disabled' : '' ); ?>>
+						<i class="tutor-icon-import-o tutor-mr-12"></i> <?php esc_html_e( 'Download CSV', 'tutor-pro' ); ?>
 					</button>
 				</div>
 			</div>

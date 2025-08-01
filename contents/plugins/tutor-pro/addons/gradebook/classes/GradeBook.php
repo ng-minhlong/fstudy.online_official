@@ -27,12 +27,6 @@ class GradeBook {
 	 */
 
 	use Backend_Page_Trait;
-	/**
-	 * Page Title
-	 *
-	 * @var $page_title
-	 */
-	public $page_title;
 
 	/**
 	 * Bulk Action
@@ -72,14 +66,27 @@ class GradeBook {
 		add_action( 'tutor_quiz/answer/review/after', array( $this, 'gradebook_generator_wrapper' ), 10, 3 );
 		add_action( 'delete_tutor_course_progress', array( $this, 'gradebook_generate' ), 10, 2 );
 
-		$this->page_title = __( 'Gradebook', 'tutor-pro' );
-
 		/**
 		 * Handle bulk action
 		 *
 		 * @since v2.0.0
 		 */
 		add_action( 'wp_ajax_tutor_gradebook_bulk_action', array( $this, 'gradebook_bulk_action' ) );
+	}
+
+	/**
+	 * Page title fallback
+	 *
+	 * @since 3.5.0
+	 *
+	 * @param string $name Property name.
+	 *
+	 * @return string
+	 */
+	public function __get( $name ) {
+		if ( 'page_title' === $name ) {
+			return esc_html__( 'Gradebook', 'tutor-pro' );
+		}
 	}
 
 	/**

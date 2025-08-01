@@ -95,7 +95,7 @@ $inactive_days = isset( $saved_data['inactive_days'] ) ? $saved_data['inactive_d
 	<main class="email-page-container main-content-wrapper">
 		<div class="tutor-row tutor-gx-0">
 
-			<div class="tutor-col-md-6 tutor-border-right">
+			<div class="tutor-col-md-6 <?php echo esc_attr( is_rtl() ? 'tutor-border-left' : 'tutor-border-right' ); ?>">
 				<div class="content-form tutor-pr-md-16 tutor-pr-xl-32 tutor-pt-32">
 					<div class="tutor-text-right tutor-mb-8">
 						<button 
@@ -208,7 +208,7 @@ $inactive_days = isset( $saved_data['inactive_days'] ) ? $saved_data['inactive_d
 							<div class="tutor-dropdown-parent">
 								<button class="tutor-btn tutor-color-secondary" action-tutor-dropdown="toggle">
 									<span class="tutor-icon-paper-plane tutor-mr-8" aria-hidden="true"></span>
-									<span><?php esc_html_e( 'Send a test mail', 'tutor-pro' ); ?></span>
+									<span><?php esc_html_e( 'Send a Test Mail', 'tutor-pro' ); ?></span>
 								</button>
 								<div class="tutor-dropdown" style="width: 350px;" data-tutor-copy-target="">
 									<?php

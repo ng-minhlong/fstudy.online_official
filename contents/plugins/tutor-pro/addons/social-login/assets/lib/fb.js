@@ -123,7 +123,7 @@ async function ajaxHandler(formData) {
       });
       return post;
     } catch (error) {
-      tutor_toast(__("Operation failed", "tutor"), error, "error");
+      tutor_toast(__("Operation failed", "tutor-pro"), error, "error");
     }
 }
   

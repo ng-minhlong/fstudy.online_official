@@ -31,7 +31,7 @@ add_filter( 'tutor_addons_lists_config', 'tutor_pmpro_config' );
 function tutor_pmpro_config( $config ) {
 	$new_config = array(
 		'name'           => __( 'Paid Memberships Pro', 'tutor-pro' ),
-		'description'    => __( 'Maximize revenue by selling membership access to all of your courses.', 'tutor-pro' ),
+		'description'    => __( 'Boost revenue by selling course memberships.', 'tutor-pro' ),
 		'depend_plugins' => array( 'paid-memberships-pro/paid-memberships-pro.php' => 'Paid Memberships Pro' ),
 	);
 
@@ -51,12 +51,13 @@ if ( ! function_exists( 'TUTOR_PMPRO' ) ) {
 	//phpcs:ignore
 	function TUTOR_PMPRO() {
 		$info = array(
-			'path'         => plugin_dir_path( TUTOR_PMPRO_FILE ),
-			'url'          => plugin_dir_url( TUTOR_PMPRO_FILE ),
-			'basename'     => plugin_basename( TUTOR_PMPRO_FILE ),
-			'version'      => TUTOR_PMPRO_VERSION,
-			'nonce_action' => 'tutor_nonce_action',
-			'nonce'        => '_wpnonce',
+			'path'                => plugin_dir_path( TUTOR_PMPRO_FILE ),
+			'url'                 => plugin_dir_url( TUTOR_PMPRO_FILE ),
+			'basename'            => plugin_basename( TUTOR_PMPRO_FILE ),
+			'version'             => TUTOR_PMPRO_VERSION,
+			'nonce_action'        => 'tutor_nonce_action',
+			'nonce'               => '_wpnonce',
+			'required_pro_plugin' => true,
 		);
 
 		return (object) $info;

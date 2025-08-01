@@ -36,22 +36,12 @@ class Events {
 	protected $google_client;
 
 	/**
-	 * App unauthorized message
-	 *
-	 * @since v2.1.0
-	 *
-	 * @var string
-	 */
-	protected $unauthorized_msg;
-
-	/**
 	 * Register hooks
 	 *
 	 * @since v2.1.0
 	 */
 	public function __construct() {
 		$this->google_client    = new GoogleEvent();
-		$this->unauthorized_msg = __( 'You app is not authorized, please authorize from set-api page!', 'tutor-pro' );
 
 		add_action( 'wp_ajax_tutor_google_meet_new_meeting', array( $this, 'create_meeting' ) );
 		add_action( 'wp_ajax_tutor_google_meet_meeting_details', array( $this, 'ajax_google_meet_meeting_details' ) );
@@ -66,6 +56,23 @@ class Events {
 		 */
 		add_filter( 'tutor_course_details_response', array( $this, 'extend_course_details_response' ) );
 	}
+
+	/**
+	 * Page title fallback
+	 *
+	 * @since 3.5.0
+	 *
+	 * @param string $name Property name.
+	 *
+	 * @return string
+	 */
+	public function __get( $name ) {
+		if ( 'unauthorized_msg' === $name ) {
+			return esc_html__( 'You app is not authorized, please authorize from set-api page!', 'tutor-pro' );
+		}
+	}
+
+
 
 	/**
 	 * Get google meet meeting details
@@ -302,9 +309,9 @@ class Events {
 					$this->json_response( $insert_event->get_error_message(), null, HttpHelper::STATUS_INTERNAL_SERVER_ERROR );
 				} else {
 					if ( $is_update ) {
-						$this->json_response( __( 'Meeting Successfully Updated' ), null );
+						$this->json_response( __( 'Meeting Successfully Updated', 'tutor-pro' ), null );
 					} else {
-						$this->json_response( __( 'Meeting Successfully Added' ), HttpHelper::STATUS_CREATED );
+						$this->json_response( __( 'Meeting Successfully Added', 'tutor-pro' ), HttpHelper::STATUS_CREATED );
 					}
 				}
 			} catch ( \Throwable $th ) {
@@ -477,7 +484,7 @@ class Events {
 	public function reset_credential() {
 		tutor_utils()->checking_nonce();
 
-		if ( ! User::is_admin() ) {
+		if ( ! User::is_admin() && ! User::is_instructor() ) {
 			wp_send_json_error( tutor_utils()->error_message() );
 		}
 
@@ -511,6 +518,7 @@ class Events {
 		}
 
 		$meetings = self::get_meetings( array( 'post_parent' => $course_id ) );
+		$meetings = ! is_array( $meetings ) ? array() : $meetings;
 
 		foreach ( $meetings as $meeting ) {
 			$meeting->meeting_data = json_decode( get_post_meta( $meeting->ID, EventsModel::POST_META_KEYS[2], true ) );

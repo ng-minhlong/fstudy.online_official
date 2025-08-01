@@ -69,6 +69,7 @@ class EventsModel {
 		$search_term = $sorting_args['search_term'];
 		$author_id   = $sorting_args['author_id'];
 		$date        = $sorting_args['date'];
+		$order       = $sorting_args['order'] ?? 'ASC';
 		$limit       = $paging_args['limit'];
 		$offset      = $paging_args['offset'];
 
@@ -103,6 +104,8 @@ class EventsModel {
 		if ( '' !== $date ) {
 			$date_clause = "AND ( DATE(start_date.meta_value) = CAST( '$date' AS DATE ) OR DATE(end_date.meta_value) = CAST( '$date' AS DATE ) )";
 		}
+
+		$order_clause = "ORDER BY end_date.meta_value {$order}";
 
 		// Get the meetings from Database
 		$meetings    = $wpdb->get_results(
@@ -149,7 +152,7 @@ class EventsModel {
 					{$date_clause}
 					{$search_clause}
 
-				ORDER BY end_date.meta_value ASC
+				{$order_clause}
 
 				LIMIT %d, %d
 				",

@@ -142,6 +142,16 @@ class GoogleEvent {
 
 		$this->google_callback_url = admin_url() . 'admin.php?page=google-meet&tab=set-api';
 
+		if ( ! is_admin() ) {
+			global $wp_rewrite;
+
+			if ( null === $wp_rewrite ) {
+				$wp_rewrite = new \WP_Rewrite();
+			}
+
+			$this->google_callback_url = tutor_utils()->tutor_dashboard_url( 'google-meet/set-api' );
+		}
+
 		if ( $this->is_credential_loaded() ) {
 			try {
 				$this->validate_json_service_account_file( $credential_path );

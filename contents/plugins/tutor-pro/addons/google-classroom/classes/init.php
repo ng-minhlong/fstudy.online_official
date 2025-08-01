@@ -47,10 +47,15 @@ class Init {
 			return;
 		}
 
-		$this->gc_metabox = array(
-			'tutor_gc_enable_classroom_stream' => __( 'Enable Google Classroom Stream', 'tutor-pro' ),
-			'tutor_gc_show_stream_files'       => __( 'Show Google Classroom Files in Stream', 'tutor-pro' ),
-			'tutor_gc_include_classroom_files' => __( 'Include Google Classroom Files in Resources', 'tutor-pro' ),
+		add_action(
+			'init',
+			function() {
+				$this->gc_metabox = array(
+					'tutor_gc_enable_classroom_stream' => __( 'Enable Google Classroom Stream', 'tutor-pro' ),
+					'tutor_gc_show_stream_files'       => __( 'Show Google Classroom Files in Stream', 'tutor-pro' ),
+					'tutor_gc_include_classroom_files' => __( 'Include Google Classroom Files in Resources', 'tutor-pro' ),
+				);
+			}
 		);
 
 		$this->gc_dashboard_url = get_admin_url( null, 'admin.php?page=' . $this->gc_dashboard_slug );

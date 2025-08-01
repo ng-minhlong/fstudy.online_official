@@ -255,7 +255,7 @@ class CourseGenerationController {
 			$content = call_user_func_array( array( $this, $method ), $arguments );
 
 			$this->json_response(
-				__( 'Content generated', 'tutor' ),
+				__( 'Content generated', 'tutor-pro' ),
 				$content
 			);
 		} catch ( Exception $error ) {

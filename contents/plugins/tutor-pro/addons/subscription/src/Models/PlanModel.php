@@ -10,8 +10,12 @@
 
 namespace TutorPro\Subscription\Models;
 
+use TUTOR\Course;
+use Tutor\Ecommerce\Tax;
 use Tutor\Helpers\DateTimeHelper;
 use Tutor\Helpers\QueryHelper;
+use Tutor\Models\BaseModel;
+use Tutor\Models\CourseModel;
 use Tutor\Models\OrderModel;
 
 /**
@@ -28,6 +32,15 @@ class PlanModel extends BaseModel {
 	protected $table_name = 'tutor_subscription_plans';
 
 	/**
+	 * Plan status
+	 *
+	 * @since 3.2.0
+	 */
+	const STATUS_ALL      = -1;
+	const STATUS_ACTIVE   = 1;
+	const STATUS_INACTIVE = 0;
+
+	/**
 	 * Payment type.
 	 */
 	const PAYMENT_ONETIME   = 'onetime';
@@ -37,6 +50,7 @@ class PlanModel extends BaseModel {
 	 * Plan types
 	 */
 	const TYPE_COURSE    = 'course';
+	const TYPE_BUNDLE    = 'bundle';
 	const TYPE_CATEGORY  = 'category';
 	const TYPE_FULL_SITE = 'full_site';
 
@@ -48,11 +62,6 @@ class PlanModel extends BaseModel {
 	const INTERVAL_WEEK  = 'week';
 	const INTERVAL_MONTH = 'month';
 	const INTERVAL_YEAR  = 'year';
-
-	/**
-	 * Order meta.
-	 */
-	const META_ENROLLMENT_FEE = 'plan_enrollment_fee';
 
 	/**
 	 * Get interval list
@@ -109,6 +118,7 @@ class PlanModel extends BaseModel {
 	public function get_type_list() {
 		return array(
 			self::TYPE_COURSE    => __( 'Course', 'tutor-pro' ),
+			self::TYPE_BUNDLE    => __( 'Bundle', 'tutor-pro' ),
 			self::TYPE_CATEGORY  => __( 'Category', 'tutor-pro' ),
 			self::TYPE_FULL_SITE => __( 'Full Site', 'tutor-pro' ),
 		);
@@ -118,14 +128,21 @@ class PlanModel extends BaseModel {
 	 * Get plan type
 	 *
 	 * @since 3.0.0
+	 * @since 3.2.0 param suffix added.
 	 *
 	 * @param string $type plan type.
+	 * @param string $suffix suffix.
 	 *
 	 * @return string
 	 */
-	public function get_type( $type ) {
+	public function get_type_label( $type, $suffix = '' ) {
+		$label     = '';
 		$type_list = $this->get_type_list();
-		return $type_list[ $type ] ?? '';
+		if ( $type_list[ $type ] ) {
+			$label = $type_list[ $type ] . ( ! empty( $suffix ) ? " $suffix" : '' );
+		}
+
+		return $label;
 	}
 
 	/**
@@ -138,23 +155,49 @@ class PlanModel extends BaseModel {
 	 * @return object|false
 	 */
 	public function get_plan( $id ) {
-		return $this->get_row( array( 'id' => $id ) );
+		$plan = $this->get_row( array( 'id' => $id ) );
+		if ( $plan ) {
+			$plan->in_sale_price      = $this->in_sale_price( $plan );
+			$plan->is_membership_plan = $this->is_membership_plan( $plan );
+			$plan->has_trial_period   = $plan->trial_value > 0;
+		}
+
+		return $plan;
 	}
 
 	/**
-	 * Get course id by plan.
+	 * Get plan info by order id or object.
+	 *
+	 * @since 3.0.1
+	 *
+	 * @param int|object $order order id or object.
+	 *
+	 * @return object
+	 */
+	public function get_plan_by_order( $order ) {
+		$order = OrderModel::get_order( $order );
+
+		if ( $order && OrderModel::is_subscription_order( $order ) ) {
+			return $this->get_plan( $order->items[0]['item_id'] );
+		}
+
+		return false;
+
+	}
+
+	/**
+	 * Get object id by plan.
 	 *
 	 * @param int $plan_id plan id.
 	 *
-	 * @return int course id if success, 0 on fail.
+	 * @return int course or bundle id if success, 0 on fail.
 	 */
-	public function get_course_id_by_plan( $plan_id ) {
+	public function get_object_id_by_plan( $plan_id ) {
 		return (int) $this->db->get_var(
 			$this->db->prepare(
 				"SELECT object_id FROM {$this->db->prefix}tutor_subscription_plan_items
-				WHERE plan_id = %d AND object_name = %s",
+				WHERE plan_id = %d",
 				$plan_id,
-				self::TYPE_COURSE
 			)
 		);
 	}
@@ -255,22 +298,21 @@ class PlanModel extends BaseModel {
 	}
 
 	/**
-	 * Check course plan exist.
+	 * Check subscription plan exist.
 	 *
 	 * @since 3.0.0
 	 *
 	 * @param int $plan_id plan id.
-	 * @param int $course_id course id.
+	 * @param int $object_id object id.
 	 *
 	 * @return boolean
 	 */
-	public function has_course_plan( $plan_id, $course_id ) {
+	public function has_subscription_plan( $plan_id, $object_id ) {
 		$plan_count = QueryHelper::get_count(
 			$this->db->prefix . 'tutor_subscription_plan_items',
 			array(
-				'plan_id'     => $plan_id,
-				'object_name' => self::TYPE_COURSE,
-				'object_id'   => $course_id,
+				'plan_id'   => $plan_id,
+				'object_id' => $object_id,
 			)
 		);
 
@@ -278,24 +320,26 @@ class PlanModel extends BaseModel {
 	}
 
 	/**
-	 * Create a plan for course.
+	 * Create a subscription plan for course or bundle
 	 *
-	 * @param int   $course_id course id.
+	 * @param int   $object_id object id.
 	 * @param array $data data.
 	 *
 	 * @return int
 	 */
-	public function create_course_plan( $course_id, $data ) {
+	public function create_subscription_plan( $object_id, $data ) {
 		$plan_id = $this->create( $data );
 
-		QueryHelper::insert(
-			$this->db->prefix . 'tutor_subscription_plan_items',
-			array(
-				'plan_id'     => $plan_id,
-				'object_name' => self::TYPE_COURSE,
-				'object_id'   => $course_id,
-			)
-		);
+		if ( isset( $data['plan_type'] ) && in_array( $data['plan_type'], array( self::TYPE_COURSE, self::TYPE_BUNDLE ), true ) ) {
+			QueryHelper::insert(
+				$this->db->prefix . 'tutor_subscription_plan_items',
+				array(
+					'plan_id'     => $plan_id,
+					'object_name' => $data['plan_type'],
+					'object_id'   => $object_id,
+				)
+			);
+		}
 
 		return $plan_id;
 	}
@@ -303,25 +347,269 @@ class PlanModel extends BaseModel {
 	/**
 	 * Get all plans.
 	 *
-	 * @param int $course_id course id.
+	 * @param int $object_id object id.
 	 *
 	 * @return array|object|null
 	 */
-	public function get_course_plans( $course_id ) {
+	public function get_subscription_plans( $object_id ) {
 		return $this->db->get_results(
 			$this->db->prepare(
-				"SELECT * FROM {$this->db->prefix}tutor_subscription_plans AS plan
+				"SELECT plan.* FROM {$this->db->prefix}tutor_subscription_plans AS plan
 				INNER JOIN {$this->db->prefix}tutor_subscription_plan_items AS item
 				ON item.plan_id = plan.id
-				WHERE item.object_name = %s
-				AND plan.payment_type = %s
+				WHERE plan.payment_type = %s
 				AND item.object_id = %d
 				ORDER BY plan.plan_order ASC",
-				self::TYPE_COURSE,
 				self::PAYMENT_RECURRING,
-				$course_id
+				$object_id
 			)
 		);
+	}
+
+	/**
+	 * Get plan category ids.
+	 *
+	 * @since 3.2.0
+	 *
+	 * @param int $plan_id plan id.
+	 *
+	 * @return array
+	 */
+	public function get_plan_category_ids( $plan_id ) {
+		$category_ids = $this->db->get_col(
+			$this->db->prepare(
+				"SELECT object_id FROM {$this->db->prefix}tutor_subscription_plan_items AS plan_items
+				WHERE plan_items.plan_id = %d
+				AND plan_items.object_name = %s",
+				$plan_id,
+				self::TYPE_CATEGORY
+			)
+		);
+
+		return array_map( 'intval', $category_ids );
+	}
+
+	/**
+	 * Get plan categories.
+	 *
+	 * @since 3.4.0
+	 *
+	 * @param int $plan_id plan id.
+	 *
+	 * @return array
+	 */
+	public function get_plan_categories( $plan_id ) {
+		return get_terms(
+			array(
+				'taxonomy' => CourseModel::COURSE_CATEGORY,
+				'include'  => $this->get_plan_category_ids( $plan_id ),
+			)
+		);
+	}
+
+	/**
+	 * Get membership plan type
+	 *
+	 * @since 3.2.0
+	 *
+	 * @return array
+	 */
+	public static function get_membership_plan_types() {
+		return array(
+			self::TYPE_FULL_SITE,
+			self::TYPE_CATEGORY,
+		);
+	}
+
+	/**
+	 * Get subscription plan types
+	 *
+	 * @since 3.2.0
+	 *
+	 * @return array
+	 */
+	public static function get_subscription_plan_types() {
+		return array(
+			self::TYPE_COURSE,
+			self::TYPE_BUNDLE,
+		);
+	}
+
+	/**
+	 * Get list of membership plans.
+	 *
+	 * @since 3.2.0
+	 *
+	 * @param int $status -1 for all, 0 for inactive, 1 for active.
+	 *
+	 * @return array|object|null
+	 */
+	public function get_membership_plans( $status = self::STATUS_ALL ) {
+		$where = array( 'plan_type' => self::get_membership_plan_types() );
+		if ( self::STATUS_ALL !== $status ) {
+			$where['is_enabled'] = $status;
+		}
+
+		$list = QueryHelper::get_all( $this->table_name, $where, 'plan_order', -1, 'ASC' );
+
+		foreach ( $list as $row ) {
+			if ( self::TYPE_CATEGORY === $row->plan_type ) {
+				$cat_ids    = $this->get_plan_category_ids( $row->id );
+				$terms      = tutor_utils()->get_course_categories( 0, array( 'include' => $cat_ids ) );
+				$categories = array();
+
+				foreach ( $terms  as $term ) {
+					$thumb_id     = get_term_meta( $term->term_id, 'thumbnail_id', true );
+					$categories[] = array(
+						'id'            => $term->term_id,
+						'title'         => $term->name,
+						'image'         => $thumb_id ? wp_get_attachment_thumb_url( $thumb_id ) : tutor()->url . 'assets/images/placeholder.svg',
+						'total_courses' => (int) $term->count,
+					);
+				}
+
+				$row->cat_ids    = $cat_ids;
+				$row->categories = $categories;
+			}
+		}
+
+		return $list;
+	}
+
+	/**
+	 * Check is plan is membership plan.
+	 *
+	 * @since 3.2.0
+	 *
+	 * @param int $plan plan id or object.
+	 *
+	 * @return boolean
+	 */
+	public function is_membership_plan( $plan ) {
+		if ( is_numeric( $plan ) ) {
+			$plan = $this->get_plan( $plan );
+		}
+
+		return in_array( $plan->plan_type, $this->get_membership_plan_types(), true );
+	}
+
+	/**
+	 * Check is plan is subscription plan.
+	 *
+	 * @since 3.2.0
+	 *
+	 * @param int $plan plan id or object.
+	 *
+	 * @return boolean
+	 */
+	public function is_subscription_plan( $plan ) {
+		if ( is_numeric( $plan ) ) {
+			$plan = $this->get_plan( $plan );
+		}
+
+		return in_array( $plan->plan_type, $this->get_subscription_plan_types(), true );
+	}
+
+	/**
+	 * Check site has active membership plans.
+	 *
+	 * @since 3.2.0
+	 *
+	 * @return boolean
+	 */
+	public function has_active_membership_plans() {
+		$active_plans = QueryHelper::get_count(
+			$this->table_name,
+			array(
+				'plan_type'  => $this->get_membership_plan_types(),
+				'is_enabled' => self::STATUS_ACTIVE,
+			)
+		);
+
+		return $active_plans > 0;
+	}
+
+	/**
+	 * Check category is accessible with plan or not.
+	 *
+	 * @since 3.2.0
+	 *
+	 * @param int $plan_id plan id.
+	 * @param int $course_id course id.
+	 *
+	 * @return boolean
+	 */
+	public function can_access_category_with_plan( $plan_id, $course_id ) {
+		$plan_categories     = $this->get_plan_category_ids( $plan_id );
+		$course_category_ids = wp_get_post_terms( $course_id, CourseModel::COURSE_CATEGORY, array( 'fields' => 'ids' ) );
+		$has_access          = count( array_intersect( $plan_categories, $course_category_ids ) ) > 0;
+		return $has_access;
+	}
+
+	/**
+	 * Get attached plan category ids.
+	 *
+	 * @since 3.2.0
+	 *
+	 * @param int $plan_id plan id.
+	 *
+	 * @return array list of attache category ids.
+	 */
+	public function get_attached_plan_categories( $plan_id ) {
+		$plan_items_table = $this->db->prefix . 'tutor_subscription_plan_items';
+		$existing_ids     = $this->db->get_col(
+			$this->db->prepare(
+				"SELECT object_id FROM {$plan_items_table}
+				WHERE plan_id = %d AND object_name = %s",
+				$plan_id,
+				self::TYPE_CATEGORY
+			)
+		);
+
+		return array_map( 'intval', $existing_ids );
+	}
+	/**
+	 * Attached categories to a plan.
+	 *
+	 * @since 3.2.0
+	 *
+	 * @param int   $plan_id plan id.
+	 * @param array $cat_ids category ids.
+	 *
+	 * @return void
+	 */
+	public function attach_categories_to_plan( $plan_id, $cat_ids ) {
+		$plan_items_table = $this->db->prefix . 'tutor_subscription_plan_items';
+
+		$existing_ids = $this->get_attached_plan_categories( $plan_id );
+
+		sort( $cat_ids );
+		sort( $existing_ids );
+
+		if ( $existing_ids === $cat_ids ) {
+			return;
+		}
+
+		// Delete old attached categories.
+		$this->db->delete(
+			$plan_items_table,
+			array(
+				'plan_id'     => $plan_id,
+				'object_name' => self::TYPE_CATEGORY,
+			)
+		);
+
+		// Now attached the categories to plan.
+		foreach ( $cat_ids as $cat_id ) {
+			QueryHelper::insert(
+				$plan_items_table,
+				array(
+					'plan_id'     => $plan_id,
+					'object_name' => self::TYPE_CATEGORY,
+					'object_id'   => $cat_id,
+				)
+			);
+		}
 	}
 
 	/**
@@ -408,20 +696,24 @@ class PlanModel extends BaseModel {
 	}
 
 	/**
-	 * Set a plan as featured from course plans.
+	 * Set a subscription plan as featured from course plans.
 	 *
 	 * @since 3.0.0
 	 *
-	 * @param int    $course_id course id.
+	 * @param int    $object_id object id.
 	 * @param int    $plan_id plan id.
 	 * @param string $featured_text featured text.
 	 *
 	 * @return void
 	 */
-	public function set_course_plan_as_featured( $course_id, $plan_id, $featured_text = '' ) {
+	public function set_subscription_plan_as_featured( $object_id, $plan_id, $featured_text = '' ) {
 		global $wpdb;
 
-		// Remove all featured flag related to $course_id.
+		$object_name = tutor()->course_post_type === get_post_type( $object_id )
+						? self::TYPE_COURSE
+						: self::TYPE_BUNDLE;
+
+		// Remove all featured flag related to $object_id.
 		$wpdb->query(
 			$wpdb->prepare(
 				"UPDATE {$wpdb->prefix}tutor_subscription_plans p
@@ -430,9 +722,9 @@ class PlanModel extends BaseModel {
 				WHERE p.plan_type = %s
 				AND pi.object_name = %s
 				AND pi.object_id = %d",
-				'course',
-				'course',
-				$course_id
+				$object_name,
+				$object_name,
+				$object_id
 			)
 		);
 
@@ -465,7 +757,8 @@ class PlanModel extends BaseModel {
 		$trial_end_date_gmt = null;
 
 		if ( OrderModel::TYPE_SUBSCRIPTION === $order->order_type ) {
-			if ( $plan->trial_value ) {
+			$apply_plan_trial = apply_filters( 'tutor_apply_plan_trial', $plan->trial_value > 0, $order->user_id, $plan );
+			if ( $apply_plan_trial ) {
 				$trial_end_date_gmt = DateTimeHelper::now()->add( $plan->trial_value, $plan->trial_interval )->to_date_time_string();
 
 				$start_date_gmt        = $trial_end_date_gmt;
@@ -493,5 +786,89 @@ class PlanModel extends BaseModel {
 			'end_date_gmt'          => $end_date_gmt,
 			'next_payment_date_gmt' => $next_payment_date_gmt,
 		);
+	}
+
+	/**
+	 * Get membership plans for course ids.
+	 *
+	 * @since 3.3.0
+	 *
+	 * @param array $course_ids course ids.
+	 *
+	 * @return array
+	 */
+	public function get_membership_plans_for_course_ids( array $course_ids ) {
+		$plans_table      = $this->db->prefix . 'tutor_subscription_plans';
+		$plan_items_table = $this->db->prefix . 'tutor_subscription_plan_items';
+		$final_plan_list  = QueryHelper::get_all( $plans_table, array( 'plan_type' => self::TYPE_FULL_SITE ), 'id', -1 );
+
+		$category_ids = array();
+		foreach ( $course_ids as $course_id ) {
+			$course_category_ids = wp_get_post_terms( $course_id, CourseModel::COURSE_CATEGORY, array( 'fields' => 'ids' ) );
+			$category_ids        = array_merge( $category_ids, $course_category_ids );
+		}
+
+		$category_ids = array_unique( $category_ids );
+
+		if ( count( $category_ids ) ) {
+			$primary_table  = "{$plans_table} plan";
+			$joining_tables = array(
+				array(
+					'type'  => 'INNER',
+					'table' => "{$plan_items_table} item",
+					'on'    => 'plan.id = item.plan_id',
+				),
+			);
+
+			$where = array(
+				'plan.plan_type'   => self::TYPE_CATEGORY,
+				'item.object_name' => self::TYPE_CATEGORY,
+				'item.object_id'   => $category_ids,
+			);
+
+			$query = QueryHelper::get_joined_data(
+				$primary_table,
+				$joining_tables,
+				array( 'DISTINCT plan.*' ),
+				$where,
+				array(),
+				'plan.id',
+				PHP_INT_MAX
+			);
+
+			$final_plan_list = array_merge( $final_plan_list, $query['results'] );
+		}
+
+		return $final_plan_list;
+	}
+
+	/**
+	 * Check tax collection is enabled for plan.
+	 *
+	 * @since 3.7.0
+	 *
+	 * @param int $plan_id plan id.
+	 *
+	 * @return boolean
+	 */
+	public function is_tax_enabled_for_plan( $plan_id ) {
+		if ( ! Tax::is_individual_control_enabled() ) {
+			return true;
+		}
+
+		$plan_info = $this->get_plan( $plan_id );
+		if ( $plan_info->is_membership_plan ) {
+			$tax_collection = (bool) $plan_info->tax_collection;
+		} else {
+			/**
+			 * Course/Bundle subscription
+			 * object id can be course or bundle id.
+			 */
+			$object_id      = $this->get_object_id_by_plan( $plan_info->id );
+			$meta_value     = get_post_meta( $object_id, Course::TAX_ON_SUBSCRIPTION_META, true );
+			$tax_collection = '0' !== $meta_value;
+		}
+
+		return $tax_collection;
 	}
 }

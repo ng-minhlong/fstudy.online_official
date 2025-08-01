@@ -32,11 +32,12 @@ add_filter( 'tutor_addons_lists_config', 'tutor_restrict_content_config' );
  */
 function tutor_restrict_content_config( $config ) {
 	$new_config = array(
-		'name'           => __( 'Restrict Content Pro', 'tutor-pro' ),
-		'description'    => __( 'Enable to manage content access through Restrict Content Pro.', 'tutor-pro' ),
-		'depend_plugins' => array(
+		'name'                => __( 'Restrict Content Pro', 'tutor-pro' ),
+		'description'         => __( 'Enable to manage content access through Restrict Content Pro.', 'tutor-pro' ),
+		'depend_plugins'      => array(
 			'restrict-content-pro/restrict-content-pro.php' => 'Restrict Content Pro',
 		),
+		'required_pro_plugin' => true,
 	);
 
 	$basic_config = (array) TUTOR_RC();

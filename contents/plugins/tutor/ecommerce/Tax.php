@@ -107,11 +107,33 @@ class Tax {
 	public static function get_setting( $key, $default = false ) {
 		$tax_settings = self::get_settings();
 
-		if ( ! empty( $tax_settings->$key ) ) {
+		if ( isset( $tax_settings->$key ) ) {
 			return $tax_settings->$key;
 		}
 
 		return $default;
+	}
+
+	/**
+	 * Check individual tax control is enabled or not.
+	 *
+	 * @since 3.7.0
+	 *
+	 * @return boolean
+	 */
+	public static function is_individual_control_enabled() {
+		return self::get_setting( 'enable_individual_tax_control', false );
+	}
+
+	/**
+	 * Should calculate tax or not.
+	 *
+	 * @since 3.7.0
+	 *
+	 * @return boolean
+	 */
+	public static function should_calculate_tax() {
+		return self::get_setting( 'enable_tax', true ) && self::is_tax_configured();
 	}
 
 	/**
@@ -131,7 +153,9 @@ class Tax {
 
 		if ( self::is_tax_included_in_price() ) {
 			// Tax = (Tax Rate X Price) / (1 + Tax Rate).
-			$tax = $amount - ( $rate * $amount ) / ( 1 + $rate );
+			// Amount Without Tax = Amount With Tax / (1 + Tax Rate).
+			$tax_rate = $rate / 100;
+			$tax      = ( $tax_rate * $amount ) / ( 1 + $tax_rate );
 		} else {
 			try {
 				$tax = $amount * ( $rate / 100 );
@@ -212,13 +236,18 @@ class Tax {
 	 *
 	 * @since 3.0.0
 	 *
+	 * @since 3.3.0 Country param is optional
+	 *
 	 * @param string $country   the country code for which the tax rate needs to be found.
 	 * @param string $state state name.
 	 *
 	 * @return float tax rate value.
 	 */
-	public static function get_country_state_tax_rate( $country, $state = null ) {
+	public static function get_country_state_tax_rate( $country = null, $state = null ) {
 		$zero_tax = 0.0;
+
+		$country = apply_filters( 'tutor_ecommerce_tax_country', $country );
+		$state   = apply_filters( 'tutor_ecommerce_tax_state', $state );
 
 		if ( empty( $country ) ) {
 			return $zero_tax;
@@ -267,7 +296,6 @@ class Tax {
 
 			return $state_rate;
 		}
-
 	}
 
 	/**

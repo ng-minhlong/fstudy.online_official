@@ -322,6 +322,7 @@ class BuddyPressGroups {
 						array(
 							'user_id'           => $student_id,
 							'action'            => '_tutor_course_completed',
+							// Translators: %s course url.
 							'content'           => sprintf( __( 'I just completed learning %s. It was super insightful!', 'tutor-pro' ), $course_url ),
 							'type'              => 'activity_update',
 							'item_id'           => $group_id,
@@ -368,6 +369,7 @@ class BuddyPressGroups {
 						array(
 							'user_id'           => $student_id,
 							'action'            => '_tutor_course_enrolled',
+							// Translators: %s course url.
 							'content'           => sprintf( __( 'Just got enrolled in %s, looks very promising! You should check it out as well. ', 'tutor-pro' ), $course_url ),
 							'type'              => 'activity_update',
 							'item_id'           => $group_id,
@@ -417,6 +419,7 @@ class BuddyPressGroups {
 						array(
 							'user_id'           => $student_id,
 							'action'            => $action_type,
+							// Translators: %s course url.
 							'content'           => sprintf( __( 'Starting with %s from today. Wish me luck! ', 'tutor-pro' ), $course_url ),
 							'type'              => 'activity_update',
 							'item_id'           => $group_id,
@@ -469,6 +472,7 @@ class BuddyPressGroups {
 							'user_id'           => $instructor_id,
 							'action'            => $action_type,
 							'content'           => sprintf(
+								// Translators: %1$s lesson url %2$s course url.
 								__( 'I have created a new lesson %1$s for my course %2$s. Go check it out!', 'tutor-pro' ),
 								$lesson_url,
 								$course_url
@@ -523,6 +527,7 @@ class BuddyPressGroups {
 						array(
 							'user_id'           => $instructor_id,
 							'action'            => $action_type,
+							// Translators: %s lesson url.
 							'content'           => sprintf( __( 'I updated my lesson on %s to add more relevant content. See what’s new!', 'tutor-pro' ), $lesson_url ),
 							'type'              => 'activity_update',
 							'item_id'           => $group_id,
@@ -574,6 +579,7 @@ class BuddyPressGroups {
 						array(
 							'user_id'           => $user_id,
 							'action'            => $action_type,
+							// Translators: %s lesson url.
 							'content'           => sprintf( __( 'I just started taking the quiz %s, come and take it with me.', 'tutor-pro' ), $lesson_url ),
 							'type'              => 'activity_update',
 							'item_id'           => $group_id,
@@ -655,6 +661,7 @@ class BuddyPressGroups {
 						array(
 							'user_id'           => $user_id,
 							'action'            => $action_type,
+							// Translators: %s lesson url.
 							'content'           => sprintf( __( 'Done with %s, it was a challenging quiz.', 'tutor-pro' ), $lesson_url ),
 							'type'              => 'activity_update',
 							'item_id'           => $group_id,

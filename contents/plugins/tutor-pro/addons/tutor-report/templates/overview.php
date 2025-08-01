@@ -266,7 +266,7 @@ if ( '' !== $end_date ) {
 											<?php echo esc_textarea( $review->comment_content ); ?>
 										</div>
 										<div class="tutor-fs-7 tutor-color-secondary tutor-mt-16">
-											<span class="tutor-fs-8 tutor-fw-medium"><?php esc_html_e( 'Course', 'tutor' ); ?>:</span>&nbsp;
+											<span class="tutor-fs-8 tutor-fw-medium"><?php esc_html_e( 'Course', 'tutor-pro' ); ?>:</span>&nbsp;
 											<span data-href="<?php echo esc_url( get_the_permalink( $review->comment_post_ID ) ); ?>">
 												<?php echo esc_html( get_the_title( $review->comment_post_ID ) ); ?>
 											</span>

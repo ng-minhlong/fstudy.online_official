@@ -155,6 +155,7 @@ class QuizImportExport {
 			$_temp[]      = isset( $meta['questions_order'] ) ? $meta['questions_order'] : '';
 			$_temp[]      = isset( $meta['hide_question_number_overview'] ) ? $meta['hide_question_number_overview'] : '';
 			$_temp[]      = isset( $meta['short_answer_characters_limit'] ) ? $meta['short_answer_characters_limit'] : '';
+			$_temp[]      = isset( $meta['open_ended_answer_characters_limit'] ) ? $meta['open_ended_answer_characters_limit'] : '';
 			$final_data[] = $_temp;
 
 			if ( ! empty( $results ) ) {
@@ -182,15 +183,25 @@ class QuizImportExport {
 
 					$settings = maybe_unserialize( $value->question_settings );
 
+					$question_type = $value->question_type;
+
+					if ( 'multiple_choice' === $value->question_type && ( ! isset( $settings['has_multiple_correct_answer'] ) || '0' === $settings['has_multiple_correct_answer'] ) ) {
+						$question_type = 'single_choice';
+					}
+
+					if ( 'matching' === $value->question_type && isset( $settings['is_image_matching'] ) && '1' === $settings['is_image_matching'] ) {
+						$question_type = 'image_matching';
+					}
+
 					$temp[] = 'question';
 					$temp[] = '"' . addslashes( $value->question_title ) . '"';
 					$temp[] = '"' . str_replace( array( "\r\n", "\n", "\r" ), '\n', addslashes( $value->question_description ) ) . '"';
-					$temp[] = $value->question_type;
+					$temp[] = $question_type;
 					$temp[] = $value->question_mark;
 					$temp[] = $value->question_order;
-					$temp[] = isset( $settings['answer_required'] ) ? 1 : '';
-					$temp[] = isset( $settings['randomize_question'] ) ? 1 : '';
-					$temp[] = isset( $settings['show_question_mark'] ) ? 1 : '';
+					$temp[] = ( isset( $settings['answer_required'] ) && '1' === $settings['answer_required'] ) ? 1 : '';
+					$temp[] = ( isset( $settings['randomize_question'] ) && '1' === $settings['randomize_question'] ) ? 1 : '';
+					$temp[] = ( isset( $settings['show_question_mark'] ) && '1' === $settings['show_question_mark'] ) ? 1 : '';
 					$temp[] = '"' . str_replace( array( "\r\n", "\n", "\r" ), '\n', addslashes( $value->answer_explanation ) ) . '"'; // Index Position 9.
 
 					$final_data[] = $temp;
@@ -296,22 +307,25 @@ class QuizImportExport {
 					$_overview   = isset( $column[12] ) ? $column[12] : '';
 					$_limit      = isset( $column[13] ) ? $column[13] : '';
 
-					if ( $_time_value || $_time_type || $_time || $_attempts || $_grade || $_max_q || $_start || $_layout || $_order || $_overview || $_limit ) {
+					$_open_ended_answer_characters_limit = isset( $column[14] ) ? $column[14] : '';
+
+					if ( $_time_value || $_time_type || $_time || $_attempts || $_grade || $_max_q || $_start || $_layout || $_order || $_overview || $_limit || $_open_ended_answer_characters_limit ) {
 						$temp = array();
 						if ( $_time_value || $_time_type ) {
-							$temp['time_limit']                    = array(
+							$temp['time_limit']                         = array(
 								'time_value' => $_time_value ? $_time_value : '0',
 								'time_type'  => $_time_type ? $_time_type : 'minutes',
 							);
-							$temp['attempts_allowed']              = $_attempts ? $_attempts : 10;
-							$temp['passing_grade']                 = $_grade ? $_grade : 80;
-							$temp['max_questions_for_answer']      = $_max_q ? $_max_q : 10;
-							$temp['question_layout_view']          = $_layout ? $_layout : '';
-							$temp['questions_order']               = $_order ? $_order : 'rand';
-							$temp['short_answer_characters_limit'] = $_limit ? $_limit : 200;
-							$temp['hide_quiz_time_display']        = $_time ? $_time : 0;
-							$temp['quiz_auto_start']               = $_start ? $_start : 0;
-							$temp['hide_question_number_overview'] = $_overview ? $_overview : 0;
+							$temp['attempts_allowed']                   = $_attempts === '' ? 10 : $_attempts;
+							$temp['passing_grade']                      = $_grade === '' ? 80 : $_grade;
+							$temp['max_questions_for_answer']           = $_max_q === '' ? 10 : $_max_q;
+							$temp['question_layout_view']               = $_layout ? $_layout : '';
+							$temp['questions_order']                    = $_order ? $_order : 'rand';
+							$temp['short_answer_characters_limit']      = $_limit;
+							$temp['hide_quiz_time_display']             = $_time ? $_time : 0;
+							$temp['quiz_auto_start']                    = $_start ? $_start : 0;
+							$temp['hide_question_number_overview']      = $_overview ? $_overview : 0;
+							$temp['open_ended_answer_characters_limit'] = $_open_ended_answer_characters_limit;
 
 							update_post_meta( $quiz_id, 'tutor_quiz_option', $temp );
 						}

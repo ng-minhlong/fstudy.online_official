@@ -2977,7 +2977,7 @@ answerBox.forEach(answer => {
     setTimeout(function(){
         console.log("Show Test!");
         document.getElementById("start_test").style.display="block";
-        hidePreloader();
+        
         
         document.getElementById("welcome").style.display="block";
 

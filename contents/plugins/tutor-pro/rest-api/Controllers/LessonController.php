@@ -442,12 +442,22 @@ class LessonController extends BaseController {
 	 * @return boolean
 	 */
 	private function is_valid_video_source_type( string $source_type ): bool {
-		// Unset embedded source.
-		if ( tutor_is_rest() ) {
-			unset( $this->supported_video_sources[4] );
+		$supported_types = tutor_utils()->get_option( 'supported_video_sources', array() );
+		if ( is_string( $supported_types ) ) {
+			$supported_types = array( $supported_types );
 		}
 
-		return in_array( $source_type, $this->supported_video_sources, true );
+		// Filter out embedded type.
+		if ( tutor_is_rest() ) {
+			$supported_types = array_filter(
+				$supported_types,
+				function ( $type ) {
+					return 'embedded' !== $type;
+				}
+			);
+		}
+
+		return in_array( $source_type, $supported_types, true );
 	}
 
 	/**

@@ -1,0 +1,23 @@
+{
+	"name": "themeum/tutor-mate",
+	"description": "Companion plugin for Tutor Starter Theme.",
+	"keywords": [
+		"WordPress",
+		"Plugin",
+		"Tutor_Mate"
+	],
+	"license": "GPL-3.0",
+	"version": "1.0.0",
+	"authors": [
+		{
+			"name": "Themeum",
+			"email": "hello@themeum.com",
+			"homepage": "https://themeum.com"
+		}
+	],
+	"autoload": {
+		"psr-4": {
+			"TUTORMATE\\": "inc/"
+		}
+	}
+}

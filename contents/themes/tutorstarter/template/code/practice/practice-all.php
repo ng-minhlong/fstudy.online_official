@@ -185,7 +185,7 @@ function fetchData(page = 1) {
         currentPage = page;
 
         // ⬇️ Tắt preloader sau khi render xong
-        hidePreloader();
+        
     })
     .catch(error => {
         console.error('Error:', error);

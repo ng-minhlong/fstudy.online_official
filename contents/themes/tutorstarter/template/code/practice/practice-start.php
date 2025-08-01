@@ -1343,7 +1343,7 @@ function displayTestCase(caseData) {
 
     function renderCompileAndResult(data) {
         
-        hidePreloader();
+        
         const container = document.getElementById("result-content");
         container.innerHTML = ""; // Xóa cũ
 

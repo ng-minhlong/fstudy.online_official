@@ -451,7 +451,7 @@ class Course_Duplicator {
 		?>
 		<a class="tutor-dropdown-item" href="<?php echo esc_url( $duplicate ); ?>">
 			<i class="tutor-icon-copy tutor-mr-8" area-hidden="true"></i>
-			<span><?php esc_html_e( 'Duplicate', 'tutor' ); ?></span>
+			<span><?php esc_html_e( 'Duplicate', 'tutor-pro' ); ?></span>
 		</a>
 		<?php
 	}

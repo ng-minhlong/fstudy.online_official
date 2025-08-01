@@ -12,6 +12,7 @@ namespace Tutor;
 
 use Tutor\Ecommerce\OptionKeys;
 use TUTOR\Input;
+use Tutor\Traits\JsonResponse;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -23,6 +24,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since 2.0.0
  */
 class Options_V2 {
+
+	use JsonResponse;
 
 	/**
 	 * Undocumented variable
@@ -213,7 +216,29 @@ class Options_V2 {
 		}
 
 		$tutor_option = get_option( 'tutor_option' );
-		wp_send_json_success( maybe_unserialize( $tutor_option ) );
+		$data         = maybe_unserialize( $tutor_option );
+
+		$export_data = $this->get_export_json_schema();
+
+		$prepare_data = array(
+			'content_type' => 'settings',
+			'data'         => $data,
+		);
+
+		$export_data['data'][] = $prepare_data;
+
+		$response = array(
+			'job_progress'       => '100',
+			'exported_data'      => $export_data,
+			'completed_contents' => array(
+				'settings' => true,
+			),
+		);
+
+		// Update settings log.
+		$this->update_settings_log( $data, 'Exported' );
+
+		$this->json_response( __( 'Settings exported successfully', 'tutor' ), $response );
 	}
 
 	/**
@@ -234,7 +259,16 @@ class Options_V2 {
 
 		$tutor_settings_log = get_option( 'tutor_settings_log' );
 		$export_id          = $this->get_request_data( 'export_id' );
-		wp_send_json_success( $tutor_settings_log[ $export_id ] );
+
+		$export_data = $this->get_export_json_schema();
+
+		$prepare_data = array(
+			'content_type' => 'settings',
+			'data'         => $tutor_settings_log[ $export_id ]['dataset'],
+		);
+
+		$export_data['data'][] = $prepare_data;
+		wp_send_json_success( $export_data );
 	}
 
 	/**
@@ -280,7 +314,7 @@ class Options_V2 {
 		$tutor_settings_log = get_option( 'tutor_settings_log' );
 		$delete_id          = $this->get_request_data( 'delete_id' );
 		unset( $tutor_settings_log[ $delete_id ] );
-		update_option( 'tutor_settings_log', $tutor_settings_log );
+		update_option( 'tutor_settings_log', $tutor_settings_log, false );
 
 		wp_send_json_success( $tutor_settings_log );
 	}
@@ -397,48 +431,39 @@ class Options_V2 {
 			wp_send_json_error( tutor_utils()->error_message() );
 		}
 
-		$request = $this->get_request_data( 'tutor_options' );
-		$request = json_decode( stripslashes( $request ), true );
+		$request = json_decode( stripslashes( $_POST['data'] ), true );
 
-		$time = $this->get_request_data( 'time' );
+		$settings_found = false;
 
-		$save_import_data['datetime']             = (int) $time;
-		$save_import_data['history_date']         = gmdate( 'j M, Y, g:i a', $time );
-		$save_import_data['datatype']             = 'imported';
-		$save_import_data['dataset']              = $request['data'];
-		$import_data[ 'tutor-imported-' . $time ] = $save_import_data;
-
-		$get_option_data = get_option( 'tutor_settings_log' );
-		if ( empty( $get_option_data ) ) {
-			$get_option_data = array();
-		}
-		if ( ! empty( $get_option_data ) && null !== $save_import_data['dataset'] ) {
-
-			$update_option = array_merge( $import_data, $get_option_data );
-
-			$update_option = tutor_utils()->sanitize_recursively( $update_option );
-
-			if ( ! empty( $update_option ) ) {
-				update_option( 'tutor_settings_log', $update_option );
-			}
-
-			if ( ! empty( $save_import_data ) ) {
-				update_option( 'tutor_option', $save_import_data['dataset'] );
-			}
-
-			$get_final_data = get_option( 'tutor_settings_log' );
-		} else {
-			if ( ! empty( $import_data ) ) {
-				update_option( 'tutor_settings_log', $import_data );
-			}
-
-			if ( ! empty( $save_import_data ) ) {
-				update_option( 'tutor_option', $save_import_data['dataset'] );
-			}
-			$get_final_data = get_option( 'tutor_settings_log' );
+		if ( json_last_error() ) {
+			$this->response_bad_request( __( 'Invalid json file', 'tutor' ) );
 		}
 
-		wp_send_json_success( $get_final_data );
+		if ( ! isset( $request['data'] ) ) {
+			$this->response_bad_request( __( 'Data not found or invalid', 'tutor' ) );
+		}
+
+		if ( is_array( $request['data'] ) && count( $request['data'] ) ) {
+			foreach ( $request['data'] as $content ) {
+				if ( isset( $content['content_type'] ) && 'settings' === $content['content_type'] ) {
+					$settings_found = true;
+				}
+			}
+		}
+
+		if ( ! $settings_found ) {
+			$this->response_bad_request( __( 'Settings not found', 'tutor' ) );
+		}
+
+		$settings_data   = is_array( $request ) && isset( $request['data'] ) ? $request['data'][0]['data'] : array();
+		$update_settings = $this->update_settings_log( $settings_data, 'Imported' );
+
+		$response = array(
+			'job_progress'  => '100',
+			'exported_data' => $update_settings,
+		);
+
+		$this->json_response( __( 'Settings imported successfully!', 'tutor' ), $response );
 	}
 
 	/**
@@ -460,7 +485,7 @@ class Options_V2 {
 
 		if ( 'on' === $enable_sharing && ( $admin_commission + $instructor_commission ) > 100 ) {
 			$success = false;
-			$message = __( 'Total share percentage must be 100% or less' );
+			$message = __( 'Total share percentage must be 100% or less', 'tutor' );
 		}
 
 		if ( ! $success ) {
@@ -510,7 +535,7 @@ class Options_V2 {
 
 		$update_option = array_slice( $update_option, 0, 10 );
 
-		update_option( 'tutor_settings_log', $update_option );
+		update_option( 'tutor_settings_log', $update_option, false );
 		update_option( 'tutor_option', $option );
 		update_option( 'tutor_option_update_time', gmdate( 'j M, Y, g:i a', $time ) );
 
@@ -578,13 +603,19 @@ class Options_V2 {
 		$tutor_saved_option   = get_option( 'tutor_option' );
 
 		foreach ( $attr as $sections ) {
-			foreach ( $sections as $section ) {
-				foreach ( $section['blocks'] as $blocks ) {
-					foreach ( $blocks['fields'] as $field ) {
-						if ( isset( $tutor_default_option[ $field['key'] ] ) ) {
-							$attr_default[ $field['key'] ] = $tutor_saved_option[ $field['key'] ];
-						} elseif ( null !== $field['key'] ) {
-								$attr_default[ $field['key'] ] = $field['default'];
+			if ( is_array( $sections ) && count( $sections ) ) {
+				foreach ( $sections as $section ) {
+					foreach ( $section['blocks'] as $blocks ) {
+						if ( isset( $blocks['fields'] ) ) {
+							foreach ( $blocks['fields'] as $field ) {
+								if ( isset( $field['key'] ) ) {
+									if ( isset( $tutor_default_option[ $field['key'] ] ) ) {
+										$attr_default[ $field['key'] ] = $tutor_saved_option[ $field['key'] ];
+									} else {
+										$attr_default[ $field['key'] ] = $field['default'] ?? '';
+									}
+								}
+							}
 						}
 					}
 				}
@@ -795,14 +826,6 @@ class Options_V2 {
 								'desc'    => __( 'Enabling this feature will show a course content summary on the Course Details page.', 'tutor' ),
 							),
 							array(
-								'key'         => 'wc_automatic_order_complete_redirect_to_courses',
-								'type'        => 'toggle_switch',
-								'label'       => __( 'Auto Redirect to Courses', 'tutor' ),
-								'default'     => 'off',
-								'label_title' => '',
-								'desc'        => __( 'When a user\'s WooCommerce order is auto-completed, they will be redirected to enrolled courses', 'tutor' ),
-							),
-							array(
 								'key'         => 'enable_spotlight_mode',
 								'type'        => 'toggle_switch',
 								'label'       => __( 'Spotlight Mode', 'tutor' ),
@@ -901,10 +924,9 @@ class Options_V2 {
 										'label' => __( 'Auto Submit', 'tutor' ),
 										'desc'  => __( 'The current quiz answers are submitted automatically.', 'tutor' ),
 									),
-									// 'grace_period' => __( 'The current quiz answers are submitted by students.', 'tutor' )
 									'auto_abandon' => array(
 										'label' => __( 'Auto Abandon', 'tutor' ),
-										'desc'  => __( 'Attempts must be submitted before time expires, otherwise they will not be counted', 'tutor' ),
+										'desc'  => __( 'Attempts must be submitted before time expires, otherwise they will not be counted.', 'tutor' ),
 									),
 								),
 								'desc'           => __( 'Choose which action to follow when the quiz time expires.', 'tutor' ),
@@ -960,6 +982,22 @@ class Options_V2 {
 								'options'     => tutor_utils()->get_video_sources( true ),
 								'desc'        => __( 'Select the video hosting platform(s) you want to enable.', 'tutor' ),
 							),
+							array(
+								'key'         => 'disable_default_player_youtube',
+								'type'        => 'toggle_switch',
+								'label'       => __( 'Use Tutor Player for YouTube', 'tutor' ),
+								'label_title' => '',
+								'default'     => 'off',
+								'desc'        => __( 'Enable this option to use Tutor LMS video player for YouTube.', 'tutor' ),
+							),
+							array(
+								'key'         => 'disable_default_player_vimeo',
+								'type'        => 'toggle_switch',
+								'label'       => __( 'Use Tutor Player for Vimeo', 'tutor' ),
+								'label_title' => '',
+								'default'     => 'off',
+								'desc'        => __( 'Enable this option to use Tutor LMS video player for Vimeo.', 'tutor' ),
+							),
 						),
 					),
 				),
@@ -1004,6 +1042,22 @@ class Options_V2 {
 								'label_title' => '',
 								'default'     => 'off',
 								'desc'        => __( 'If enabled, in the case of Courses, WooCommerce Orders will get the "Completed" status .', 'tutor' ),
+							),
+							array(
+								'key'         => 'wc_automatic_order_complete_redirect_to_courses',
+								'type'        => 'toggle_switch',
+								'label'       => __( 'Auto Redirect to Courses', 'tutor' ),
+								'default'     => 'off',
+								'label_title' => '',
+								'desc'        => __( 'When a user\'s WooCommerce order is auto-completed, they will be redirected to enrolled courses', 'tutor' ),
+							),
+							array(
+								'key'         => 'enable_guest_course_cart',
+								'type'        => 'toggle_switch',
+								'label'       => __( 'Enable Guest Mode', 'tutor' ),
+								'label_title' => '',
+								'default'     => 'off',
+								'desc'        => __( 'Allow customers to place orders without an account.', 'tutor' ),
 							),
 						),
 					),
@@ -1630,29 +1684,6 @@ class Options_V2 {
 							),
 						),
 					),
-					'video_player'   => array(
-						'label'      => __( 'Video Player', 'tutor' ),
-						'slug'       => 'video_player',
-						'block_type' => 'uniform',
-						'fields'     => array(
-							array(
-								'key'         => 'disable_default_player_youtube',
-								'type'        => 'toggle_switch',
-								'label'       => __( 'Use Tutor Player for YouTube', 'tutor' ),
-								'label_title' => '',
-								'default'     => 'off',
-								'desc'        => __( 'Enable this option to use Tutor LMS video player for YouTube.', 'tutor' ),
-							),
-							array(
-								'key'         => 'disable_default_player_vimeo',
-								'type'        => 'toggle_switch',
-								'label'       => __( 'Use Tutor Player for Vimeo', 'tutor' ),
-								'label_title' => '',
-								'default'     => 'off',
-								'desc'        => __( 'Enable this option to use Tutor LMS video player for Vimeo.', 'tutor' ),
-							),
-						),
-					),
 				),
 			),
 			'advanced'     => array(
@@ -1765,10 +1796,10 @@ class Options_V2 {
 							array(
 								'key'         => 'enable_tutor_native_login',
 								'type'        => 'toggle_switch',
-								'label'       => __( 'Enable Tutor Login', 'tutor' ),
+								'label'       => __( 'Enable Tutor LMS Login', 'tutor' ),
 								'label_title' => '',
 								'default'     => 'on',
-								'desc'        => __( 'Enable to use the tutor login modal instead of the default WordPress login page', 'tutor' ),
+								'desc'        => __( 'Enable to use the Tutor LMS native login system instead of the WordPress login page', 'tutor' ),
 							),
 							array(
 								'key'         => 'delete_on_uninstall',
@@ -1870,7 +1901,7 @@ class Options_V2 {
 	 */
 	public function blocks( $blocks = array() ) {
 		ob_start();
-		include tutor()->path . 'views/options/option_blocks.php';
+		include apply_filters( 'tutor_settings_block_template_path', tutor()->path . 'views/options/option_blocks.php', $blocks );
 		return ob_get_clean();
 	}
 
@@ -1888,10 +1919,11 @@ class Options_V2 {
 		ob_start();
 		$blocks = $section['blocks'];
 		if ( isset( $section['template'] ) ) {
-			include tutor()->path . "views/options/template/{$section['template']}.php";
+			include apply_filters( 'tutor_option_template_path', tutor()->path . "views/options/template/{$section['template']}.php", $section['template'] );
 		}
 		return ob_get_clean();
 	}
+
 
 	/**
 	 * Load template inside template directory
@@ -1909,5 +1941,112 @@ class Options_V2 {
 			require tutor()->path . "views/options/template/{$template_slug}";
 		}
 		return ob_get_clean();
+	}
+
+	/**
+	 * Get field name
+	 *
+	 * It's useful when a field has event key like course.lessons
+	 *
+	 * @since 3.5.0
+	 *
+	 * @param array $field Option field array.
+	 *
+	 * @return string
+	 */
+	public function get_field_name( array $field ) {
+		$events     = $field['event'] ?? null;
+		$field_name = 'tutor_option';
+		if ( $events ) {
+			$events = explode( '.', $events );
+			foreach ( $events as $event ) {
+				$field_name .= '[' . $event . ']';
+			}
+			$field_name .= '[' . $field['key'] . ']';
+		} else {
+			$field_name .= '[' . $field['key'] . ']';
+		}
+
+		return $field_name;
+	}
+
+	/**
+	 * Json schema data
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array
+	 */
+	public function get_export_json_schema() {
+		$export_data = array(
+			'schema_version'   => '1.0.0',
+			'exported_at'      => current_time( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) ),
+			'keep_media_files' => false,
+			'data'             => array(),
+		);
+
+		return $export_data;
+	}
+
+	/**
+	 * Update settings log based on the new data
+	 *
+	 * @since 3.6.0
+	 *
+	 * @param array  $new_settings_data New exported/import settings data.
+	 * @param string $action_type Action type Imported/Exported.
+	 *
+	 * @return array Settings log data
+	 */
+	public function update_settings_log( $new_settings_data, $action_type ) {
+		$get_final_data = array();
+		
+		$action = strtolower( $action_type );
+
+		$time = tutor_time();
+
+		$save_import_data['datetime']             = $time;
+		$save_import_data['history_date']         = gmdate( 'j M, Y, g:i a', $time );
+		$save_import_data['datatype']             = $action_type;
+		$save_import_data['dataset']              = $new_settings_data;
+		$import_data[ 'tutor-imported-' . $time ] = $save_import_data;
+
+		$get_option_data = get_option( 'tutor_settings_log' );
+		if ( empty( $get_option_data ) ) {
+			$get_option_data = array();
+		}
+		if ( ! empty( $get_option_data ) && null !== $save_import_data['dataset'] ) {
+
+			$update_option = array_merge( $import_data, $get_option_data );
+
+			$update_option = tutor_utils()->sanitize_recursively( $update_option );
+
+			if ( ! empty( $update_option ) ) {
+				update_option( 'tutor_settings_log', $update_option );
+			}
+
+			if ( 'imported' === $action ) {
+				if ( ! empty( $save_import_data ) ) {
+					update_option( 'tutor_option', $save_import_data['dataset'] );
+				}
+			}
+
+			$get_final_data = get_option( 'tutor_settings_log' );
+
+		} else {
+			if ( ! empty( $import_data ) ) {
+				update_option( 'tutor_settings_log', $import_data );
+			}
+
+			if ( 'imported' === $action ) {
+				if ( ! empty( $save_import_data ) ) {
+					update_option( 'tutor_option', $save_import_data['dataset'] );
+				}
+			}
+
+			$get_final_data = get_option( 'tutor_settings_log' );
+		}
+
+		return $get_final_data;
 	}
 }

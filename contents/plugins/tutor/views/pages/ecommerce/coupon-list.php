@@ -16,6 +16,7 @@ use Tutor\Ecommerce\CouponController;
 use Tutor\Ecommerce\OptionKeys;
 use Tutor\Ecommerce\Settings;
 use TUTOR\Input;
+use Tutor\Models\CouponModel;
 
 /**
  * Determine active tab
@@ -29,7 +30,7 @@ $paged_filter = Input::get( 'paged', 1, Input::TYPE_INT );
 $limit        = (int) tutor_utils()->get_option( 'pagination_per_page', 10 );
 $offset       = ( $limit * $paged_filter ) - $limit;
 
-$coupon_controller = new CouponController();
+$coupon_controller = new CouponController( false );
 
 $get_coupons = $coupon_controller->get_coupons( $limit, $offset );
 $coupons     = $get_coupons['results'];
@@ -49,6 +50,26 @@ $navbar_data = array(
 	'button_url'   => $coupon_controller::get_coupon_page_url() . '&action=add_new',
 );
 
+$applies_to_options = array(
+	array(
+		'key'   => '',
+		'title' => __( 'Select', 'tutor' ),
+	),
+);
+
+$applies_to = array_map(
+	function ( $val, $key ) {
+		return array(
+			'key'   => $key,
+			'title' => $val,
+		);
+	},
+	CouponModel::get_coupon_applies_to(),
+	array_keys( CouponModel::get_coupon_applies_to() )
+);
+
+$applies_to_options = array_merge( $applies_to_options, $applies_to );
+
 /**
  * Bulk action & filters
  */
@@ -56,7 +77,24 @@ $filters = array(
 	'bulk_action'  => $coupon_controller->bulk_action,
 	'bulk_actions' => $coupon_controller->prepare_bulk_actions(),
 	'ajax_action'  => 'tutor_coupon_bulk_action',
-	'filters'      => true,
+	'filters'      => array(
+		array(
+			'label'      => __( 'Status', 'tutor' ),
+			'field_type' => 'select',
+			'field_name' => 'data',
+			'options'    => $coupon_controller->tabs_key_value(),
+			'searchable' => false,
+			'value'      => Input::get( 'data', '' ),
+		),
+		array(
+			'label'      => __( 'Applies To', 'tutor' ),
+			'field_type' => 'select',
+			'field_name' => 'applies_to',
+			'options'    => $applies_to_options,
+			'show_label' => true,
+			'value'      => Input::get( 'applies_to', '' ),
+		),
+	),
 );
 
 ?>
@@ -66,17 +104,17 @@ $filters = array(
 		/**
 		 * Load Templates with data.
 		 */
-		$navbar_template  = tutor()->path . 'views/elements/navbar.php';
-		$filters_template = tutor()->path . 'views/elements/filters.php';
+		$navbar_template  = tutor()->path . 'views/elements/list-navbar.php';
+		$filters_template = tutor()->path . 'views/elements/list-filters.php';
 		tutor_load_template_from_custom_path( $navbar_template, $navbar_data );
 		tutor_load_template_from_custom_path( $filters_template, $filters );
 		$currency_symbol = Settings::get_currency_symbol_by_code( tutor_utils()->get_option( OptionKeys::CURRENCY_CODE, 'USD' ) );
 	?>
-	<div class="tutor-admin-body">
-		<div class="tutor-mt-24">
+	<div class="tutor-admin-container tutor-admin-container-lg">
+		<div class="tutor-mt-24 tutor-dashboard-list-table">
 			<div class="tutor-table-responsive">
-
-				<table class="tutor-table tutor-table-middle table-dashboard-course-list">
+				<?php if ( is_array( $coupons ) && count( $coupons ) ) : ?>
+				<table class="tutor-table tutor-table-middle">
 					<thead class="tutor-text-sm tutor-text-400">
 						<tr>
 							<th>
@@ -86,6 +124,9 @@ $filters = array(
 							</th>
 							<th class="tutor-table-rows-sorting">
 								<?php esc_html_e( 'Name', 'tutor' ); ?>
+							</th>
+							<th>
+								<?php esc_html_e( 'Applies to', 'tutor' ); ?>
 							</th>
 							<th>
 								<?php esc_html_e( 'Discount', 'tutor' ); ?>
@@ -100,13 +141,13 @@ $filters = array(
 								<?php esc_html_e( 'Status', 'tutor' ); ?>
 							</th>
 							<th colspan="2">
-								<?php esc_html_e( 'Uses', 'tutor' ); ?>
+								<?php esc_html_e( 'Usage', 'tutor' ); ?>
 							</th>
 						</tr>
 					</thead>
 
 					<tbody>
-						<?php if ( is_array( $coupons ) && count( $coupons ) ) : ?>
+						
 							<?php
 							foreach ( $coupons as $key => $coupon ) :
 								?>
@@ -118,14 +159,20 @@ $filters = array(
 									</td>
 
 									<td>
-										<div class="tutor-fs-7">
+										<a href="<?php echo esc_url( $coupon_page_url . '&action=edit&coupon_id=' . $coupon->id ); ?>" class="tutor-table-link tutor-fs-7">
 											<?php echo esc_html( $coupon->coupon_title ); ?>
+										</a>
+									</td>
+
+									<td>
+										<div class="tutor-fs-7">
+											<?php echo esc_html( CouponModel::get_coupon_applies_to_label( $coupon->applies_to ) ); ?>
 										</div>
 									</td>
 
 									<td>
 										<div class="tutor-fs-7">
-											<?php echo esc_html( 'flat' === $coupon->discount_type ? $currency_symbol . $coupon->discount_amount : $coupon->discount_amount . '%' ); ?>
+											<?php echo wp_kses_post( ( 'flat' === $coupon->discount_type ? tutor_utils()->tutor_price( $coupon->discount_amount ) : $coupon->discount_amount . '%' ) ); ?>
 										</div>
 									</td>
 									<td>
@@ -142,7 +189,11 @@ $filters = array(
 
 									<td>
 										<?php
-										echo wp_kses_post( tutor_utils()->translate_dynamic_text( $coupon->coupon_status, true ) );
+										$coupon_status = $coupon->coupon_status;
+										if ( CouponModel::STATUS_ACTIVE === $coupon_status ) {
+											$coupon_status = $coupon_controller->model->has_coupon_validity( $coupon ) ? $coupon->coupon_status : 'expired';
+										}
+										echo wp_kses_post( tutor_utils()->translate_dynamic_text( $coupon_status, true ) );
 										?>
 									</td>
 
@@ -174,15 +225,11 @@ $filters = array(
 									</td>
 								</tr>
 							<?php endforeach; ?>
-						<?php else : ?>
-							<tr>
-								<td colspan="100%" class="column-empty-state">
-									<?php tutor_utils()->tutor_empty_state( tutor_utils()->not_found_text() ); ?>
-								</td>
-							</tr>
-						<?php endif; ?>
 					</tbody>
 				</table>
+				<?php else : ?>
+					<?php tutils()->render_list_empty_state(); ?>
+				<?php endif; ?>
 
 				<div class="tutor-admin-page-pagination-wrapper tutor-mt-32">
 					<?php

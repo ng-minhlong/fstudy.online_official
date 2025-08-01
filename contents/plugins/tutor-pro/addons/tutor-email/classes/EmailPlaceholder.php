@@ -358,6 +358,11 @@ class EmailPlaceholder {
 				'label'       => __( 'Withdraw Time', 'tutor-pro' ),
 				'test_data'   => $date_time,
 			),
+			'submission_date'        => array(
+				'placeholder' => '{submission_date}',
+				'label'       => __( 'Submission Date', 'tutor-pro' ),
+				'test_data'   => gmdate( get_option( 'date_format' ) ),
+			),
 
 		);
 		return apply_filters( 'tutor_pro_email_placeholders', $arr );

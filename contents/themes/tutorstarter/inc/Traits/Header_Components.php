@@ -331,7 +331,7 @@ trait Header_Components {
             
             async function updateUserRole(userId, userName) {
                 try {
-                    const response = await fetch('/api/v1/user/update_role', {
+                    const response = await fetch(`${site_url}/api/v1/user/update_role`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

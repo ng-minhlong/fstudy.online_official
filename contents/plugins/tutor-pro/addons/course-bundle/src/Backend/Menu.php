@@ -43,13 +43,12 @@ class Menu {
 	 */
 	public static function register_submenu() {
 		add_submenu_page(
-			'tutor',
+			'tutor-pro',
 			__( 'Course Bundles', 'tutor-pro' ),
 			__( 'Course Bundles', 'tutor-pro' ),
 			'manage_tutor_instructor',
 			'course-bundle',
-			__CLASS__ . '::bundle_list_page',
-			null
+			__CLASS__ . '::bundle_list_page'
 		);
 
 		do_action( 'tutor_pro_after_course_bundle_submenu' );
@@ -60,9 +59,39 @@ class Menu {
 	 *
 	 * @since 2.2.0
 	 *
+	 * @since 3.2.0
+	 * Loading bundle-builder-init file
+	 *
 	 * @return void
 	 */
 	public static function bundle_list_page() {
-		include Utils::view_path( 'backend/bundle-list.php' );
+		if ( Utils::is_bundle_editor() ) {
+			echo '
+				<style>
+					#wpadminbar {
+						z-index: 9999;
+						position: fixed;
+					}
+					#adminmenu, 
+					#adminmenuback, 
+					#adminmenuwrap, 
+					#wpfooter {
+						display: none !important;
+					}
+					#wpcontent {
+						margin: 0 !important;
+					}
+					#wpbody-content {
+						padding-bottom: 0px !important;
+						float: none;
+					}
+					.notice {
+						display: none;
+					}
+				</style>';
+			include_once Utils::view_path( 'bundle-builder-init.php' );
+		} else {
+			wp_safe_redirect( admin_url( 'admin.php?page=tutor' ) );
+		}
 	}
 }

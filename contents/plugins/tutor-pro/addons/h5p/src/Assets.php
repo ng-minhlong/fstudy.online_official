@@ -88,17 +88,19 @@ class Assets {
 
 		if ( isset( $_GET['page'] ) && 'tutor_h5p' === $_GET['page'] ) {
 			wp_enqueue_script(
-				'tutor-pro-line-chart',
-				Utils::addon_config()->url . 'assets/js/lib/Chart.bundle.min.js',
+				'tutor-pro-chart-js',
+				tutor_pro()->url . 'assets/lib/Chart.bundle.min.js',
 				array(),
-				TUTOR_PRO_VERSION
+				TUTOR_PRO_VERSION,
+				true
 			);
 
 			wp_enqueue_script(
 				'tutor-pro-analytics',
 				Utils::addon_config()->url . 'assets/js/analytics.js',
-				array(),
-				TUTOR_PRO_VERSION
+				array( 'jquery', 'tutor-pro-chart-js' ),
+				TUTOR_PRO_VERSION,
+				true
 			);
 
 			wp_add_inline_script(
@@ -127,17 +129,19 @@ class Assets {
 
 		if ( isset( $_GET['page'] ) && 'tutor_h5p' === $_GET['page'] ) {
 			wp_enqueue_script(
-				'tutor-pro-line-chart',
-				Utils::addon_config()->url . 'assets/js/lib/Chart.bundle.min.js',
+				'tutor-pro-chart-js',
+				tutor_pro()->url . 'assets/lib/Chart.bundle.min.js',
 				array(),
-				TUTOR_PRO_VERSION
+				TUTOR_PRO_VERSION,
+				true
 			);
 
 			wp_enqueue_script(
 				'tutor-pro-analytics',
 				Utils::addon_config()->url . 'assets/js/analytics.js',
-				array(),
-				TUTOR_PRO_VERSION
+				array( 'jquery', 'tutor-pro-chart-js' ),
+				TUTOR_PRO_VERSION,
+				true
 			);
 
 			wp_add_inline_script(

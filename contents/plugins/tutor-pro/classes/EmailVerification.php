@@ -167,8 +167,10 @@ class EmailVerification {
 	 * @return bool true on success otherwise false
 	 */
 	public static function send_mail( $user, $attempt = '' ) {
-		$token = md5( $user->user_email );
-		$link  = trailingslashit( home_url() ) . "?email={$user->user_email}&token={$token}";
+		$token     = md5( $user->user_email );
+		$user_mail = urlencode( $user->user_email );
+		$link      = trailingslashit( home_url() ) . "?email={$user_mail}&token={$token}";
+		do_action( 'tutor_pro_before_prepare_email_template_data', $user_mail );
 
 		if ( '' !== $attempt ) {
 			$link .= "&attempt={$attempt}";
@@ -191,6 +193,7 @@ class EmailVerification {
 
 		$subject = __( 'Verify your Email', 'tutor-pro' );
 
+		do_action( 'tutor_pro_after_prepare_template_email_data' );
 		$email_body  = Mailer::prepare_template( $template, $data );
 		$email_body .= tutor_pro_email_global_footer();
 

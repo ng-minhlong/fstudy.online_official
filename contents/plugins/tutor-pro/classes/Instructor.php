@@ -230,7 +230,7 @@ class Instructor {
 		$user_id = wp_update_user( $user_data );
 		if ( ! is_wp_error( $user_id ) ) {
 			$phone_number      = Input::post( 'phone_number', '' );
-			$tutor_profile_bio = Input::post( 'tutor_profile_bio', '', Input::TYPE_KSES_POST );
+			$tutor_profile_bio = wp_kses( Input::post( 'tutor_profile_bio', '', Input::TYPE_KSES_POST ), tutor_utils()->allowed_profile_bio_tags() );
 
 			update_user_meta( $user_id, 'phone_number', $phone_number );
 			update_user_meta( $user_id, 'description', $tutor_profile_bio );

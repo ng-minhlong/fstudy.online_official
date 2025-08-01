@@ -66,7 +66,7 @@ class Tutor_Calendar {
 			wp_enqueue_script(
 				'tutor-pro-calendar',
 				tutor_pro_calendar()->url . 'assets/js/Calendar.js',
-				array( 'wp-i18n', 'wp-element' ),
+				array( 'wp-i18n', 'wp-element', 'wp-date' ),
 				TUTOR_PRO_VERSION,
 				true
 			);
@@ -82,13 +82,15 @@ class Tutor_Calendar {
 	/**
 	 * Check assignment expired or not
 	 *
-	 * @since  1.9.10
+	 * @since 1.9.10
+	 * @since 3.4.0 param $user_id added.
 	 *
 	 * @param int $assignment_id assignment id.
+	 * @param int $user_id the user id.
 	 *
 	 * @return mixed array | false
 	 */
-	public static function assignment_info( int $assignment_id ) {
+	public static function get_assignment_info_by_user( int $assignment_id, int $user_id ) {
 		$assignment_id = sanitize_text_field( $assignment_id );
 		$time_duration = tutor_utils()->get_assignment_option(
 			$assignment_id,
@@ -101,9 +103,13 @@ class Tutor_Calendar {
 
 		$unlock_date = tutor_utils()->get_item_content_drip_settings( $assignment_id, 'unlock_date' );
 
-		$post = get_post( $assignment_id );
+		$post          = get_post( $assignment_id );
+		$course_id     = tutor_utils()->get_course_id_by( 'assignment', $assignment_id );
+		$enrolled_info = tutor_utils()->is_enrolled( $course_id, $user_id );
+		$enrolled_time = apply_filters( 'tutor_content_drip_assignment_deadline', strtotime( $enrolled_info->post_date_gmt ), $course_id, $assignment_id );
 		if ( $post && ! is_null( $post ) ) {
 			$assignment_created_time = strtotime( $post->post_date_gmt );
+			$deadline_time           = $enrolled_time < $assignment_created_time ? $assignment_created_time : $enrolled_time;
 			$time_duration_in_sec    = 0;
 			if ( isset( $time_duration['value'] ) && isset( $time_duration['time'] ) ) {
 				switch ( $time_duration['time'] ) {
@@ -124,22 +130,43 @@ class Tutor_Calendar {
 
 			$time_duration_in_sec = $time_duration_in_sec * (int) $time_duration['value'];
 			if ( empty( $unlock_date ) ) {
-				$remaining_time = $assignment_created_time + $time_duration_in_sec;
+				$remaining_time = $deadline_time + $time_duration_in_sec;
 			} else {
-				$remaining_time = strtotime( $unlock_date ) + $time_duration_in_sec;
+				$remaining_time = ( strtotime( $unlock_date ) < $enrolled_time ? $deadline_time : strtotime( $unlock_date ) ) + $time_duration_in_sec;
 			}
 
 			$now         = time();
 			$week_values = array(
-				'weeks' => __( 'Weeks', 'tutor-pro' ),
-				'days'  => __( 'Days', 'tutor-pro' ),
-				'hours' => __( 'Hours', 'tutor-pro' ),
+				'days'  => _n( 'Day', 'Days', $time_duration['value'], 'tutor-pro' ),
+				'hours' => _n( 'Hour', 'Hours', $time_duration['value'], 'tutor-pro' ),
+				'weeks' => _n( 'Week', 'Weeks', $time_duration['value'], 'tutor-pro' ),
 			);
+
+			$custom_expire_date    = '';
+			$start_assignment_date = null;
+			$deadline_from_start   = (bool) tutor_utils()->get_assignment_option( $assignment_id, 'deadline_from_start' );
+			if ( $deadline_from_start ) {
+				$assignment_comment = tutor_utils()->get_single_comment_user_post_id( $assignment_id, $user_id );
+				if ( $assignment_comment && isset( $assignment_comment->comment_date_gmt ) ) {
+					$start_assignment_date = $assignment_comment->comment_date_gmt;
+					$remaining_time        = strtotime( $assignment_comment->comment_date_gmt ) + $time_duration_in_sec;
+				}
+
+				if ( ! $assignment_comment ) {
+					$custom_expire_date = sprintf(
+						// translators: %1$s is the number value (e.g., 3), %2$s is the time unit (e.g., days).
+						esc_html__( '%1$s %2$s after you start the assignment', 'tutor-pro' ),
+						esc_html( $time_duration['value'] ),
+						esc_html( strtolower( $week_values[ $time_duration['time'] ] ) )
+					);
+				}
+			}
+
 			return array(
 				'duration'     => $time_duration['value'] == 0 ? __( 'No Limit', 'tutor-pro' ) : $time_duration['value'] . ' ' . $week_values[ $time_duration['time'] ],
-				'is_expired'   => ( $time_duration['value'] == 0 ? false : ( $now > $remaining_time ? true : false ) ),
-				'expire_date'  => $time_duration['value'] == 0 ? __( 'No Limit', 'tutor-pro' ) : date( get_option( 'date_format' ), $remaining_time ),
-				'expire_month' => $time_duration['value'] == 0 ? __( 'No Limit', 'tutor-pro' ) : date( 'n', $remaining_time ),
+				'is_expired'   => ( $time_duration['value'] == 0 ? false : ( ( ! $deadline_from_start || $start_assignment_date ) && $now > $remaining_time ? true : false ) ),
+				'expire_date'  => $time_duration['value'] == 0 ? __( 'No Limit', 'tutor-pro' ) : ( $custom_expire_date ? $custom_expire_date : gmdate( 'Y-m-d', $remaining_time ) ),
+				'expire_month' => $time_duration['value'] == 0 ? __( 'No Limit', 'tutor-pro' ) : gmdate( 'n', $remaining_time ),
 				'unlock_date'  => $unlock_date,
 			);
 		}
@@ -255,13 +282,11 @@ class Tutor_Calendar {
 
 		foreach ( $results as $meeting ) {
 			// Format date.
-			$meeting->post_date     = \tutor_get_formated_date( get_option( 'date_format' ), $meeting->post_date );
-			$meeting->zm_start_date = \tutor_get_formated_date( get_option( 'date_format' ), $meeting->zoom_meeting_dt );
+			$meeting->zm_start_date = gmdate( 'Y-m-d', strtotime( $meeting->zoom_meeting_dt ) );
 
 			$meeting->meta_info = array(
-				'expire_date'          => $meeting->zoom_meeting_dt,
-				'expire_date_readable' => tutor_utils()->get_human_readable_time( $meeting->zoom_meeting_dt, null, '%ad:%hh:%im' ),
-				'is_expired'           => '1' === $meeting->is_expired ? true : false,
+				'expire_date' => $meeting->zoom_meeting_dt,
+				'is_expired'  => '1' === $meeting->is_expired ? true : false,
 			);
 		}
 
@@ -371,10 +396,8 @@ class Tutor_Calendar {
 			$response = array();
 
 			foreach ( $results as $key => $result ) {
-				$result->post_date = \tutor_get_formated_date( get_option( 'date_format' ), $result->post_date );
-
 				if ( tutor()->assignment_post_type === $result->post_type ) {
-					$result->meta_info = self::assignment_info( $result->ID );
+					$result->meta_info = self::get_assignment_info_by_user( $result->ID, $user_id );
 				} elseif ( in_array( $result->post_type, array( tutor()->lesson_post_type, tutor()->quiz_post_type ), true ) ) {
 					$course_id = $result->post_parent;
 					if ( tutor()->topics_post_type === get_post_type( $course_id ) ) {
@@ -398,10 +421,9 @@ class Tutor_Calendar {
 						$end_datetime   = get_post_meta( $result->ID, EventsModel::POST_META_KEYS[1], true );
 
 						$result->meta_info = array(
-							'gm_start_date'        => \tutor_get_formated_date( get_option( 'date_format' ), $start_datetime ),
-							'expire_date'          => \tutor_get_formated_date( get_option( 'date_format' ), $start_datetime ),
-							'expire_date_readable' => tutor_utils()->get_human_readable_time( $end_datetime, null, '%ad:%hh:%im' ),
-							'is_expired'           => time() > strtotime( $end_datetime ) ? true : false,
+							'gm_start_date' => gmdate( 'Y-m-d', strtotime( $start_datetime ) ),
+							'expire_date'   => $end_datetime,
+							'is_expired'    => time() > strtotime( $end_datetime ) ? true : false,
 						);
 					} else {
 						// Remove meet.

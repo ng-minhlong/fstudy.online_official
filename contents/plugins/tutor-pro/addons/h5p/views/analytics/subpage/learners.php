@@ -115,7 +115,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<div class="tutor-modal-content">
 				<div class="tutor-modal-header">
 					<div class="tutor-modal-title">
-						<?php esc_html_e( 'Verbs', 'tutor' ); ?>
+						<?php esc_html_e( 'Verbs', 'tutor-pro' ); ?>
 					</div>
 				<button class="tutor-iconic-btn tutor-modal-close" data-tutor-modal-close>
 					<span class="tutor-icon-times" area-hidden="true"></span>
@@ -131,7 +131,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<div class="tutor-modal-content">
 					<div class="tutor-modal-header">
 						<div class="tutor-modal-title">
-				<?php esc_html_e( 'Activities', 'tutor' ); ?>
+				<?php esc_html_e( 'Activities', 'tutor-pro' ); ?>
 					</div>
 					<button class="tutor-iconic-btn tutor-modal-close" data-tutor-modal-close>
 						<span class="tutor-icon-times" area-hidden="true"></span>
@@ -147,7 +147,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<div class="tutor-modal-content">
 					<div class="tutor-modal-header">
 						<div class="tutor-modal-title">
-				<?php esc_html_e( 'Last 10 statements', 'tutor' ); ?>
+				<?php esc_html_e( 'Last 10 statements', 'tutor-pro' ); ?>
 					</div>
 					<button class="tutor-iconic-btn tutor-modal-close" data-tutor-modal-close>
 						<span class="tutor-icon-times" area-hidden="true"></span>

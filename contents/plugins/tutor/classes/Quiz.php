@@ -196,7 +196,7 @@ class Quiz {
 			'question_type'      => $type,
 			'question_mark'      => 1,
 			'answer_required'    => 0,
-			'randomize_options'  => 0,
+			'randomize_question' => 0,
 			'show_question_mark' => 0,
 		);
 
@@ -310,16 +310,16 @@ class Quiz {
 			if ( is_array( $unserialized ) ) {
 				$unserialized['instructor_feedback'] = $feedback;
 
-				do_action( 'tutor_quiz/attempt/submitted/feedback', $attempt_details->attempt_id );
 				//phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
 				$update = self::update_attempt_info( $attempt_details->attempt_id, serialize( $unserialized ) );
 				if ( $update ) {
+					do_action( 'tutor_quiz/attempt/submitted/feedback', $attempt_details->attempt_id );
 					wp_send_json_success();
 				} else {
 					wp_send_json_error();
 				}
 			} else {
-				wp_send_json_error( __( 'Invalid quiz info' ) );
+				wp_send_json_error( __( 'Invalid quiz info', 'tutor' ) );
 			}
 		}
 		wp_send_json_error();
@@ -1132,6 +1132,8 @@ class Quiz {
 		}
 
 		$data = QuizModel::get_quiz_details( $quiz_id );
+
+		$data = apply_filters( 'tutor_quiz_details_response', $data, $quiz_id );
 
 		$this->json_response(
 			__( 'Quiz data fetched successfully', 'tutor' ),

@@ -354,9 +354,15 @@ require_once(__DIR__ . '/../config-custom.php');
 </li>
 <!-- Nav Item - Charts -->
 <li class="nav-item">
-    <a class="nav-link"  href="<?php echo MAIN_PATH; ?>other_function_page/video_export_system/admin_video_export.php">
+    <a class="nav-link"  href="<?php echo MAIN_PATH; ?>other_function_page/video_export_system/lessons_management.php">
         <i class="fas fa-fw fa-chart-area"></i>
-        <span>Hệ thống xuất video</span></a>
+        <span>Hệ thống quản lý bài học</span></a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link"  href="<?php echo MAIN_PATH; ?>other_function_page/video_export_system/lessons_management_reporter.php">
+        <i class="fas fa-fw fa-chart-area"></i>
+        <span>Hệ thống nhận report</span></a>
 </li>
 
 

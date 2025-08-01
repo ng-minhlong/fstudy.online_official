@@ -10,11 +10,13 @@
 
 namespace TUTOR_MT;
 
+use TUTOR\Course;
 use Tutor\Helpers\HttpHelper;
 use TUTOR\Input;
 use Tutor\Helpers\QueryHelper;
 use Tutor\Models\CourseModel;
 use Tutor\Traits\JsonResponse;
+use TUTOR\User;
 
 /**
  * Handle multi instructors logics
@@ -22,13 +24,12 @@ use Tutor\Traits\JsonResponse;
 class MultiInstructors {
 	use JsonResponse;
 
+
 	/**
 	 * Register Hooks
 	 */
 	public function __construct() {
-		// Modal Perform.
-		add_action( 'wp_ajax_tutor_add_instructors_to_course', array( $this, 'tutor_add_instructors_to_course' ) );
-		add_action( 'wp_ajax_detach_instructor_from_course', array( $this, 'detach_instructor_from_course' ) );
+		add_filter( 'tutor/options/extend/attr', array( $this, 'extend_instructor_options' ) );
 		add_action( 'wp_ajax_tutor_course_instructor_search', array( $this, 'tutor_course_instructor_search' ) );
 
 		/**
@@ -37,10 +38,74 @@ class MultiInstructors {
 		 * @since v2.0.7
 		 */
 		$course_post_type = tutor()->course_post_type;
+
 		add_action( "save_post_{$course_post_type}", array( $this, 'change_main_instructor' ) );
 
 		add_action( "save_post_{$course_post_type}", array( $this, 'add_instructors_to_course' ) );
 		add_filter( 'tutor_course_details_response', array( $this, 'extend_course_details_response' ) );
+		add_filter( 'tutor_admin_course_list', array( $this, 'extend_admin_course_list' ), 10, 3 );
+	}
+
+	/**
+	 * Extend instructor backend course list with co instructor course.
+	 *
+	 * @since 3.3.1
+	 *
+	 * @param array  $course_list_args the admin course list args.
+	 * @param int    $instructor_id    the instructor id.
+	 * @param string $active_tab       the current active navbar tab.
+	 *
+	 * @return array
+	 */
+	public function extend_admin_course_list( $course_list_args, $instructor_id, $active_tab ) {
+		if ( tutor_utils()->is_instructor( $instructor_id ) && ! current_user_can( 'administrator' ) ) {
+			$post_type = is_array( $course_list_args['post_type'] ) ? $course_list_args['post_type'] : array( $course_list_args['post_type'] );
+			// Get course ids by author and co-author.
+			$instructor_courses    = CourseModel::get_courses_by_instructor( $instructor_id, Course::course_status_list(), 0, PHP_INT_MAX, false, $post_type );
+			$instructor_course_ids = array();
+
+			if ( $instructor_courses ) {
+				foreach ( $instructor_courses as $instructor_course ) {
+					array_push( $instructor_course_ids, $instructor_course->ID );
+				}
+			} else {
+				return $course_list_args;
+			}
+
+			if ( 'mine' !== $active_tab ) {
+				if ( isset( $course_list_args['post__in'] ) ) {
+					$course_list_args['post__in'] = array_merge( $course_list_args['post__in'], $instructor_course_ids );
+					unset( $course_list_args['author'] );
+				} else {
+					$course_list_args['post__in'] = $instructor_course_ids;
+					unset( $course_list_args['author'] );
+				}
+			}
+		}
+
+		return $course_list_args;
+	}
+
+	/**
+	 * Extend instructor options.
+	 *
+	 * @since 3.2.0
+	 *
+	 * @param array $attr instructor options.
+	 *
+	 * @return array
+	 */
+	public function extend_instructor_options( $attr ) {
+		$attr['general']['blocks'][3]['fields'][] = array(
+			'key'         => 'instructor_can_manage_co_instructors',
+			'type'        => 'toggle_switch',
+			'label'       => __( 'Allow Instructors to Manage Co-Instructors', 'tutor-pro' ),
+			'label_title' => '',
+			'default'     => 'on',
+			'desc'        => __( 'If enabled, instructors can add or remove co-instructors for their courses.', 'tutor-pro' ),
+		);
+
+		return $attr;
 	}
 
 	/**
@@ -94,64 +159,6 @@ class MultiInstructors {
 	}
 
 	/**
-	 * Get HTML output of instructor metabox
-	 *
-	 * @since 2.1.0
-	 *
-	 * @param integer $course_id course id.
-	 *
-	 * @return string HTML output.
-	 */
-	public function get_instructor_metabox_output( int $course_id ) {
-		global $post;
-		//phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
-		$post = get_post( $course_id );
-
-		ob_start();
-		tutor_load_template_from_custom_path(
-			dirname( __DIR__ ) . '/views/metabox/instructors-metabox.php',
-			array(
-				'post' => $post,
-			),
-			false
-		);
-		return ob_get_clean();
-	}
-
-	/**
-	 * Handle ajax request for adding multi instructor to a course
-	 *
-	 * @return void   wp_json response
-	 */
-	public function tutor_add_instructors_to_course() {
-		tutor_utils()->checking_nonce();
-
-		$course_id      = Input::post( 'course_id', 0, Input::TYPE_INT );
-		$instructor_ids = Input::post( 'tutor_instructor_ids', array(), Input::TYPE_ARRAY );
-
-		if ( 0 === $course_id || ! is_array( $instructor_ids ) ) {
-			wp_send_json_error( array( 'message' => __( 'Invalid Request', 'tutor-pro' ) ) );
-		}
-
-		if ( ! tutor_utils()->can_user_manage( 'course', $course_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Access Denied', 'tutor-pro' ) ) );
-		}
-
-		$instructor_ids = array_filter(
-			$instructor_ids,
-			function( $id ) {
-				return is_numeric( $id );
-			}
-		);
-
-		foreach ( $instructor_ids as $instructor_id ) {
-			add_user_meta( $instructor_id, '_tutor_instructor_course_id', $course_id );
-		}
-
-		wp_send_json_success( array( 'output' => $this->get_instructor_metabox_output( $course_id ) ) );
-	}
-
-	/**
 	 * On course save add instructor to course
 	 *
 	 * @since 3.0.0
@@ -161,10 +168,20 @@ class MultiInstructors {
 	 * @return void
 	 */
 	public function add_instructors_to_course( int $course_id ) {
+		/**
+		 * Restriction added for instructors to modify instructors
+		 *
+		 * @since 3.2.0
+		 */
+		$can_instructors_modify_instructors = (bool) tutor_utils()->get_option( 'instructor_can_manage_co_instructors', true );
+		if ( User::is_only_instructor() && ! $can_instructors_modify_instructors ) {
+			return;
+		}
+
 		$instructor_ids = Input::post( 'course_instructor_ids', array(), Input::TYPE_ARRAY );
 		$instructor_ids = array_filter(
 			$instructor_ids,
-			function( $id ) {
+			function ( $id ) {
 				return is_numeric( $id );
 			}
 		);
@@ -221,34 +238,6 @@ class MultiInstructors {
 		$data['course_instructors'] = $users;
 
 		return $data;
-	}
-
-	/**
-	 * Remove instructor from a course
-	 *
-	 * @return void
-	 */
-	public function detach_instructor_from_course() {
-		tutor_utils()->checking_nonce();
-
-		global $wpdb;
-
-		$instructor_id = Input::post( 'instructor_id', 0, Input::TYPE_INT );
-		$course_id     = Input::post( 'course_id', 0, Input::TYPE_INT );
-
-		if ( ! tutor_utils()->can_user_manage( 'course', $course_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Access Denied', 'tutor' ) ) );
-		}
-
-		$wpdb->delete(
-			$wpdb->usermeta,
-			array(
-				'user_id'    => $instructor_id,
-				'meta_key'   => '_tutor_instructor_course_id',
-				'meta_value' => $course_id,
-			)
-		);
-		wp_send_json_success();
 	}
 
 	/**
@@ -319,5 +308,4 @@ class MultiInstructors {
 		}
 		return $response;
 	}
-
 }

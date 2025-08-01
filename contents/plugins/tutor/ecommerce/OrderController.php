@@ -63,13 +63,6 @@ class OrderController {
 	use JsonResponse;
 
 	/**
-	 * Page Title
-	 *
-	 * @var $page_title
-	 */
-	public $page_title;
-
-	/**
 	 * Constructor.
 	 *
 	 * Initializes the Orders class, sets the page title, and optionally registers
@@ -83,8 +76,7 @@ class OrderController {
 	 * @return void
 	 */
 	public function __construct( $register_hooks = true ) {
-		$this->page_title = __( 'Orders', 'tutor' );
-		$this->model      = new OrderModel();
+		$this->model = new OrderModel();
 
 		if ( $register_hooks ) {
 			/**
@@ -135,6 +127,23 @@ class OrderController {
 			 * @since 3.0.0
 			 */
 			add_action( 'wp_ajax_tutor_order_bulk_action', array( $this, 'bulk_action_handler' ) );
+
+			add_filter( 'tutor_calculate_order_tax_amount', array( $this, 'filter_calculate_single_order_tax_amount' ), 10, 5 );
+		}
+	}
+
+	/**
+	 * Page title fallback
+	 *
+	 * @since 3.5.0
+	 *
+	 * @param string $name Property name.
+	 *
+	 * @return string
+	 */
+	public function __get( $name ) {
+		if ( 'page_title' === $name ) {
+			return esc_html__( 'Orders', 'tutor' );
 		}
 	}
 
@@ -153,6 +162,40 @@ class OrderController {
 		} else {
 			return tutor_utils()->get_tutor_dashboard_url() . '/orders';
 		}
+	}
+
+	/**
+	 * For Single Order
+	 * Filter order tax calculation during create an order.
+	 *
+	 * @since 3.7.0
+	 *
+	 * @param int|float $tax_amount tax amount.
+	 * @param int|float $total_price total price.
+	 * @param int|float $tax_rate tax rate.
+	 * @param string    $order_type order type.
+	 * @param array     $items order items.
+	 *
+	 * @return int|float
+	 */
+	public function filter_calculate_single_order_tax_amount( $tax_amount, $total_price, $tax_rate, $order_type, $items ) {
+		if ( OrderModel::TYPE_SINGLE_ORDER === $order_type ) {
+			$tax_exempt_price = 0;
+			$tax_amount       = Tax::calculate_tax( $total_price, $tax_rate );
+
+			foreach ( $items as $item ) {
+				$is_tax_enabled = CourseModel::is_tax_enabled_for_single_purchase( $item['item_id'] ?? 0 );
+				if ( ! $is_tax_enabled ) {
+					$display_price     = $this->model->get_order_item_display_price( (object) $item );
+					$tax_exempt_price += $display_price;
+				}
+			}
+
+			$tax_exempt_amount = Tax::calculate_tax( $tax_exempt_price, $tax_rate );
+			$tax_amount        = $tax_amount - $tax_exempt_amount;
+		}
+
+		return $tax_amount;
 	}
 
 	/**
@@ -178,7 +221,7 @@ class OrderController {
 	 *
 	 * @return mixed order id or order data.
 	 */
-	public function create_order( int $user_id, array $items, string $payment_status, string $order_type, $coupon_code = null, $vn_paygate_order_content_id = null, array $args = array(), $return_id = true ) {
+	public function create_order( int $user_id, array $items, string $payment_status, string $order_type, $coupon_code = null, array $args = array(), $return_id = true ) {
 		$items          = Input::sanitize_array( $items );
 		$payment_status = Input::sanitize( $payment_status );
 		$coupon_code    = Input::sanitize( $coupon_code );
@@ -199,23 +242,17 @@ class OrderController {
 		$subtotal_price = 0;
 		$total_price    = 0;
 
-		// Add enrollment fee with total & subtotal price.
-		if ( $this->model::TYPE_SINGLE_ORDER !== $order_type ) {
-			$plan = apply_filters( 'tutor_get_plan_info', null, $items[0]['item_id'] );
-			if ( $plan ) {
-				$item_price     = $this->model::calculate_order_price( $items );
-				$subtotal_price = $item_price->subtotal;
-				$total_price    = $item_price->total;
-
-				if ( $this->model::TYPE_SUBSCRIPTION === $order_type && $plan->enrollment_fee ) {
-					$subtotal_price += $plan->enrollment_fee;
-					$total_price    += $plan->enrollment_fee;
-				}
-			}
-		} else {
+		if ( $this->model::TYPE_SINGLE_ORDER === $order_type ) {
 			$item_price     = $this->model::calculate_order_price( $items );
 			$subtotal_price = $item_price->subtotal;
 			$total_price    = $item_price->total;
+		} else {
+			// For subscription and renewal order.
+			$prices = apply_filters( 'tutor_create_order_prices_for_subscription', null, $items, $order_type, $user_id );
+			if ( $prices ) {
+				$subtotal_price = $prices->subtotal_price;
+				$total_price    = $prices->total_price;
+			}
 		}
 
 		$order_data = array(
@@ -228,12 +265,12 @@ class OrderController {
 			'total_price'    => $total_price,
 			'net_payment'    => $total_price,
 			'user_id'        => $user_id,
+			'payment_status' => $payment_status,
 			'order_status'   => $this->model::PAYMENT_PAID === $payment_status ? $this->model::ORDER_COMPLETED : $this->model::ORDER_INCOMPLETE,
 			'created_at_gmt' => current_time( 'mysql', true ),
 			'created_by'     => get_current_user_id(),
 			'updated_at_gmt' => current_time( 'mysql', true ),
 			'updated_by'     => get_current_user_id(),
-			'vn_paygate_order_content_id' => $vn_paygate_order_content_id,
 		);
 
 		if ( isset( $args['discount_amount'] ) && $args['discount_amount'] > 0 ) {
@@ -242,19 +279,25 @@ class OrderController {
 			$order_data['discount_reason'] = __( 'Sale discount', 'tutor' );
 		}
 
-		/**
-		 * Tax calculation for order.
-		 */
-		$tax_rate = Tax::get_user_tax_rate( $user_id );
-		if ( $tax_rate ) {
-			$order_data['tax_type']   = Tax::get_tax_type();
-			$order_data['tax_rate']   = $tax_rate;
-			$order_data['tax_amount'] = Tax::calculate_tax( $total_price, $tax_rate );
+		$calculate_tax = apply_filters( 'tutor_calculate_order_tax', Tax::should_calculate_tax(), $args );
 
-			if ( ! Tax::is_tax_included_in_price() ) {
-				$total_price              += $order_data['tax_amount'];
-				$order_data['total_price'] = $total_price;
-				$order_data['net_payment'] = $total_price;
+		if ( $calculate_tax ) {
+			/**
+			 * Tax calculation for order.
+			 */
+			$tax_rate = Tax::get_user_tax_rate( $user_id );
+			if ( $tax_rate ) {
+				$tax_amount = apply_filters( 'tutor_calculate_order_tax_amount', 0, $total_price, $tax_rate, $order_type, $items );
+
+				$order_data['tax_type']   = Tax::get_tax_type();
+				$order_data['tax_rate']   = $tax_rate;
+				$order_data['tax_amount'] = $tax_amount;
+
+				if ( ! Tax::is_tax_included_in_price() ) {
+					$total_price              += $order_data['tax_amount'];
+					$order_data['total_price'] = $total_price;
+					$order_data['net_payment'] = $total_price;
+				}
 			}
 		}
 
@@ -550,7 +593,6 @@ class OrderController {
 				HttpHelper::STATUS_INTERNAL_SERVER_ERROR
 			);
 		}
-
 	}
 
 	/**
@@ -695,7 +737,6 @@ class OrderController {
 				HttpHelper::STATUS_INTERNAL_SERVER_ERROR
 			);
 		}
-
 	}
 
 	/**
@@ -754,11 +795,11 @@ class OrderController {
 		);
 
 		if ( ! empty( $date ) ) {
-			$where['created_at_gmt'] = tutor_get_formated_date( 'Y-m-d', $date );
+			$where['date(o.created_at_gmt)'] = tutor_get_formated_date( '', $date );
 		}
 
 		if ( ! empty( $payment_status ) ) {
-			$where['payment_status'] = $payment_status;
+			$where['o.payment_status'] = $payment_status;
 		}
 
 		$order_status = $this->model->get_order_status();
@@ -766,7 +807,7 @@ class OrderController {
 		$tabs = array();
 
 		$tabs [] = array(
-			'key'   => 'all',
+			'key'   => '',
 			'title' => __( 'All', 'tutor' ),
 			'value' => $this->model->get_order_count( $where, $search ),
 			'url'   => $url . '&data=all',
@@ -1168,5 +1209,4 @@ class OrderController {
 
 		return (object) $refund_data;
 	}
-
 }

@@ -33,12 +33,6 @@ class Quiz_Attempts_List {
 	 */
 
 	use Backend_Page_Trait;
-	/**
-	 * Page Title
-	 *
-	 * @var $page_title
-	 */
-	public $page_title;
 
 	/**
 	 * Bulk Action
@@ -55,8 +49,6 @@ class Quiz_Attempts_List {
 	 * @param boolean $register_hook should register hook or not.
 	 */
 	public function __construct( $register_hook = true ) {
-
-		$this->page_title = __( 'Quiz Attempts', 'tutor' );
 		if ( ! $register_hook ) {
 			return;
 		}
@@ -77,6 +69,21 @@ class Quiz_Attempts_List {
 		add_action( 'tutor_quiz/attempt_ended', array( new QuizAttempts(), 'delete_cache' ) );
 		add_action( 'tutor_quiz/attempt_deleted', array( new QuizAttempts(), 'delete_cache' ) );
 		add_action( 'tutor_quiz/answer/review/after', array( new QuizAttempts(), 'delete_cache' ) );
+	}
+
+	/**
+	 * Page title fallback
+	 *
+	 * @since 3.5.0
+	 *
+	 * @param string $name Property name.
+	 *
+	 * @return string
+	 */
+	public function __get( $name ) {
+		if ( 'page_title' === $name ) {
+			return esc_html__( 'Quiz Attempts', 'tutor' );
+		}
 	}
 
 	/**
@@ -133,26 +140,49 @@ class Quiz_Attempts_List {
 		);
 
 		$is_ajax_action = 'tutor_quiz_attempts_count' === Input::post( 'action' );
+		$course_id      = Input::post( 'course_id', '' );
+		$date           = Input::post( 'date', '' );
+		$search         = Input::post( 'search', '' );
+
+		$course_filter   = '' !== $course_id ? $wpdb->prepare( ' AND quiz_attempts.course_id = %d', $course_id ) : '';
+		$date_filter     = '' !== $date ? $wpdb->prepare( ' AND DATE(quiz_attempts.attempt_started_at) = %s ', $date ) : '';
+		$search_term_raw = $search;
+		$search_filter   = '%' . $wpdb->esc_like( $search ) . '%';
 
 		if ( $is_ajax_action ) {
-			$attempt_cache = new QuizAttempts();
+			$current_params = compact( 'course_id', 'date', 'search' );
+			$attempt_cache  = new QuizAttempts( $current_params );
 
-			if ( $attempt_cache->has_cache() && ! is_null( $attempt_cache->get_cache()->pass ) ) {
-				$count_obj = $attempt_cache->get_cache();
+			$cached_attempts = $attempt_cache->get_cache();
+			if ( $attempt_cache->has_cache() && $attempt_cache->is_same_query() && isset( $cached_attempts['result'] ) ) {
+				$count_obj = $cached_attempts['result'];
 			} else {
 				$select_stmt = "SELECT COUNT( DISTINCT attempt_id)
 								FROM {$wpdb->prefix}tutor_quiz_attempts quiz_attempts
 								INNER JOIN {$wpdb->posts} quiz ON quiz_attempts.quiz_id = quiz.ID
-								-- INNER JOIN {$wpdb->prefix}tutor_quiz_attempt_answers AS ans ON quiz_attempts.attempt_id = ans.quiz_attempt_id";
+								INNER JOIN {$wpdb->users} AS users ON quiz_attempts.user_id = users.ID
+								INNER JOIN {$wpdb->posts} AS course ON course.ID = quiz_attempts.course_id";
 
 				$count_obj->pass = (int) $wpdb->get_var(
 					$wpdb->prepare(
 						"{$select_stmt}		
 						WHERE attempt_status != %s
+						AND (
+							users.user_email = %s
+							OR users.display_name LIKE %s
+							OR quiz.post_title LIKE %s
+							OR course.post_title LIKE %s
+						)
 							{$pass_clause}
 							{$user_clause}
+							{$course_filter}
+							{$date_filter}
 							",
-						'attempt_started'
+						'attempt_started',
+						$search_term_raw,
+						$search_filter,
+						$search_filter,
+						$search_filter
 					)
 				);
 
@@ -160,10 +190,22 @@ class Quiz_Attempts_List {
 					$wpdb->prepare(
 						"{$select_stmt}		
 						WHERE attempt_status != %s
+						AND (
+							users.user_email = %s
+							OR users.display_name LIKE %s
+							OR quiz.post_title LIKE %s
+							OR course.post_title LIKE %s
+						)
 							{$fail_clause}
 							{$user_clause}
+							{$course_filter}
+							{$date_filter}
 							",
-						'attempt_started'
+						'attempt_started',
+						$search_term_raw,
+						$search_filter,
+						$search_filter,
+						$search_filter
 					)
 				);
 
@@ -171,10 +213,22 @@ class Quiz_Attempts_List {
 					$wpdb->prepare(
 						"{$select_stmt}		
 						WHERE attempt_status != %s
+						AND (
+							users.user_email = %s
+							OR users.display_name LIKE %s
+							OR quiz.post_title LIKE %s
+							OR course.post_title LIKE %s
+						)
 							{$pending_clause}
 							{$user_clause}
+							{$course_filter}
+							{$date_filter}
 							",
-						'attempt_started'
+						'attempt_started',
+						$search_term_raw,
+						$search_filter,
+						$search_filter,
+						$search_filter
 					)
 				);
 
@@ -182,7 +236,7 @@ class Quiz_Attempts_List {
 				$attempt_cache->set_cache();
 			}
 		}
-		
+
 		$all      = $count_obj->pass + $count_obj->fail + $count_obj->pending;
 		$pass     = $count_obj->pass;
 		$fail     = $count_obj->fail;
@@ -205,12 +259,12 @@ class Quiz_Attempts_List {
 	 * @return array
 	 */
 	public function tabs_key_value( $user_id, $course_id, $date, $search ): array {
-		$url   = apply_filters( 'tutor_data_tab_base_url', get_pagenum_link());
+		$url   = apply_filters( 'tutor_data_tab_base_url', get_pagenum_link() );
 		$stats = $this->get_quiz_attempts_stat();
 
 		$tabs = array(
 			array(
-				'key'   => 'all',
+				'key'   => '',
 				'title' => __( 'All', 'tutor' ),
 				'value' => $stats['all'],
 				'url'   => $url . '&data=all',

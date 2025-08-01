@@ -1141,7 +1141,7 @@ if (!empty($results)) {
 
     </body>
 <script>
-hidePreloader();
+
 function redirectToTest(){
     
     window.location.href = `${linkTestMain}`;

@@ -12,10 +12,12 @@
 namespace TutorPro\CourseBundle\Models;
 
 use Tutor\Cache\TutorCache;
-use Tutor\Helpers\QueryHelper;
+use TUTOR\Course;
 use Tutor\Models\CourseModel;
-use Tutor\Models\QuizModel;
 use TutorPro\CourseBundle\CustomPosts\CourseBundle;
+use Tutor\Ecommerce\OptionKeys as OptionKeys;
+use Tutor\Helpers\QueryHelper;
+use WP_Query;
 
 /**
  * BundleModel Class.
@@ -34,6 +36,34 @@ class BundleModel {
 	const RIBBON_NONE       = 'none';
 
 	/**
+	 * Get bundles using provided args
+	 *
+	 * If user is not admin then it will return only current user's post
+	 *
+	 * @since 3.6.0
+	 *
+	 * @param array $args Args.
+	 *
+	 * @return \WP_Query
+	 */
+	public static function get_bundle_list( array $args = array() ) {
+
+		$default_args = array(
+			'post_type'      => CourseBundle::POST_TYPE,
+			'posts_per_page' => -1,
+			'post_status'    => 'publish',
+		);
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			$default_args['author'] = get_current_user_id();
+		}
+
+		$args = wp_parse_args( $args, apply_filters( 'tutor_get_bundle_list_filter_args', $default_args ) );
+
+		return new \WP_Query( $args );
+	}
+
+	/**
 	 * Get bundle courses
 	 *
 	 * @since 2.2.0
@@ -44,24 +74,34 @@ class BundleModel {
 	 */
 	public static function get_bundle_courses( $bundle_id ) {
 		$course_ids = self::get_bundle_course_ids( $bundle_id );
-		if ( 0 === count( $course_ids ) ) {
+		if ( empty( $course_ids ) ) {
 			return array();
 		}
 
-		global $wpdb;
-		$in_clause = QueryHelper::prepare_in_clause( $course_ids );
-		//phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$courses = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * from {$wpdb->posts}
-				WHERE post_type=%s
-				AND ID IN({$in_clause})
-				",
-				CourseModel::POST_TYPE
-			)
+		$args = array(
+			'post_type'      => CourseModel::POST_TYPE,
+			'post__in'       => $course_ids,
+			'posts_per_page' => -1,
 		);
-		//phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		return $courses;
+
+		$query   = new WP_Query( apply_filters( 'tutor_course_lead_info_args', $args ) );
+		$courses = $query->get_posts();
+
+		$ordered_courses = array_reduce(
+			$course_ids,
+			function( $ordered_list, $course_id ) use ( $courses ) {
+				foreach ( $courses as $course ) {
+					if ( (int) $course->ID === (int) $course_id ) {
+							$ordered_list[] = $course;
+							break;
+					}
+				}
+				return $ordered_list;
+			},
+			array()
+		);
+
+		return $ordered_courses;
 	}
 
 	/**
@@ -103,7 +143,7 @@ class BundleModel {
 			$total_lessons = count( $course_ids ) ? tutor_utils()->get_course_content_ids_by( tutor()->lesson_post_type, tutor()->course_post_type, $course_ids ) : array();
 
 			$arr['total_courses']        = count( $course_ids );
-			$arr['total_duration']       = self::get_bundle_duration( $course_ids );
+			$arr['total_duration']       = self::convert_seconds_into_human_readable_time( self::get_bundle_duration( $course_ids ), false );
 			$arr['total_video_contents'] = count( $total_lessons );
 
 			foreach ( $course_ids as $course_id ) {
@@ -163,13 +203,41 @@ class BundleModel {
 	 *
 	 * @since 2.2.0
 	 *
-	 * @param int $bundle_id course bundle id.
+	 * @since 3.6.0 $bundle_id array support added.
+	 * @param int|string|array $bundle_id course bundle id comma separate|int|array.
 	 *
 	 * @return array
 	 */
 	public static function get_bundle_course_ids( $bundle_id ) {
-		$id_str = get_post_meta( $bundle_id, CourseBundle::BUNDLE_COURSE_IDS_META_KEY, true );
-		return empty( $id_str ) ? array() : explode( ',', $id_str );
+		if ( is_numeric( $bundle_id ) ) {
+			$id_str = get_post_meta( $bundle_id, CourseBundle::BUNDLE_COURSE_IDS_META_KEY, true );
+			return empty( $id_str ) ? array() : explode( ',', $id_str );
+		}
+
+		$bundle_ids = is_string( $bundle_id ) ? explode( ', ', $bundle_id ) : $bundle_id;
+		$bundle_ids = QueryHelper::prepare_in_clause( $bundle_ids );
+
+		global $wpdb;
+
+		$results = QueryHelper::get_all(
+			$wpdb->postmeta,
+			array(
+				'meta_key' => CourseBundle::BUNDLE_COURSE_IDS_META_KEY,
+				'post_id'  => array( 'IN', $bundle_ids ),
+			),
+			'meta_id'
+		);
+
+		if ( $results && count( $results ) ) {
+			$course_ids = array();
+			foreach ( $results as $result ) {
+				$course_ids = array_merge( $course_ids, explode( ',', $result->meta_value ) );
+			}
+
+			return array_unique( $course_ids );
+		}
+
+		return array();
 	}
 
 	/**
@@ -183,34 +251,38 @@ class BundleModel {
 	 */
 	public static function get_bundle_course_authors( $bundle_id ) {
 		$courses = self::get_bundle_course_ids( $bundle_id );
-		if ( 0 === count( $courses ) ) {
+		if ( empty( $courses ) ) {
 			return array();
 		}
 
-		global $wpdb;
-		$in_clause = QueryHelper::prepare_in_clause( $courses );
-
-		//phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$authors = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT
-                    DISTINCT um.user_id,
-                    u.display_name,
-                    u.user_email,
-                    tutor_job_title.meta_value AS designation
-				FROM {$wpdb->usermeta} um
-				    LEFT JOIN {$wpdb->users} u 
-                        ON u.ID = um.user_id
-                    LEFT JOIN {$wpdb->usermeta} tutor_job_title
-						    ON tutor_job_title.user_id = um.user_id
-						   AND tutor_job_title.meta_key = '_tutor_profile_job_title'
-				WHERE um.meta_key=%s
-				    AND um.meta_value IN ({$in_clause})",
-				'_tutor_instructor_course_id'
-			)
+		$query_args = array(
+			'meta_query' => array(
+				array(
+					'key'     => '_tutor_instructor_course_id',
+					'value'   => $courses,
+					'compare' => 'IN',
+				),
+			),
+			'fields'     => array( 'ID', 'display_name', 'user_email' ),
+			'number'     => -1,
 		);
-		//phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		return $authors;
+
+		$user_query = new \WP_User_Query( $query_args );
+		$authors    = array();
+
+		if ( ! empty( $user_query->get_results() ) ) {
+			foreach ( $user_query->get_results() as $user ) {
+				$authors[ $user->ID ] = (object) array(
+					'user_id'      => $user->ID,
+					'display_name' => $user->display_name,
+					'user_email'   => $user->user_email,
+					'designation'  => get_user_meta( $user->ID, '_tutor_profile_job_title', true ),
+					'avatar_url'   => get_avatar_url( $user->ID, array( 'size' => 96 ) ),
+				);
+			}
+		}
+
+		return array_values( $authors );
 	}
 
 	/**
@@ -224,29 +296,23 @@ class BundleModel {
 	 */
 	public static function get_bundle_course_categories( $bundle_id ) {
 		$courses = self::get_bundle_course_ids( $bundle_id );
-		if ( 0 === count( $courses ) ) {
+		if ( empty( $courses ) ) {
 			return array();
 		}
 
-		global $wpdb;
-		$in_clause = QueryHelper::prepare_in_clause( $courses );
+		$terms = wp_get_object_terms( $courses, 'course-category', array( 'fields' => 'all' ) );
 
-		//phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$categories = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT 
-				DISTINCT terms.term_id, terms.name, terms.slug 
-			  FROM 
-				{$wpdb->terms} AS terms 
-				INNER JOIN {$wpdb->term_taxonomy} AS taxonomy ON terms.term_id = taxonomy.term_id 
-				INNER JOIN {$wpdb->term_relationships} AS relationships ON taxonomy.term_taxonomy_id = relationships.term_taxonomy_id 
-			  WHERE 
-				relationships.object_id IN ({$in_clause}) 
-				AND taxonomy.taxonomy = %s",
-				'course-category'
-			)
-		);
-		//phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$categories = array();
+		if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
+			foreach ( $terms as $term ) {
+				$categories[] = array(
+					'term_id' => $term->term_id,
+					'name'    => $term->name,
+					'slug'    => $term->slug,
+				);
+			}
+		}
+
 		return $categories;
 	}
 
@@ -281,7 +347,7 @@ class BundleModel {
 			TutorCache::set( $cache_key, $count );
 		}
 
-		return $count;
+		return (int) $count;
 	}
 
 	/**
@@ -302,12 +368,38 @@ class BundleModel {
         		FROM {$wpdb->postmeta}
         		WHERE meta_key = %s
 				AND meta_value LIKE %s",
-				'bundle-course-ids',
+				CourseBundle::BUNDLE_COURSE_IDS_META_KEY,
 				"%{$course_id}%"
 			)
 		);
 
 		return is_object( $data ) ? $data->post_id : false;
+	}
+
+	/**
+	 * Get bundle ids by course id.
+	 *
+	 * @since 3.2.0
+	 *
+	 * @param int $course_id the course id.
+	 *
+	 * @return array
+	 */
+	public static function get_bundle_ids_by_course( $course_id ) {
+		global $wpdb;
+
+		$data = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT post_id 
+        		FROM {$wpdb->postmeta}
+        		WHERE meta_key = %s
+				AND meta_value LIKE %s",
+				CourseBundle::BUNDLE_COURSE_IDS_META_KEY,
+				"%{$course_id}%"
+			)
+		);
+
+		return $data;
 	}
 
 	/**
@@ -547,5 +639,209 @@ class BundleModel {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Check if user is enrolled in bundle courses
+	 *
+	 * @since 3.3.0
+	 *
+	 * @param int $bundle_id the bundle id.
+	 * @param int $user_id   the user id.
+	 *
+	 * @return bool
+	 */
+	public static function is_enrolled_to_bundle_courses( $bundle_id, $user_id ) {
+		$bundle_course_ids = self::get_bundle_course_ids( $bundle_id );
+		$is_enrolled       = true;
+		if ( count( $bundle_course_ids ) > 0 ) {
+			foreach ( $bundle_course_ids as $course_id ) {
+				$has_enrollment = tutor_utils()->is_enrolled( $course_id, $user_id, false );
+				if ( ! $has_enrollment ) {
+					$is_enrolled = false;
+				}
+			}
+		}
+		return $is_enrolled;
+	}
+
+
+	/**
+	 * Get post meta fields.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @return array
+	 */
+	public static function get_post_meta_fields() {
+		return array(
+			'sale_price',
+			'ribbon_type',
+			'course_benefits',
+		);
+	}
+
+	/**
+	 * Get bundle data
+	 *
+	 * @since 3.2.0
+	 *
+	 * @param int $bundle_id bundle id.
+	 *
+	 * @return array
+	 */
+	public static function get_bundle_data( $bundle_id ): array {
+		$overview   = self::get_bundle_meta( $bundle_id );
+		$authors    = self::get_bundle_course_authors( $bundle_id );
+		$categories = self::get_bundle_course_categories( $bundle_id );
+
+		$course_ids = self::get_bundle_course_ids( $bundle_id );
+
+		$courses = array();
+		foreach ( $course_ids as $course_id ) {
+			$post = get_post( $course_id );
+			if ( ! $post ) {
+				continue;
+			}
+
+			$course = Course::get_mini_info( $post );
+			if ( $course ) {
+				$courses[] = $course;
+			}
+		}
+
+		$subtotal_price      = self::get_bundle_regular_price( $bundle_id );
+		$subtotal_sale_price = tutor_utils()->get_raw_course_price( $bundle_id )->sale_price;
+
+		$data = array(
+			'overview'                => $overview,
+			'authors'                 => $authors,
+			'courses'                 => $courses,
+			'categories'              => $categories,
+			'subtotal_price'          => tutor_utils()->tutor_price( $subtotal_price ),
+			'subtotal_raw_price'      => $subtotal_price,
+			'subtotal_sale_price'     => tutor_utils()->tutor_price( $subtotal_sale_price ),
+			'subtotal_raw_sale_price' => $subtotal_sale_price,
+			'course_ids'              => $course_ids,
+		);
+
+		return $data;
+	}
+
+	/**
+	 * Get bundle price
+	 *
+	 * It will calculate all the course price of a bundle
+	 *
+	 * @since 3.2.0
+	 *
+	 * @param int $bundle_id bundle id.
+	 *
+	 * @return int|float bundle regular price
+	 */
+	public static function get_bundle_regular_price( int $bundle_id ) {
+		$course_ids = self::get_bundle_course_ids( $bundle_id );
+		$price      = 0;
+
+		foreach ( $course_ids as $course_id ) {
+			if ( ! tutor_utils()->is_course_purchasable( $course_id ) ) {
+				continue;
+			}
+
+			if ( tutor_utils()->is_monetize_by_tutor() ) {
+				$course_price = tutor_utils()->get_raw_course_price( $course_id );
+				$price       += $course_price->regular_price;
+			} else {
+				$product_id = tutor_utils()->get_course_product_id( $course_id );
+				$product    = wc_get_product( $product_id );
+				if ( $product ) {
+					$product_price = (float) $product->get_regular_price();
+					$price        += $product_price;
+				}
+			}
+		}
+
+		return $price;
+	}
+
+	/**
+	 * Wrapper method to get raw course price
+	 *
+	 * @since 2.2.0
+	 *
+	 * @param integer $bundle_id int bundle id.
+	 *
+	 * @return int|float
+	 */
+	public static function get_bundle_sale_price( int $bundle_id ) {
+		$price = tutor_utils()->get_raw_course_price( $bundle_id );
+		return is_numeric( $price->sale_price ) ? $price->sale_price : 0;
+	}
+
+	/**
+	 * Get bundle discount by ribbon settings of bundle.
+	 *
+	 * @since 2.2.0
+	 *
+	 * @param int    $bundle_id bundle id.
+	 * @param string $ribbon_type ribbon type.
+	 * @param bool   $symbol symbol.
+	 *
+	 * @return int|string
+	 */
+	public static function get_bundle_discount_by_ribbon( $bundle_id, $ribbon_type, $symbol = true ) {
+		if ( self::RIBBON_NONE === $ribbon_type ) {
+			return '';
+		}
+
+		$is_tutor_monetize = tutor_utils()->is_monetize_by_tutor();
+
+		$regular_price = self::get_bundle_regular_price( $bundle_id );
+		$sale_price    = self::get_bundle_sale_price( $bundle_id );
+
+		if ( self::RIBBON_PERCENTAGE === $ribbon_type ) {
+			$discount = 0;
+			try {
+				$discount = $regular_price ? ( $regular_price - $sale_price ) / $regular_price * 100 : 0;
+			} catch ( \Throwable $th ) {
+				$discount = 0;
+			}
+
+			$discount = round( $discount, 2 );
+			return $symbol ? $discount . '%' : $discount;
+		}
+
+		if ( self::RIBBON_AMOUNT === $ribbon_type ) {
+			$discount = $regular_price - $sale_price;
+			$discount = round( $discount, 2 );
+
+			$currency_sign = $is_tutor_monetize ? tutor_get_currency_symbol_by_code( tutor_utils()->get_option( OptionKeys::CURRENCY_CODE ) ) : get_woocommerce_currency_symbol();
+
+			return $symbol ? $currency_sign . $discount : $discount;
+		}
+
+	}
+
+	/**
+	 * Get enrollment ids by bundle enrollment.
+	 *
+	 * @since 3.2.0
+	 *
+	 * @param int $bundle_id bundle id.
+	 *
+	 * @return array list of enrollment id
+	 */
+	public static function get_bundle_enrollment_ids( $bundle_id ) {
+		global $wpdb;
+
+		$bundle_course_ids = array_map( 'intval', self::get_bundle_course_ids( $bundle_id ) );
+		$course_ids_str    = QueryHelper::prepare_in_clause( $bundle_course_ids );
+
+		$enrollment_ids = $wpdb->get_col(
+			// phpcs:ignore -- $course_ids_str sanitized.
+			$wpdb->prepare( "SELECT ID FROM {$wpdb->posts} p WHERE p.post_type = %s AND p.post_parent IN ({$course_ids_str})", 'tutor_enrolled' )
+		);
+
+		return $enrollment_ids;
 	}
 }

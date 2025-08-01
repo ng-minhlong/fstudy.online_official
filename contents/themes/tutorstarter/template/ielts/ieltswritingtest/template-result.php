@@ -1360,7 +1360,7 @@ function openTab(tabName) {
 // Set initial active task on page load
 window.onload = function() {
     setActiveTask('overall');
-    hidePreloader();
+    
 };
 </script>
 </body>

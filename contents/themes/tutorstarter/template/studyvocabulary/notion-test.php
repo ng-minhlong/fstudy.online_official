@@ -417,7 +417,7 @@ table th {
                 window.location.href = `${siteUrl}/practice/notion/flashcard/`;
             });
         });
-        hidePreloader();
+        
         </script>
 
 

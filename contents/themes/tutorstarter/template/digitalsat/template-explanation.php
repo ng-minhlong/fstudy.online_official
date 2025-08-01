@@ -541,7 +541,7 @@ $new_skip_ans = 0;
                     echo "'correct_ans': " . json_encode($correct_answer_mapping[$question_data['correct_answer']] ?? '') . ",";
                         
                     if (!empty($question_data["image_link"])) {
-                        $custom_image_path = "/contents/themes/tutorstarter/template/media_img_intest/digital_sat/" . $question_data["id_question"] . ".png";
+                        $custom_image_path = "/fstudy/contents/themes/tutorstarter/template/media_img_intest/digital_sat/" . $question_data["id_question"] . ".png";
                         echo "'image': " . json_encode($custom_image_path) . ",";
                     } else {
                         echo "'image': " . json_encode(""),
@@ -558,36 +558,13 @@ $new_skip_ans = 0;
                         json_encode($question_data["category"]) .
                         ",";
 
-                    echo "'answer': [";
-                    echo "['" .
-                        $question_data["answer_1"] .
-                        "', '" .
-                        ($question_data["correct_answer"] == "answer_1"
-                            ? "true"
-                            : "false") .
-                        "'],";
-                    echo "['" .
-                        $question_data["answer_2"] .
-                        "', '" .
-                        ($question_data["correct_answer"] == "answer_2"
-                            ? "true"
-                            : "false") .
-                        "'],";
-                    echo "['" .
-                        $question_data["answer_3"] .
-                        "', '" .
-                        ($question_data["correct_answer"] == "answer_3"
-                            ? "true"
-                            : "false") .
-                        "'],";
-                    echo "['" .
-                        $question_data["answer_4"] .
-                        "', '" .
-                        ($question_data["correct_answer"] == "answer_4"
-                            ? "true"
-                            : "false") .
-                        "']";
+                    echo "\"answer\": [";
+                    echo json_encode([$question_data["answer_1"], $question_data["correct_answer"] == "answer_1" ? "true" : "false"]) . ",";
+                    echo json_encode([$question_data["answer_2"], $question_data["correct_answer"] == "answer_2" ? "true" : "false"]) . ",";
+                    echo json_encode([$question_data["answer_3"], $question_data["correct_answer"] == "answer_3" ? "true" : "false"]) . ",";
+                    echo json_encode([$question_data["answer_4"], $question_data["correct_answer"] == "answer_4" ? "true" : "false"]);
                     echo "],";
+                        
                     echo "'explanation': " .
                         json_encode($question_data["explanation"]) .
                         ",";
@@ -625,7 +602,7 @@ $new_skip_ans = 0;
                     echo "'correct_ans': " . json_encode($correct_answer_text) . ",";
 
                     if (!empty($question_data["image_link"])) {
-                        $custom_image_path = "/contents/themes/tutorstarter/template/media_img_intest/digital_sat/" . $question_data["id_question"] . ".png";
+                        $custom_image_path = "/fstudy/contents/themes/tutorstarter/template/media_img_intest/digital_sat/" . $question_data["id_question"] . ".png";
                         echo "'image': " . json_encode($custom_image_path) . ",";
                     } else {
                         echo "'image': " . json_encode(""),
@@ -1802,15 +1779,25 @@ img {
                     <span class="close" onclick="closeSettingPopup()">&times;</span>
                     <h3 style="text-align: center;" > Settings</h3>
                     <div id="button-container">
-                        <img class="small-button" src="/contents/themes/tutorstarter/system-test-toolkit/icon-small-button/guide2.png" height="30px" width="30px" id="guide-button"></img>
+                        <img class="small-button" src="<?php echo $site_url; ?>/contents/themes/tutorstarter/system-test-toolkit/icon-small-button/guide2.png" height="30px" width="30px" id="guide-button"></img>
         
-                        <img class="small-button" src="/contents/themes/tutorstarter/system-test-toolkit/icon-small-button/draft2.png" height="30px" width="30px" id="draft-button"></img>
-                        <img class="small-button" src="/contents/themes/tutorstarter/system-test-toolkit/icon-small-button/translate2.png" height="30px" width="30px" id="translate-button"></img>                 
-                        <img id = "change-mode-button"class="small-button" onclick="DarkMode()" src="/contents/themes/tutorstarter/system-test-toolkit/icon-small-button/dark-mode.png" height="30px" width="30px" ></img>
-                        <img id = "change-mode-button"class="small-button" onclick="reloadTest()" src="/contents/themes/tutorstarter/system-test-toolkit/reload.png" height="30px" width="30px" ></img>
-                        <img id = "change-mode-button"class="small-button" onclick="timePersonalize()" src="/contents/themes/tutorstarter/system-test-toolkit/sandclock.png" height="30px" width="30px" ></img>
+                        <img class="small-button" src="<?php echo $site_url; ?>/contents/themes/tutorstarter/system-test-toolkit/icon-small-button/draft2.png" height="30px" width="30px" id="draft-button"></img>
+                 
+                 
+                      
+                 
+                        <img class="small-button" src="<?php echo $site_url; ?>/contents/themes/tutorstarter/system-test-toolkit/icon-small-button/translate2.png" height="30px" width="30px" id="translate-button"></img>
+        
+                        <!--<img class="small-button" onclick="openColorPopup()" src="icon-small-button/color.png" height="30px" width="30px" id="colors-button"></img> -->
+                 
+                 
+                        <img id = "change-mode-button"class="small-button" onclick="DarkMode()" src="<?php echo $site_url; ?>/contents/themes/tutorstarter/system-test-toolkit/icon-small-button/dark-mode.png" height="30px" width="30px" ></img>
+                        <img id = "change-mode-button"class="small-button" onclick="reloadTest()" src="<?php echo $site_url; ?>/contents/themes/tutorstarter/system-test-toolkit/reload.png" height="30px" width="30px" ></img>
+                        <img id = "change-mode-button"class="small-button" onclick="timePersonalize()" src="<?php echo $site_url; ?>/contents/themes/tutorstarter/system-test-toolkit/sandclock.png" height="30px" width="30px" ></img>
 
+                        
                       </div>
+                   
                    
                 </div>
             </div>
@@ -1863,10 +1850,9 @@ img {
                     
          
                     <div class = "fixedleftsmallbuttoncontainer" style="display: none;">
-                                <button  class ="buttonsidebar" onClick="reloadTest()"><img width="25px"  src="/contents/themes/tutorstarter/system-test-toolkit/reload.png" ></button><br>
-                                <button  class ="buttonsidebar" id="print-exam-button" ><img width="28px" src="/contents/themes/tutorstarter/system-test-toolkit/print.png" ></button><br>
-                                <button id="change_appearance"  class ="buttonsidebar" ><img width="28px" src="/contents/themes/tutorstarter/system-test-toolkit/setting.png" ></button><br>
-                                <button id="quick-view"  class ="buttonsidebar" ><img width="28px" src="/contents/themes/tutorstarter/system-test-toolkit/quick-view.png" ></button>
+                                <button  class ="buttonsidebar" id="print-exam-button" ><img width="28px" src="<?php echo $site_url; ?>/contents/themes/tutorstarter/system-test-toolkit/print.png" ></button><br>
+                                <button id="change_appearance"  class ="buttonsidebar" ><img width="28px" src="<?php echo $site_url; ?>/contents/themes/tutorstarter/system-test-toolkit/setting.png" ></button><br>
+                                <button id="quick-view"  class ="buttonsidebar" ><img width="28px" src="<?php echo $site_url; ?>/contents/themes/tutorstarter/system-test-toolkit/quick-view.png" ></button>
                     </div>
 
                    <div id="center-block" style="display:none"> 
@@ -2272,7 +2258,7 @@ function purple_highlight(spanId) {
     document.getElementById(spanId).style.backgroundColor = '#FFB6C1';
 }
 
-
+ 
     
        let removeChoice = false;
 
@@ -2757,7 +2743,6 @@ answerBox.forEach(answer => {
     setTimeout(function(){
         console.log("Show Test!");
         document.getElementById("start_test").style.display="block";
-        hidePreloader();
         startTest();
     }, 1000);
 }
@@ -2848,41 +2833,35 @@ function PreSubmit(){
 </script>
 <?php
 echo'
-<!--<script type="text/javascript" src="'. $site_url .'function/alert_leave_page.js"></script> -->
-<!--<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_explanation/main7.js"></script> -->
 
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_explanation/translate.js"></script>
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_explanation/zoom-text.js"></script>
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/translate.js"></script>
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/zoom-text.js"></script>
 
-<!--<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_explanation/toggle-time-remaining-container.js"></script>-->
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_explanation/report-error.js"></script>
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_explanation/note-sidebar.js"></script>
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/report-error.js"></script>
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/note-sidebar.js"></script>
 
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_explanation/submit_ans_1.js"></script>
-<!--<script type="module" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_explanation/check_dev_tool.js"></script>
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/submit_answer_9.js"></script>
+<!--<script type="module" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/check_dev_tool.js"></script>
     -->
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_explanation/highlight_text_3.js"></script>
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_explanation/fullscreen.js"></script>
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_explanation/format-time-1.js"></script>
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_explanation/draft-popup.js"></script>
-<script type="text/javascript" src="/contents/themes/tutorstarter/system-test-toolkit/function_explanation/color-background.js"></script>
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_explanation/start1.js"></script>
-<!-- <script type="text/javascript" src="'. $site_url .'function_explanation/quick-view-answer.js"></script> -->
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_explanation/checkbox_and_remember_2.js"></script>
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/highlight_text_5.js"></script>
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/fullscreen.js"></script>
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/format-time-4.js"></script>
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/draft-popup.js"></script>
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/start-digital-sat-Test-7.js"></script>
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/checkboxAndRemember_3.js"></script>
 
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_explanation/reload-test.js"></script>
-<script type ="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_explanation/change-mode.js"></script> 
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/reload-test.js"></script>
+<script type ="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/change-mode.js"></script> 
 <!--
-<script type ="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_explanation/disable-view-inspect.js"></script> -->
+<script type ="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/disable-view-inspect.js"></script> -->
 
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_explanation/print-exam.js"></script>
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function/print-exam.js"></script>
 <script src="https://www.google.com/recaptcha/api.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://smtpjs.com/v3/smtp.js">
 </script>
 '
 ?>
-
     </body>
 
 

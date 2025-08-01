@@ -667,19 +667,19 @@ class Routes {
 		$permissions = array(
 			array(
 				'value' => RestAuth::WRITE,
-				'label' => __( 'Write', 'tutor' ),
+				'label' => __( 'Write', 'tutor-pro' ),
 			),
 			array(
 				'value' => RestAuth::READ_WRITE,
-				'label' => __( 'Read/Write', 'tutor' ),
+				'label' => __( 'Read/Write', 'tutor-pro' ),
 			),
 			array(
 				'value' => RestAuth::DELETE,
-				'label' => __( 'Delete', 'tutor' ),
+				'label' => __( 'Delete', 'tutor-pro' ),
 			),
 			array(
 				'value' => RestAuth::ALL,
-				'label' => __( 'All', 'tutor' ),
+				'label' => __( 'All', 'tutor-pro' ),
 			),
 		);
 

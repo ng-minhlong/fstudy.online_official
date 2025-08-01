@@ -25,7 +25,7 @@ if ( is_numeric( $basename ) ) {
 
 $per_page    = tutor_utils()->get_option( 'pagination_per_page' );
 $offset      = ( $per_page * $paged ) - $per_page;
-$course_id   = Input::get( 'course_id', '' );
+$course_id   = Input::get( 'course-id', 0, INPUT::TYPE_INT );
 $date_filter = Input::get( 'date', '' );
 
 $orderby = Input::get( 'orderby', 'registration_date' );
@@ -52,7 +52,7 @@ $register_sort_icon     = $orderby == 'registration_date' ? ( strtolower( $order
 $course_taken_sort_icon = $orderby == 'course_taken' ? ( strtolower( $order ) == 'asc' ? 'up' : 'down' ) : 'up';
 
 $search_filter = Input::get( 'search', '' );
-$students      = tutor_utils()->get_students_by_instructor( $user->ID, $offset, $per_page, $search_filter, $course_id, $date_filter, $sort_order, $order );
+$students      = tutor_utils()->get_students_by_instructor( $user->ID, $offset, $per_page, $search_filter, $course_id, $date_filter, $sort_order, $order, array( 'publish', 'private' ) );
 $courses       = CourseModel::get_courses_by_instructor();
 ?>
 <div class="tutor-analytics-students">
@@ -79,7 +79,7 @@ $courses       = CourseModel::get_courses_by_instructor();
 						<option value=""><?php esc_html_e( 'All', 'tutor-pro' ); ?></option>
 						<?php if ( $courses ) : ?>
 							<?php foreach ( $courses as $course ) : ?>
-								<option value="<?php echo esc_attr( $course->ID ); ?>" <?php selected( $course_id, $course->ID, 'selected' ); ?>>
+								<option value="<?php echo esc_attr( $course->ID ); ?>" <?php selected( $course_id, $course->ID ); ?>>
 									<?php echo esc_html( $course->post_title ); ?>
 								</option>
 							<?php endforeach; ?>
@@ -91,7 +91,14 @@ $courses       = CourseModel::get_courses_by_instructor();
 
 				<div class="tutor-col-lg">
 					<label class="tutor-form-label"><?php esc_html_e( 'Date', 'tutor-pro' ); ?></label>
-					<div class="tutor-v2-date-picker"></div>
+					<div class="tutor-v2-date-picker">
+						<div class="tutor-form-wrap">
+							<span class="tutor-form-icon tutor-form-icon-reverse">
+								<span class="tutor-icon-calender-line" aria-hidden="true"></span>
+							</span>
+							<input class="tutor-form-control" placeholder="<?php esc_attr_e( 'Loading...', 'tutor-pro' ); ?>">
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>

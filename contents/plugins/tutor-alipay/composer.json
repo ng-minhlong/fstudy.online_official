@@ -1,0 +1,14 @@
+{
+    "version": "1.0.0",
+    "name": "themeum/tutor-payment-alipay",
+    "description": "Global payment gateway implementation for wp and joomla",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Ollyo\\PaymentHub\\": "../tutor/ecommerce/PaymentGateways/Paypal/src",
+            "Ollyo\\PaymentHub\\Payments\\Alipay\\": "payments",
+            "TutorAlipay\\": "integration"
+        }
+    }
+}

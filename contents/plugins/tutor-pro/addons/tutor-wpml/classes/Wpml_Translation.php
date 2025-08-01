@@ -11,7 +11,9 @@
 namespace TUTOR_WPML;
 
 use TUTOR\Input;
+use TUTOR_EMAIL\EmailNotification;
 use TUTOR_PRO\Course_Duplicator;
+
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -59,6 +61,232 @@ class Wpml_Translation {
 		add_filter( 'tutor_filter_course_archive_page', array( $this, 'filter_course_archive_id' ), 10, 1 );
 		add_filter( 'post_type_archive_link', array( $this, 'update_archive_link' ), 10, 2 );
 		add_filter( 'tutor_data_tab_base_url', array( $this, 'filter_data_tab_base_url' ) );
+
+		/**
+		 * Email template translation
+		 */
+		add_action( 'tutor_pro_before_prepare_email_template_data', array( $this, 'set_email_translation' ), 10, 1 );
+		add_action( 'tutor_pro_after_prepare_template_email_data', array( $this, 'revert_translation' ) );
+		add_action( 'tutor_pro_before_save_email_template_data', array( $this, 'save_email_template_option' ) );
+		add_filter( 'tutor_pro_email_template_data_option', array( $this, 'set_email_template_option' ) );
+		add_filter( 'tutor_pro_user_email_template_option', array( $this, 'set_user_email_template_option' ), 10, 2 );
+
+		add_action( 'tutor_after_student_signup', array( $this, 'save_user_language' ) );
+		add_action( 'tutor_after_instructor_signup', array( $this, 'save_user_language' ) );
+		add_action( 'wpml_language_has_switched', array( $this, 'update_user_language' ) );
+		add_action( 'tutor_after_login_success', array( $this, 'save_user_language' ) );
+		add_filter( 'wpml_user_language', array( $this, 'set_recipient_language' ), 10, 2 );
+
+		add_filter( 'icl_ls_languages', array( $this, 'set_dashboard_subpage_url' ) );
+		add_filter( 'wpml_show_admin_language_switcher', array( $this, 'set_tutor_settings_ls' ) );
+
+	}
+
+	/**
+	 * Prevent showing language switcher on tutor settings page.
+	 *
+	 * @since 3.4.1
+	 *
+	 * @param  bool $allow_ls boolean to show or hide language switcher.
+	 *
+	 * @return bool
+	 */
+	public function set_tutor_settings_ls( $allow_ls ) {
+		$current_page = Input::get( 'page' );
+
+		if ( 'tutor_settings' === $current_page ) {
+			$allow_ls = false;
+		}
+
+		return $allow_ls;
+	}
+
+	/**
+	 * Add subpage url on tutor dashboard url for language switcher.
+	 *
+	 * @since 3.4.1
+	 *
+	 * @param array $active_languages the list of active languages of language switcher.
+	 *
+	 * @return array
+	 */
+	public function set_dashboard_subpage_url( $active_languages ) {
+		global $wp_query;
+
+		$is_dashboard = tutor_utils()->is_tutor_frontend_dashboard();
+
+		if ( $is_dashboard && isset( $wp_query->query_vars['tutor_dashboard_page'] ) ) {
+			$tutor_dashboard_page = $wp_query->query_vars['tutor_dashboard_page'];
+			foreach ( $active_languages as $lang ) {
+				$lang['url'] .= $tutor_dashboard_page;
+
+				if ( isset( $wp_query->query_vars['tutor_dashboard_sub_page'] ) ) {
+					$tutor_dashboard_subpage = $wp_query->query_vars['tutor_dashboard_sub_page'];
+					$lang['url'] .= '/' . $tutor_dashboard_subpage;
+				}
+
+				$active_languages[ $lang['language_code'] ] = $lang;
+			}
+		}
+
+		return $active_languages;
+	}
+
+	/**
+	 * Sets the receiver language code for email for tutor users.
+	 *
+	 * @since 3.2.3
+	 *
+	 * @param string $lang the language code.
+	 * @param string $email the receiver email.
+	 *
+	 * @return string
+	 */
+	public function set_recipient_language( $lang, $email ) {
+		$user      = get_user_by( 'email', $email );
+		if ( $user ) {
+			$user_lang = get_user_meta( $user->ID, '_tutor_wpml_user_language', true );
+			return $user_lang;
+		}
+	}
+
+	/**
+	 * Updates user locale meta upon wpml language switch.
+	 *
+	 * @since 3.2.3
+	 *
+	 * @return void
+	 */
+	public function update_user_language() {
+		$user_id     = get_current_user_id();
+		$wpml_cookie = isset( $_COOKIE['wp-wpml_current_language'] ) ? sanitize_text_field( wp_unslash( $_COOKIE['wp-wpml_current_language'] ) ) : apply_filters( 'wpml_current_language', null );
+		update_user_meta( $user_id, '_tutor_wpml_user_language', $wpml_cookie );
+	}
+
+	/**
+	 * Set email template option based on user locale language code.
+	 *
+	 * @since 3.2.3
+	 *
+	 * @param array $option default email template option array.
+	 * @param int   $user_id the user id.
+	 *
+	 * @return array
+	 */
+	public function set_user_email_template_option( $option, $user_id ) {
+		$locale     = get_user_meta( $user_id, '_tutor_wpml_user_language', true );
+		$admin_lang = apply_filters( 'wpml_default_language', null );
+
+		if ( $locale !== $admin_lang ) {
+			$option_key = EmailNotification::EMAIL_TEMPLATE_DATA_OPTION . '_' . $locale;
+			$option     = get_option( $option_key );
+		}
+
+		return $option;
+	}
+
+	/**
+	 * Save language of current user being registered or logged in.
+	 *
+	 * @since 3.2.3
+	 *
+	 * @param int $user_id the user id.
+	 *
+	 * @return void
+	 */
+	public function save_user_language( $user_id ) {
+		$user_language = get_user_meta( $user_id, '_tutor_wpml_user_language', true );
+		$locale        = get_user_meta( $user_id, 'locale', true );
+
+		if ( empty( $user_language ) && empty( $locale ) ) {
+			$wpml_cookie = isset( $_COOKIE['wp-wpml_current_language'] ) ? sanitize_text_field( wp_unslash( $_COOKIE['wp-wpml_current_language'] ) ) : apply_filters( 'wpml_current_language', null );
+			update_user_meta( $user_id, '_tutor_wpml_user_language', $wpml_cookie );
+
+			$active_languages = apply_filters( 'wpml_active_languages', null );
+			foreach ( $active_languages as $lang ) {
+				if ( $lang['active'] ) {
+					$locale = $lang['default_locale'];
+					break;
+				}
+			}
+
+			update_user_meta( $user_id, 'locale', $locale );
+
+		} else {
+			$current_lang = isset( $_COOKIE['wp-wpml_current_language'] ) ? sanitize_text_field( wp_unslash( $_COOKIE['wp-wpml_current_language'] ) ) : apply_filters( 'wpml_current_language', null );
+			if ( $user_language !== $current_lang ) {
+				update_user_meta( $user_id, '_tutor_wpml_user_language', $current_lang );
+			}
+
+			$active_languages = apply_filters( 'wpml_active_languages', null );
+			foreach ( $active_languages as $lang ) {
+				if ( $lang['active'] ) {
+					$active_locale = $lang['default_locale'];
+					break;
+				}
+			}
+
+			if ( $locale !== $active_locale ) {
+				update_user_meta( $user_id, 'locale', $active_locale );
+			}
+		}
+
+	}
+
+	/**
+	 * Set email template option based on the current language.
+	 *
+	 * @since 3.2.1
+	 *
+	 * @param mixed $email_option the initial email option.
+	 *
+	 * @return mixed
+	 */
+	public function set_email_template_option( $email_option ) {
+		$current_lang = apply_filters( 'wpml_current_language', null );
+		$admin_lang   = apply_filters( 'wpml_default_language', null );
+
+		if ( $current_lang !== $admin_lang ) {
+			$option_key   = EmailNotification::EMAIL_TEMPLATE_DATA_OPTION . '_' . $current_lang;
+			$email_option = get_option( $option_key );
+		}
+
+		return $email_option;
+	}
+
+	/**
+	 * Save email template option based on the current language.
+	 *
+	 * @since 3.2.1
+	 *
+	 * @return void
+	 */
+	public function save_email_template_option() {
+		do_action( 'wpml_multilingual_options', EmailNotification::EMAIL_TEMPLATE_DATA_OPTION );
+	}
+
+	/**
+	 * Revert any language translation after email template data is prepared.
+	 *
+	 * @since 3.2.1
+	 *
+	 * @return void
+	 */
+	public function revert_translation() {
+		do_action( 'wpml_restore_language_from_email' );
+	}
+
+	/**
+	 * Set the current language based on user email preference.
+	 *
+	 * @since 3.2.1
+	 *
+	 * @param string $user_email the user email.
+	 *
+	 * @return void
+	 */
+	public function set_email_translation( $user_email ) {
+		do_action( 'wpml_switch_language_for_email', $user_email );
 	}
 
 	/**
@@ -140,10 +368,9 @@ class Wpml_Translation {
 	public function copy_content_from_source( $target_course_id ) {
 
 		$icl_trid           = Input::post( 'icl_trid', '' );
-		$copy_source        = Input::post( 'tutor_wpml_copy_source', '' );
 		$source_copied_meta = get_post_meta( $target_course_id, 'tutor_wpml_source_copied', false );
 
-		if ( '' === $icl_trid || '' === $copy_source || 1 != $copy_source || $source_copied_meta ) {
+		if ( '' === $icl_trid || $source_copied_meta ) {
 			return;
 		}
 

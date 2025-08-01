@@ -265,7 +265,12 @@ class Pusher extends Push_Notification {
 		$attempt             = tutor_utils()->get_attempt( $attempt_id );
 		$quiz_title          = get_post_field( 'post_title', $attempt->quiz_id );
 		$course              = get_post( $attempt->course_id );
-		$instructor_feedback = get_post_meta( $attempt_id, 'instructor_feedback', true );
+		$instructor_feedback = '';
+
+		$attempt_info = isset( $attempt->attempt_info ) ? unserialize( $attempt->attempt_info ) : false;
+		if ( $attempt_info ) {
+			$instructor_feedback = $attempt_info['instructor_feedback'] ?? '';
+		}
 
 		$title = sprintf( __( 'Your Quiz Results Are Up', 'tutor-pro' ), $quiz_title ) . ' : ' . $course->post_title;
 

@@ -10,12 +10,15 @@
 
 namespace TUTOR_REPORT;
 
+use TUTOR\Input;
+
 defined( 'ABSPATH' ) || exit;
 
-use Tutor\Ecommerce\OrderController;
+use Tutor\Models\OrderModel;
+use Tutor\Ecommerce\Settings;
 use Tutor\Helpers\QueryHelper;
-use TUTOR\Input;
 use TUTOR_REPORT\ExportAnalytics;
+use Tutor\Ecommerce\OrderController;
 
 /**
  * Class Analytics
@@ -124,7 +127,7 @@ class Analytics extends ExportAnalytics {
 				'url'   => esc_url( tutor_utils()->tutor_dashboard_url() . 'analytics/export' ),
 			),
 		);
-		return $sub_pages;
+		return apply_filters( 'tutor_analytics_sub_pages', $sub_pages );
 	}
 
 	/**
@@ -201,25 +204,25 @@ class Analytics extends ExportAnalytics {
 	 *
 	 * @since 1.9.8
 	 */
-	public static function get_courses_with_search_by_user( int $user_id, string $search = '' ): int {
+	public static function get_courses_with_search_by_user( int $user_id, string $search = '', $post_status = array( 'publish' ) ): int {
 		global $wpdb;
 		$user_id = sanitize_text_field( $user_id );
 		$search  = sanitize_text_field( $search );
 
 		$course_post_type = tutor()->course_post_type;
 		$search_term      = '%' . $wpdb->esc_like( $search ) . '%';
+		$post_status      = QueryHelper::prepare_in_clause( $post_status );
 
 		$total_item = $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT count(ID)
 				FROM {$wpdb->posts}
 				WHERE post_type = %s
-				AND post_status = %s
+				AND post_status IN ({$post_status})
 				AND post_author = %d
 				AND (post_title LIKE %s)
 			",
 				$course_post_type,
-				'publish',
 				$user_id,
 				$search_term
 			)
@@ -237,7 +240,7 @@ class Analytics extends ExportAnalytics {
 	 *
 	 * @since 1.9.8
 	 */
-	public static function get_courses_with_total_enroll_earning( int $user_id, string $order = '', string $order_by = '', int $offset = 0, int $limit = 10, string $search = '' ) {
+	public static function get_courses_with_total_enroll_earning( int $user_id, string $order = '', string $order_by = '', int $offset = 0, int $limit = 10, string $search = '', $post_status = array( 'publish' ) ) {
 		global $wpdb;
 		$post_type = tutor()->course_post_type;
 		$user_id   = sanitize_text_field( $user_id );
@@ -253,6 +256,7 @@ class Analytics extends ExportAnalytics {
 		$search_term     = '%' . $wpdb->esc_like( $search ) . '%';
 		$complete_status = tutor_utils()->get_earnings_completed_statuses();
 		$complete_status = "'" . implode( "','", $complete_status ) . "'";
+		$post_status     = QueryHelper::prepare_in_clause( $post_status );
 
 		$courses = $wpdb->get_results(
 			$wpdb->prepare(
@@ -263,7 +267,7 @@ class Analytics extends ExportAnalytics {
 							AND enrollment.post_status = %s
 					WHERE post.post_type = %s
 						AND post.post_author = %d
-						AND post.post_status = %s
+						AND post.post_status IN ({$post_status})
 						AND ( post.post_title LIKE %s)
 					GROUP BY post.ID
 					ORDER BY {$order_by} {$order}
@@ -273,7 +277,6 @@ class Analytics extends ExportAnalytics {
 				'completed',
 				$post_type,
 				$user_id,
-				'publish',
 				$search_term,
 				$offset,
 				$limit
@@ -344,28 +347,7 @@ class Analytics extends ExportAnalytics {
 		$course_query = '';
 		// set additional query for period or date range if condition not meet then get all time data.
 		if ( '' !== $period ) {
-			switch ( $period ) {
-				case 'today':
-					$period_query = ' AND  DATE(created_at) = CURDATE() ';
-					break;
-				case 'monthly':
-					$period_query = ' AND  MONTH(created_at) = MONTH(CURDATE()) ';
-					break;
-				case 'yearly':
-					$period_query = ' AND  YEAR(created_at) = YEAR(CURDATE()) ';
-					break;
-				case 'last30days':
-					$period_query = ' AND  DATE(created_at) BETWEEN DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND CURDATE() ';
-					break;
-				case 'last90days':
-					$period_query = ' AND  DATE(created_at) BETWEEN DATE_SUB(CURDATE(), INTERVAL 90 DAY) AND CURDATE() ';
-					break;
-				case 'last365days':
-					$period_query = ' AND  DATE(created_at) BETWEEN DATE_SUB(CURDATE(), INTERVAL 365 DAY) AND CURDATE() ';
-					break;
-				default:
-					break;
-			}
+			$period_query = QueryHelper::get_period_clause( 'earnings.created_at', $period );
 		}
 
 		if ( 'today' !== $period ) {
@@ -377,7 +359,7 @@ class Analytics extends ExportAnalytics {
 		}
 
 		if ( '' !== $start_date && '' !== $end_date ) {
-			$period_query = " AND  DATE(created_at) BETWEEN CAST('$start_date' AS DATE) AND CAST('$end_date' AS DATE) ";
+			$period_query = " AND  DATE(earnings.created_at) BETWEEN CAST('$start_date' AS DATE) AND CAST('$end_date' AS DATE) ";
 			$group_query  = ' GROUP BY DATE(date_format) ';
 		}
 
@@ -389,23 +371,33 @@ class Analytics extends ExportAnalytics {
 		 */
 		$author_query = '';
 		if ( $user_id ) {
-			$author_query = "AND user_id = {$user_id}";
+			$author_query = "AND earnings.user_id = {$user_id}";
 		}
 		// Get statuses.
 		$complete_status = tutor_utils()->get_earnings_completed_statuses();
 		$complete_status = "'" . implode( "','", $complete_status ) . "'";
 
-		$amount_type = is_admin() ? 'admin_amount' : 'instructor_amount';
-		$earnings    = $wpdb->get_results(
-			"SELECT  SUM($amount_type) AS total,
-					DATE(created_at) AS date_format
-			FROM	{$wpdb->prefix}tutor_earnings
-			WHERE 	order_status IN({$complete_status})
+		$amount_type = is_admin() ? 'earnings.admin_amount' : 'earnings.instructor_amount';
+		$amount_rate = is_admin() ? 'earnings.admin_rate' : 'earnings.instructor_rate';
+
+		$amount_condition = "CASE
+			WHEN orders.tax_type = 'inclusive' AND earnings.course_price_grand_total > 0
+				THEN ( earnings.course_price_grand_total - orders.tax_amount ) * ( $amount_rate/100 )
+			ELSE $amount_type
+			END";
+
+		$earnings = $wpdb->get_results(
+			"SELECT  SUM($amount_condition) AS total,
+				DATE(earnings.created_at) AS date_format
+			FROM	{$wpdb->prefix}tutor_earnings as earnings 
+			LEFT JOIN {$wpdb->prefix}tutor_orders as orders
+				ON earnings.order_id = orders.id
+			WHERE earnings.order_status IN({$complete_status})
 					{$author_query}
 					{$course_query}
 					{$period_query}
 					{$group_query}
-			ORDER BY created_at ASC;
+			ORDER BY earnings.created_at ASC;
 			"
 		);
 
@@ -944,6 +936,7 @@ class Analytics extends ExportAnalytics {
 	public static function get_statements_by_user( int $user_id, int $offset, int $limit, $course_id = '', $date_filter = '' ): array {
 		global $wpdb;
 		$course_post_type = tutor()->course_post_type;
+		$bundle_post_type = tutor()->bundle_post_type;
 
 		$user_id     = sanitize_text_field( $user_id );
 		$limit       = sanitize_text_field( $limit );
@@ -961,42 +954,59 @@ class Analytics extends ExportAnalytics {
 			$date_query = " AND DATE(statements.created_at) = CAST( '$date_filter' AS DATE ) ";
 		}
 
+		$post_type_in_clause = QueryHelper::prepare_in_clause( array( $course_post_type, $bundle_post_type ) );
+
+		$res = array();
+
+		if ( tutor_utils()->is_monetize_by_tutor() ) {
+			$order_model = new OrderModel();
+			$res         = $order_model->get_statements( $post_type_in_clause, $course_query, $date_query, $user_id, $offset, $limit );
+		} elseif ( 'wc' === tutor_utils()->get_option( 'monetize_by' ) ) {
+		//phpcs:disable
 		$statements = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT statements.*, course.post_title AS course_title
+				"SELECT 
+				statements.course_price_total AS order_total_price,
+				null AS order_tax_amount,
+				null AS order_tax_type,
+				statements.*, course.post_title AS course_title
 				FROM {$wpdb->prefix}tutor_earnings AS statements
-					INNER JOIN {$wpdb->posts} AS course ON course.ID = statements.course_id AND course.post_type = %s
+					INNER JOIN {$wpdb->posts} AS course ON course.ID = statements.course_id 
+					AND course.post_type IN ({$post_type_in_clause})
 				WHERE statements.user_id = %d
 				{$course_query}
 				{$date_query}
 				ORDER BY statements.created_at DESC
 				LIMIT %d, %d
 			",
-				$course_post_type,
 				$user_id,
 				$offset,
 				$limit
 			)
 		);
+		//phpcs:enable
 
-		$total_statements = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT COUNT(*)
+			$total_statements = $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(*)
 				FROM {$wpdb->prefix}tutor_earnings AS statements
-					INNER JOIN {$wpdb->posts} AS course ON course.ID = statements.course_id AND course.post_type = %s
+					INNER JOIN {$wpdb->posts} AS course ON course.ID = statements.course_id
+					AND course.post_type IN ({$post_type_in_clause})
 				WHERE statements.user_id = %d
 				{$course_query}
 				{$date_query}
 			",
-				$course_post_type,
-				$user_id
-			)
-		);
+					$user_id
+				)
+			);
 
-		return array(
-			'statements'       => $statements,
-			'total_statements' => $total_statements,
-		);
+			$res = array(
+				'statements'       => $statements,
+				'total_statements' => $total_statements,
+			);
+		}
+
+		return $res;
 	}
 
 	/**
@@ -1023,17 +1033,18 @@ class Analytics extends ExportAnalytics {
 		if ( isset( $query_vars['tutor_dashboard_page'] ) && $query_vars['tutor_dashboard_page'] == 'analytics' ) {
 			$current_page = isset( $query_vars['tutor_dashboard_sub_page'] ) ? $query_vars['tutor_dashboard_sub_page'] : 'overview';
 
-				// enqueue scripts
+				// enqueue scripts.
 				wp_enqueue_script(
-					'tutor-pro-line-chart',
-					TUTOR_REPORT()->url . 'assets/js/lib/Chart.bundle.min.js',
+					'tutor-pro-chart-js',
+					tutor_pro()->url . 'assets/lib/Chart.bundle.min.js',
 					array(),
-					TUTOR_PRO_VERSION
+					TUTOR_PRO_VERSION,
+					true
 				);
 				wp_enqueue_script(
 					'tutor-pro-analytics',
 					TUTOR_REPORT()->url . 'assets/js/analytics.js',
-					array( 'jquery' ),
+					array( 'jquery', 'tutor-pro-chart-js' ),
 					TUTOR_PRO_VERSION,
 					true
 				);
@@ -1043,26 +1054,19 @@ class Analytics extends ExportAnalytics {
 					'before'
 				);
 
-				// export js
+			// export js.
 			if ( 'export' === $current_page ) {
 				wp_enqueue_script(
 					'tutor-pro-jszip',
-					TUTOR_REPORT()->url . 'assets/js/lib/jszip.min.js',
+					tutor_pro()->url . 'assets/lib/jszip.min.js',
 					array(),
-					TUTOR_PRO_VERSION,
-					true
-				);
-				wp_enqueue_script(
-					'tutor-pro-file-saver',
-					TUTOR_REPORT()->url . 'assets/js/FileSaver.min.js',
-					array( 'jquery' ),
 					TUTOR_PRO_VERSION,
 					true
 				);
 				wp_enqueue_script(
 					'tutor-pro-export',
 					TUTOR_REPORT()->url . 'assets/js/export.js',
-					array( 'jquery' ),
+					array( 'jquery', 'tutor-pro-jszip' ),
 					TUTOR_PRO_VERSION,
 					true
 				);
@@ -1077,7 +1081,6 @@ class Analytics extends ExportAnalytics {
 			);
 
 		}
-
 	}
 
 	/**
@@ -1196,7 +1199,7 @@ class Analytics extends ExportAnalytics {
 	 *
 	 * @return array
 	 */
-	public function analytics_data():array {
+	public function analytics_data(): array {
 		$arr = array(
 			'students'  => $this->students_data(),
 			'earnings'  => $this->earnings_data(),
@@ -1309,5 +1312,4 @@ class Analytics extends ExportAnalytics {
 
 		return $wpdb->get_results( $wpdb->prepare( $sql, '_is_tutor_instructor', '_tutor_instructor_status', 'approved', $limit ) );
 	}
-
 }

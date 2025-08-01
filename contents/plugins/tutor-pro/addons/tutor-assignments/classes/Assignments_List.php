@@ -16,6 +16,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use TUTOR\Backend_Page_Trait;
+use Tutor\Helpers\DateTimeHelper;
+use Tutor\Helpers\QueryHelper;
+use Tutor\Input;
 
 /**
  * Assignments List class
@@ -28,6 +31,12 @@ class Assignments_List {
 	 * @var $page_title
 	 */
 	use Backend_Page_Trait;
+
+	const POST_TYPE   = 'tutor_assignments';
+	const TAB_ALL     = 'all';
+	const TAB_PENDING = 'pending';
+	const TAB_PASS    = 'pass';
+	const TAB_FAIL    = 'fail';
 
 	/**
 	 * Page Title
@@ -123,9 +132,7 @@ class Assignments_List {
 	 * @return void
 	 */
 	public function column_date( $item ) {
-		$format      = get_option( 'date_format' );
-		$time_format = get_option( 'time_format' );
-		$deadline    = tutor_utils()->get_assignment_deadline_date( $item->comment_post_ID, $format );
+		$deadline = tutor_utils()->get_assignment_deadline_date_in_gmt( $item->comment_post_ID, null, $item->user_id, $item->ID );
 
 		// Deadline.
 		if ( $deadline ) {
@@ -133,7 +140,7 @@ class Assignments_List {
 			<div class="course-meta" style="margin-top:0">
 				<span class="tutor-color-black tutor-fs-7">
 					<strong><?php esc_html_e( 'Deadline', 'tutor-pro' ); ?></strong>
-					<?php echo esc_html( $deadline ); ?>
+					<?php echo esc_html( DateTimeHelper::get_gmt_to_user_timezone_date( $deadline ) ); ?>
 				</span>
 			</div>
 			<?php
@@ -200,28 +207,28 @@ class Assignments_List {
 		$data = $this->tabs_data( $course_id, $date, $search );
 		$tabs = array(
 			array(
-				'key'   => 'all',
+				'key'   => '',
 				'title' => __( 'All', 'tutor-pro' ),
-				'value' => $data['all'],
-				'url'   => '?page=tutor-assignments&data=all',
+				'value' => $data[ self::TAB_ALL ],
+				'url'   => '?page=tutor-assignments&data=' . self::TAB_ALL,
 			),
 			array(
-				'key'   => 'pass',
+				'key'   => self::TAB_PASS,
 				'title' => __( 'Pass', 'tutor-pro' ),
-				'value' => $data['pass'],
-				'url'   => '?page=tutor-assignments&data=pass',
+				'value' => $data[ self::TAB_PASS ],
+				'url'   => '?page=tutor-assignments&data=' . self::TAB_PASS,
 			),
 			array(
-				'key'   => 'fail',
+				'key'   => self::TAB_FAIL,
 				'title' => __( 'Fail', 'tutor-pro' ),
-				'value' => $data['fail'],
-				'url'   => '?page=tutor-assignments&data=fail',
+				'value' => $data[ self::TAB_FAIL ],
+				'url'   => '?page=tutor-assignments&data=' . self::TAB_FAIL,
 			),
 			array(
-				'key'   => 'pending',
+				'key'   => self::TAB_PENDING,
 				'title' => __( 'Pending', 'tutor-pro' ),
-				'value' => $data['pending'],
-				'url'   => '?page=tutor-assignments&data=pending',
+				'value' => $data[ self::TAB_PENDING ],
+				'url'   => '?page=tutor-assignments&data=' . self::TAB_PENDING,
 			),
 		);
 
@@ -245,42 +252,22 @@ class Assignments_List {
 		 * otherwise just get that belongs to instructor
 		 */
 		$user_id = current_user_can( 'administrator' ) ? 0 : get_current_user_id();
-		$all     = self::count_all( 'all', $course_id, $date, $search, '', '', '', $user_id );
-		$pass    = self::count_pass_fail( 'pass', $course_id, $date, $search, '', '', '', $user_id );
-		$fail    = self::count_pass_fail( 'fail', $course_id, $date, $search, '', '', '', $user_id );
-		$pending = self::count_pending( 'pending', $course_id, $date, $search, '', '', '', $user_id );
+		$all     = self::get_submitted_assignment_list( self::TAB_ALL, $course_id, $date, $search, '', '', '', $user_id )->total_count;
+		$pass    = self::get_submitted_assignment_list( self::TAB_PASS, $course_id, $date, $search, '', '', '', $user_id )->total_count;
+		$fail    = self::get_submitted_assignment_list( self::TAB_FAIL, $course_id, $date, $search, '', '', '', $user_id )->total_count;
+		$pending = self::get_submitted_assignment_list( self::TAB_PENDING, $course_id, $date, $search, '', '', '', $user_id )->total_count;
 		return array(
-			'all'     => is_array( $all ) ? count( $all ) : 0,
-			'pass'    => is_array( $pass ) ? count( $pass ) : 0,
-			'fail'    => is_array( $fail ) ? count( $fail ) : 0,
-			'pending' => is_array( $pending ) ? count( $pending ) : 0,
+			self::TAB_ALL     => $all,
+			self::TAB_PASS    => $pass,
+			self::TAB_FAIL    => $fail,
+			self::TAB_PENDING => $pending,
 		);
 	}
 
 	/**
-	 * Listing for All Assignments
+	 * Get submitted assignment list on backend.
 	 *
-	 * @since 2.0.0
-	 *
-	 * @param string  $status status.
-	 * @param string  $course_id course id.
-	 * @param string  $date date.
-	 * @param string  $search_term search term.
-	 * @param string  $offset offset.
-	 * @param string  $limit limit.
-	 * @param string  $order order.
-	 * @param integer $user_id user id.
-	 *
-	 * @return array $result
-	 */
-	public static function assignment_list_all( string $status, $course_id = '', $date = '', $search_term = '', $offset = '', $limit = '', $order = '', $user_id = 0 ) {
-		return self::count_all( $status, $course_id, $date, $search_term, $offset, $limit, $order, $user_id );
-	}
-
-	/**
-	 * Listing for Pending Assignments
-	 *
-	 * @since 2.0.0
+	 * @since 3.6.0
 	 *
 	 * @param string  $status status.
 	 * @param string  $course_id course id.
@@ -291,309 +278,132 @@ class Assignments_List {
 	 * @param string  $order order.
 	 * @param integer $user_id user id.
 	 *
-	 * @return array $result
+	 * @return object
 	 */
-	public static function assignment_list_pending( string $status, $course_id = '', $date = '', $search_term = '', $offset = '', $limit = '', $order = '', $user_id = 0 ) {
-		return self::count_pending( $status, $course_id, $date, $search_term, $offset, $limit, $order, $user_id );
-	}
-
-	/**
-	 * Listing for Passed and Failed Assignments
-	 *
-	 * @since 2.0.0
-	 *
-	 * @param string  $status | required.
-	 * @param string  $course_id selected course id | optional.
-	 * @param string  $date selected date | optional.
-	 * @param string  $search_term search by user name or email | optional.
-	 * @param string  $offset offset.
-	 * @param string  $limit limit.
-	 * @param string  $order order.
-	 * @param integer $user_id user id.
-	 *
-	 * @return array $result
-	 */
-	public static function assignment_list_pass_fail( string $status, $course_id = '', $date = '', $search_term = '', $offset = '', $limit = '', $order = '', $user_id = 0 ) {
-		return self::count_pass_fail( $status, $course_id, $date, $search_term, $offset, $limit, $order, $user_id );
-	}
-
-	/**
-	 * Count assignments by status & filters
-	 * Count pass | fail
-	 *
-	 * @since 2.0.0
-	 *
-	 * @param string  $status status.
-	 * @param string  $course_id course id.
-	 * @param string  $date date.
-	 * @param string  $search_term search term.
-	 * @param string  $offset offset.
-	 * @param string  $limit limit.
-	 * @param string  $order order.
-	 * @param integer $user_id user id.
-	 *
-	 * @return int
-	 */
-	protected static function count_pass_fail( string $status, $course_id = '', $date = '', $search_term = '', $offset = '', $limit = '', $order = '', $user_id = 0 ) {
+	public static function get_submitted_assignment_list( string $status, $course_id = '', $date = '', $search_term = '', $offset = '', $limit = '', $order = '', $user_id = 0 ) {
 		global $wpdb;
-		$course_id   = sanitize_text_field( $course_id );
-		$date        = sanitize_text_field( $date );
-		$search_term = sanitize_text_field( $search_term );
-		$status      = sanitize_text_field( $status );
+		$course_id   = Input::sanitize( $course_id, 0, INPUT::TYPE_INT );
+		$user_id     = Input::sanitize( $user_id, 0, INPUT::TYPE_INT );
+		$date        = Input::sanitize( $date, '' );
+		$search_term = Input::sanitize( $search_term, '' );
+		$status      = Input::sanitize( $status, '' );
 		$order       = sanitize_sql_orderby( $order );
 
-		$course_query = '';
-		// Prepare search query.
-		$search_term = '%' . $wpdb->esc_like( $search_term ) . '%';
-
-		if ( '' !== $course_id ) {
-			$course_id    = (int) $course_id;
-			$course_query = "AND course.ID = $course_id ";
-		}
-		$date_query = '';
-		if ( '' !== $date ) {
-			$date_query = "AND DATE(post.post_date) = CAST( '$date' AS DATE )";
-		}
-
-		$status_query = '';
-		if ( 'pass' === $status ) {
-			$status_query = 'AND CAST(evaluate_mark.meta_value AS SIGNED) >= CAST(pass_mark.meta_value AS SIGNED)';
-		} else {
-			$status_query = 'AND CAST(evaluate_mark.meta_value AS SIGNED) < CAST(pass_mark.meta_value AS SIGNED)';
-		}
-
-		$offset_limit_query = '';
-		if ( '' !== $offset && '' !== $limit ) {
-			$offset_limit_query = "LIMIT $offset, $limit";
-		}
-
-		$order_query = '';
-		if ( '' !== $order ) {
-			$order_query = "ORDER BY submit.comment_date {$order}";
-		} else {
-			$order_query = 'ORDER BY submit.comment_date DESC';
-		}
-		$user_query = '';
-		if ( $user_id ) {
-			$user_id    = sanitize_text_field( $user_id );
-			$user_query = "AND course.post_author = {$user_id}";
-		}
-
-		//phpcs:disable
-		$results = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->posts} AS post 
-				INNER JOIN {$wpdb->posts} AS topic
-					ON topic.ID = post.post_parent
-				INNER JOIN {$wpdb->posts} AS course
-					ON course.ID = topic.post_parent
-				INNER JOIN {$wpdb->comments} AS submit
-					ON submit.comment_post_ID = post.ID
-				INNER JOIN {$wpdb->postmeta} AS total_mark 
-					ON total_mark.post_id = post.ID 
-					AND total_mark.meta_key = '_tutor_assignment_total_mark'
-				INNER JOIN {$wpdb->postmeta} AS pass_mark 
-					ON pass_mark.post_id = post.ID 
-					AND pass_mark.meta_key = '_tutor_assignment_pass_mark'
-				INNER JOIN {$wpdb->commentmeta} AS evaluate_mark 
-					ON evaluate_mark.comment_ID = submit.comment_ID 
-					AND evaluate_mark.meta_key = 'assignment_mark'
-				WHERE post.post_type = %s
-					{$status_query}
-					{$course_query}
-					{$date_query}
-					{$user_query}
-					AND ( post.post_title LIKE  %s OR course.post_title LIKE %s )
-					{$order_query}
-					{$offset_limit_query}
-			",
-				'tutor_assignments',
-				$search_term,
-				$search_term
-			)
+		$primary_tables = "{$wpdb->posts} as post";
+		$joining_tables = array(
+			array(
+				'type'  => 'INNER',
+				'table' => "{$wpdb->posts} as topic",
+				'on'    => 'topic.ID = post.post_parent',
+			),
+			array(
+				'type'  => 'INNER',
+				'table' => "{$wpdb->posts} as course",
+				'on'    => 'course.ID = topic.post_parent',
+			),
+			array(
+				'type'  => 'INNER',
+				'table' => "{$wpdb->comments} as submit",
+				'on'    => 'submit.comment_post_ID = post.ID',
+			),
 		);
-		//phpcs:enable
 
-		return $results;
-	}
-
-	/**
-	 * Count assignments by status & filters count pending.
-	 *
-	 * @since 2.0.0
-	 *
-	 * @param string  $status status.
-	 * @param string  $course_id course id.
-	 * @param string  $date date.
-	 * @param string  $search_term search term.
-	 * @param string  $offset offset.
-	 * @param string  $limit limit.
-	 * @param string  $order order.
-	 * @param integer $user_id user id.
-	 *
-	 * @return int
-	 */
-	protected static function count_pending( string $status, $course_id = '', $date = '', $search_term = '', $offset = '', $limit = '', $order = '', $user_id = 0 ) {
-		global $wpdb;
-		$course_id   = sanitize_text_field( $course_id );
-		$date        = sanitize_text_field( $date );
-		$search_term = sanitize_text_field( $search_term );
-		$status      = sanitize_text_field( $status );
-		$order       = sanitize_sql_orderby( $order );
-
-		// Prepare search query.
-		$search_term = '%' . $wpdb->esc_like( $search_term ) . '%';
-
-		$course_query = '';
-		if ( '' !== $course_id ) {
-			$course_id    = (int) $course_id;
-			$course_query = "AND course.ID = $course_id";
-		}
-
-		$date_query = '';
-		if ( '' !== $date ) {
-			$date_query = "AND DATE(post.post_date) = CAST( '$date' AS DATE )";
-		}
-
-		$status_query = '';
-		if ( 'pending' === $status ) {
-			$status_query = 'AND submit.comment_post_ID IS NOT NULL';
-		}
-
-		$offset_limit_query = '';
-		if ( '' !== $offset && '' !== $limit ) {
-			$offset_limit_query = "LIMIT $offset, $limit";
-		}
-
-		$order_query = '';
-		if ( '' !== $order ) {
-			$order_query = "ORDER BY submit.comment_date {$order}";
-		} else {
-			$order_query = 'ORDER BY submit.comment_date DESC';
-		}
-
-		$user_query = '';
-		if ( $user_id ) {
-			$user_id    = sanitize_text_field( $user_id );
-			$user_query = "AND course.post_author = {$user_id}";
-		}
-
-		//phpcs:disable
-		$results = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->posts} AS post 
-				INNER JOIN {$wpdb->posts} AS topic
-					ON topic.ID = post.post_parent
-				INNER JOIN {$wpdb->posts} AS course
-					ON course.ID = topic.post_parent
-				INNER JOIN {$wpdb->comments} AS submit
-				ON submit.comment_post_ID = post.ID
-				LEFT JOIN {$wpdb->commentmeta} AS evaluate
-					ON evaluate.comment_ID = submit.comment_ID AND evaluate.meta_key = 'assignment_mark'
-				WHERE post.post_type = %s
-				AND evaluate.meta_value IS NULL
-					{$course_query}
-					{$date_query}
-					{$status_query}
-					{$user_query}
-				AND ( post.post_title LIKE  %s OR course.post_title LIKE %s ) 
-				{$order_query}
-				{$offset_limit_query}
-			",
-				'tutor_assignments',
-				$search_term,
-				$search_term
-			)
+		$where = array(
+			'post.post_type'          => self::POST_TYPE,
+			'submit.comment_approved' => 'submitted',
 		);
-		//phpcs:enable
 
-		return $results;
-	}
+		$raw_query = array();
 
-	/**
-	 * Count assignments by status & filters Count all
-	 *
-	 * @param string  $status status.
-	 * @param string  $course_id course id.
-	 * @param string  $date date.
-	 * @param string  $search_term search term.
-	 * @param string  $offset offset.
-	 * @param string  $limit limit.
-	 * @param string  $order order.
-	 * @param integer $user_id user id.
-	 *
-	 * @return int
-	 */
-	protected static function count_all( string $status, $course_id = '', $date = '', $search_term = '', $offset = '', $limit = '', $order = '', $user_id = 0 ) {
-		global $wpdb;
-		$course_id   = sanitize_text_field( $course_id );
-		$date        = sanitize_text_field( $date );
-		$search_term = sanitize_text_field( $search_term );
-		$status      = sanitize_text_field( $status );
-		$order       = sanitize_sql_orderby( $order );
-
-		// Prepare search query.
-		$search_term = '%' . $wpdb->esc_like( $search_term ) . '%';
-
-		$course_query = '';
-		if ( '' !== $course_id ) {
-			$course_id    = (int) $course_id;
-			$course_query = "AND course.ID = $course_id";
-		}
-
-		$date_query = '';
 		if ( '' !== $date ) {
-			$date_query = "AND DATE(post.post_date) = CAST( '$date' AS DATE )";
+			$where['DATE(post.post_date)'] = $date;
 		}
 
-		$status_query = '';
-		if ( 'all' === $status ) {
-			$status_query = 'AND submit.comment_post_ID IS NOT NULL';
+		if ( $course_id ) {
+			$where['course.ID'] = $course_id;
 		}
 
-		$offset_limit_query = '';
-		if ( '' !== $offset && '' !== $limit ) {
-			$offset_limit_query = "LIMIT $offset, $limit";
-		}
-
-		$order_query = '';
-		if ( '' !== $order ) {
-			$order_query = "ORDER BY submit.comment_date {$order}";
-		} else {
-			$order_query = 'ORDER BY submit.comment_date DESC';
-		}
-
-		$user_query = '';
 		if ( $user_id ) {
-			$user_id    = sanitize_text_field( $user_id );
-			$user_query = "AND course.post_author = {$user_id}";
+			$where['course.post_author'] = $user_id;
 		}
 
-		//phpcs:disable
-		$results = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->posts} AS post 
-				INNER JOIN {$wpdb->posts} AS topic
-					ON topic.ID = post.post_parent
-				INNER JOIN {$wpdb->posts} AS course
-					ON course.ID = topic.post_parent
-				INNER JOIN {$wpdb->comments} AS submit
-					ON submit.comment_post_ID = post.ID
-				WHERE post.post_type = %s
-					{$course_query}
-					{$date_query}
-					{$status_query}
-					{$user_query}
-				AND ( post.post_title LIKE  %s OR course.post_title LIKE %s ) 
-				{$order_query}
-				{$offset_limit_query}
-			",
-				'tutor_assignments',
-				$search_term,
-				$search_term
-			)
+		$search_clause = array();
+
+		if ( '' !== $search_term ) {
+			$search_clause = array(
+				'post.post_title'   => $search_term,
+				'course.post_title' => $search_term,
+			);
+		}
+
+		if ( self::TAB_ALL === $status ) {
+			$where['submit.comment_post_ID'] = array(
+				'IS NOT',
+				'NULL',
+			);
+		}
+
+		if ( self::TAB_PENDING === $status ) {
+			$join_table = array(
+				'type'  => 'LEFT',
+				'table' => "{$wpdb->commentmeta} AS evaluate",
+				'on'    => "evaluate.comment_ID = submit.comment_ID AND evaluate.meta_key = 'assignment_mark'",
+			);
+
+			array_push( $joining_tables, $join_table );
+
+			$where['submit.comment_post_ID'] = array(
+				'IS NOT',
+				'NULL',
+			);
+
+			$where['evaluate.meta_value'] = 'null';
+
+		}
+
+		if ( self::TAB_PASS === $status || self::TAB_FAIL === $status ) {
+			$join_table = array(
+				array(
+					'type'  => 'INNER',
+					'table' => "{$wpdb->postmeta} AS pass_mark",
+					'on'    => "pass_mark.post_id = post.ID AND pass_mark.meta_key = '_tutor_assignment_pass_mark'",
+				),
+				array(
+					'type'  => 'INNER',
+					'table' => "{$wpdb->commentmeta} AS evaluate_mark",
+					'on'    => "evaluate_mark.comment_ID = submit.comment_ID AND evaluate_mark.meta_key = 'assignment_mark'",
+				),
+			);
+
+			$joining_tables  = array_merge( $joining_tables, $join_table );
+			$evaluate_signed = '';
+			$pass_signed     = '';
+
+			if ( self::TAB_PASS === $status ) {
+				$where['CAST(evaluate_mark.meta_value AS SIGNED) >= CAST(pass_mark.meta_value AS SIGNED)'] = array(
+					'RAW',
+					array(),
+				);
+			} else {
+				$where['CAST(evaluate_mark.meta_value AS SIGNED) < CAST(pass_mark.meta_value AS SIGNED)'] = array(
+					'RAW',
+					array(),
+				);
+			}
+		}
+
+		$results = (object) QueryHelper::get_joined_data(
+			$primary_tables,
+			$joining_tables,
+			array( '*' ),
+			$where,
+			$search_clause,
+			'submit.comment_date',
+			$limit,
+			$offset,
+			$order,
+			'OBJECT',
 		);
-		//phpcs:enable
 
 		return $results;
 	}
@@ -616,36 +426,13 @@ class Assignments_List {
 					{$wpdb->comments} 
 			  	WHERE 
 					comment_type = 'tutor_assignment' 
-					AND comment_post_ID = %d 
+					AND comment_post_ID = %d
+					AND comment_approved = 'submitted'
 			  	ORDER BY 
 				  	comment_ID $order_filter", //phpcs:ignore
 				$assignment_id
 			)
 		);
 		return is_array( $assignments ) && count( $assignments ) ? $assignments : array();
-	}
-
-	/**
-	 * Count total comment for an assignment
-	 *
-	 * @param integer $id assignment id.
-	 *
-	 * @return integer
-	 */
-	public static function assignment_comment_count( int $id ): int {
-		global $wpdb;
-		$count = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT
-					COUNT(comment_ID)
-				FROM 
-					{$wpdb->comments}
-				WHERE 
-					comment_type = 'tutor_assignment'
-					AND comment_post_ID = %d",
-				$id
-			)
-		);
-		return (int) $count;
 	}
 }

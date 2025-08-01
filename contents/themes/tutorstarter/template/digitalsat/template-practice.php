@@ -2666,7 +2666,7 @@ answerBox.forEach(answer => {
     setTimeout(function(){
         console.log("Show Test!");
         document.getElementById("start_test").style.display="block";
-        hidePreloader();
+        
         document.getElementById("welcome").style.display="block";
 
     }, 1000);
@@ -2769,7 +2769,7 @@ echo '
 <script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_practice/report-error.js"></script>
 <script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_practice/note-sidebar.js"></script>
 
-<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_practice/submit_answer_4.js"></script>
+<script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_practice/submit_answer_5.js"></script>
 <!--<script type="module" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_practice/check_dev_tool.js"></script>
     -->
 <script type="text/javascript" src="'. $site_url .'/contents/themes/tutorstarter/system-test-toolkit/function_practice/highlight_text_3.js"></script>

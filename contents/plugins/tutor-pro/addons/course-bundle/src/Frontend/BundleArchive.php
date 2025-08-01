@@ -15,7 +15,6 @@ use TUTOR\Input;
 use Tutor\Models\CourseModel;
 use TutorPro\CourseBundle\CustomPosts\CourseBundle;
 use TutorPro\CourseBundle\CustomPosts\ManagePostMeta;
-use TutorPro\CourseBundle\MetaBoxes\BundlePrice;
 use TutorPro\CourseBundle\Models\BundleModel;
 use TutorPro\CourseBundle\Utils;
 
@@ -42,6 +41,7 @@ class BundleArchive {
 		add_filter( 'tutor_course_filter_args', array( $this, 'course_filter_args' ) );
 		add_filter( 'tutor_course_thumbnail_placeholder', array( $this, 'bundle_thumbnail_placeholder' ), 10, 2 );
 		add_action( 'tutor_after_course_loop_rating', array( $this, 'add_bundle_info' ) );
+		add_action( 'tutor_my_courses_before_meta', array( $this, 'add_bundle_info' ) );
 		add_filter( 'tutor_show_course_ratings', array( $this, 'show_course_ratings' ), 10, 2 );
 		add_filter( 'tutor_course_students', array( $this, 'bundle_students' ), 10, 2 );
 		add_filter( 'tutor_course/loop/start/button', array( $this, 'loop_start_button' ), 10, 2 );
@@ -157,14 +157,14 @@ class BundleArchive {
 
 		$bundle_course_ids = BundleModel::get_bundle_course_ids( $post_id );
 		$ribbon_type       = ManagePostMeta::get_ribbon_type( $post_id );
-		$bundle_sale_price = BundlePrice::get_bundle_sale_price( $post_id );
+		$bundle_sale_price = BundleModel::get_bundle_sale_price( $post_id );
 		?>
 			<!-- Show bundle discount badge -->
 
 			<?php if ( BundleModel::RIBBON_NONE !== $ribbon_type && $bundle_sale_price > 0 ) : ?>
 			<div class="tutor-bundle-discount-info">
 				<div class="tutor-bundle-save-text"><?php esc_html_e( 'SAVE', 'tutor-pro' ); ?></div>
-				<div class="tutor-bundle-save-amount"><?php echo esc_html( BundlePrice::get_bundle_discount_by_ribbon( $post_id, $ribbon_type ) ); ?></div>
+				<div class="tutor-bundle-save-amount"><?php echo esc_html( BundleModel::get_bundle_discount_by_ribbon( $post_id, $ribbon_type ) ); ?></div>
 			</div>
 			<?php endif; ?>
 

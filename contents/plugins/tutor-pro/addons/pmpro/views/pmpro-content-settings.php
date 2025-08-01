@@ -24,7 +24,7 @@
 	 */
 	function generate_categories_for_pmpro( $cats, $level_categories = array() ) {
 
-		if ( ! count( $cats ) ) {
+		if ( ! tutor_utils()->count( $cats ) ) {
 			return;
 		}
 

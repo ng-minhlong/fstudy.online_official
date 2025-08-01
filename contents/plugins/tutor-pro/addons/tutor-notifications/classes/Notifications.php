@@ -347,7 +347,6 @@ class Notifications {
 		$attempt    = tutor_utils()->get_attempt( $attempt_id );
 		$quiz_title = get_post_field( 'post_title', $attempt->quiz_id );
 		$course     = get_post( $attempt->course_id );
-		$feedback   = get_post_meta( $attempt_id, 'instructor_feedback', true );
 
 		$message_type   = 'Quiz';
 		$message_status = 'UNREAD';

@@ -56,8 +56,8 @@ if ( tutor_utils()->is_enrolled( $course_id ) || tutor_utils()->has_user_course_
 									?>
 								</h3>
 								<div>
-									<p>
-										<?php esc_html_e( 'Date', 'tutor-pro' ); ?>: <span><?php echo esc_html( $zoom_meeting->start_date ); ?></span>
+									<p title="<?php echo esc_attr( $zoom_meeting->timezone ); ?>">
+										<?php esc_html_e( 'Date', 'tutor-pro' ); ?>: <span><?php echo esc_html( tutor_i18n_get_formated_date( $zoom_meeting->start_date ) ); ?></span>
 									</p>
 									<p>
 										<?php esc_html_e( 'Password', 'tutor-pro' ); ?>: <span><?php echo esc_html( $meeting_data['password'] ); ?></span> <i class="tutor-icon-copy tutor-copy-text" data-text="<?php echo esc_attr( $meeting_data['password'] ); ?>"></i>

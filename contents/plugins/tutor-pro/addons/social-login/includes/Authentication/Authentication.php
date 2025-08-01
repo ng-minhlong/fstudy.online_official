@@ -155,12 +155,11 @@ class Authentication {
 			 * @since 2.2.0
 			 */
 			if ( 'google' === $request['auth'] ) {
-				$user_login            = strstr( $request['email'], '@', true );
-				$request['user_login'] = $user_login;
+				$request['user_login'] = tutor_utils()->create_unique_username( $request['email'] );
 			}
 
 			if ( ! empty( $request['user_login'] ) ) {
-				$request['user_login'] = self::create_unique_username( $request['user_login'] );
+				$request['user_login'] = tutor_utils()->create_unique_username( $request['user_login'] );
 			}
 
 			// Prepare registration.
@@ -255,7 +254,7 @@ class Authentication {
 						$last_name  = $name_chunks[ $max_index ];
 					}
 
-					$response_user_data['screen_name'] = self::create_unique_username( $response_user_data['screen_name'] );
+					$response_user_data['screen_name'] = tutor_utils()->create_unique_username( $response_user_data['screen_name'] );
 
 					$email           = $response_user_data['email'];
 					$user_login      = $response_user_data['screen_name'];
@@ -351,24 +350,6 @@ class Authentication {
 			delete_transient( 'twitter_login_is_instructor' );
 			wp_safe_redirect( tutor_utils()->tutor_dashboard_url() );
 		}
-	}
-
-	/**
-	 * Create unique username if duplicate exists
-	 *
-	 * @since 2.2.0
-	 *
-	 * @param string $username Username.
-	 *
-	 * @return string
-	 */
-	public static function create_unique_username( string $username ) {
-		$is_user_exists = get_user_by( 'login', $username );
-		if ( $is_user_exists ) {
-			$username = $username . '_' . time();
-		}
-
-		return $username;
 	}
 
 	/**

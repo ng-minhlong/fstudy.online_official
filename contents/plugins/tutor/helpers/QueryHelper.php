@@ -79,7 +79,8 @@ class QueryHelper {
 	}
 
 	/**
-	 * Delete rows from table
+	 * Delete a row from table with where clause.
+	 * Limitation: It can only delete one row by wpdb::delete
 	 *
 	 * @param string $table  table name.
 	 * @param array  $where  key value pairs.Where key is the name of
@@ -95,6 +96,22 @@ class QueryHelper {
 			$where
 		);
 		return $delete ? true : false;
+	}
+
+	/**
+	 * Bulk record delete by where clause.
+	 *
+	 * @since 3.7.0
+	 *
+	 * @param string $table table name.
+	 * @param array  $where where clause.
+	 *
+	 * @return int|boolean
+	 */
+	public static function bulk_delete( $table, array $where ): bool {
+		$where_clause = self::build_where_clause( $where );
+		global $wpdb;
+		return $wpdb->query( "DELETE FROM {$table} WHERE {$where_clause}" ); //phpcs:ignore --$where clause sanitized.
 	}
 
 	/**
@@ -147,15 +164,18 @@ class QueryHelper {
 	 * Insert multiple rows without knowing key value
 	 *
 	 * @since v2.0.7
+	 * @since 3.6.0 param $return_ids added.
 	 *
 	 * @param string $table  table name.
 	 * @param array  $request two dimensional array
 	 * for ex: [ [id => 1], [id => 2] ].
+	 * @param bool   $return_ids if true returns the last inserted data ids.
+	 * @param bool   $do_sanitize sanitize data or not.
 	 *
 	 * @return mixed  wpdb response true or int on success, false on failure.
 	 * @throws \Exception If error occur.
 	 */
-	public static function insert_multiple_rows( $table, $request ) {
+	public static function insert_multiple_rows( $table, $request, $return_ids = false, $do_sanitize = true ) {
 		global $wpdb;
 		$column_keys   = '';
 		$column_values = '';
@@ -168,7 +188,10 @@ class QueryHelper {
 			// Prepare column keys & values.
 			foreach ( $keys as $v ) {
 				$column_keys   .= sanitize_key( $v ) . ',';
-				$sanitize_value = is_null( $value[ $v ] ) ? $value[ $v ] : sanitize_text_field( $value[ $v ] );
+				$sanitize_value = $value[ $v ];
+				if ( $sanitize_value && $do_sanitize ) {
+					$sanitize_value = sanitize_text_field( $sanitize_value );
+				}
 				$column_values .= is_numeric( $sanitize_value ) ? $sanitize_value . ',' : "'$sanitize_value'" . ',';
 			}
 			// Trim trailing comma.
@@ -197,6 +220,16 @@ class QueryHelper {
 			throw new \Exception( $wpdb->last_error );
 		}
 
+		if ( $return_ids ) {
+			$query_ids = $wpdb->get_results(
+				//phpcs:ignore
+				"SELECT ID FROM {$table} WHERE ID >= LAST_INSERT_ID()",
+				'ARRAY_N'
+			);
+
+			return $query_ids;
+		}
+
 		return true;
 	}
 
@@ -215,43 +248,161 @@ class QueryHelper {
 	public static function make_clause( array $where ) {
 		list ( $field, $operator, $value ) = $where;
 
-		if ( 'IN' === strtoupper( $operator ) ) {
+		$upper_operator = strtoupper( $operator );
+		if ( in_array( $upper_operator, array( 'IN', 'NOT IN' ), true ) ) {
 			$value = '(' . self::prepare_in_clause( $value ) . ')';
 		}
 
-		return "{$field} {$operator} {$value}";
+		return "{$field} {$upper_operator} {$value}";
+	}
+
+	/**
+	 * Check operator is supported.
+	 *
+	 * @since 3.5.0
+	 *
+	 * @param string $operator operator like =, !=, > , < etc.
+	 *
+	 * @return boolean
+	 */
+	public static function is_support_operator( $operator ) {
+		$operator = strtoupper( $operator );
+
+		return in_array(
+			$operator,
+			array(
+				'=',
+				'!=',
+				'<>',
+				'>',
+				'<',
+				'>=',
+				'<=',
+				'LIKE',
+				'NOT LIKE',
+				'IN',
+				'NOT IN',
+				'IS',
+				'IS NOT',
+				'BETWEEN',
+				'NOT BETWEEN',
+				'RAW',
+			),
+			true
+		);
 	}
 
 	/**
 	 * Build where clause string
 	 *
-	 * @param   array $where assoc array with field and value.
-	 * @return  string
-	 *
 	 * @since 2.0.9
+	 * @since 3.0.0 Null value support added, if need to check with null: [name => 'null']
+	 * @since 3.5.0 All common SQL comparison operators support added.
+	 *              $where = array(
+	 *                  'id'         => ['BETWEEN', [10, 20]],
+	 *                  'status'     => ['!=', 'draft'],
+	 *                  'email'      => ['LIKE', '%@gmail.com'],
+	 *                  'type'       => ['NOT IN', ['test', 'sample']],
+	 *                  'age'        => ['>=', 18],
+	 *                  'active'     => true,
+	 *                  'deleted_at' => 'null',
+	 *                  'role'       => 'editor',
+	 *              )
+	 * @since 3.6.0 Added raw query support. Make sure the query written is not sql injectable.
+	 *              $where = array(
+	 *                  'username = %s' =>  [ 'RAW' , array( 'test' ) ]
+	 *              )
+	 * @param   array $where assoc array with field and value.
 	 *
-	 * @since 3.0.0
-	 * Null value support added, if need to check with
-	 * null: [name => 'null'] we can pass
+	 * @return  string
 	 */
 	public static function build_where_clause( array $where ) {
 		$arr = array();
 		foreach ( $where as $field => $value ) {
-			if ( is_array( $value ) ) {
-				$value = array( $field, 'IN', $value );
+			$operator = null;
+			if ( is_array( $value ) && isset( $value[0] ) && is_string( $value[0] ) && self::is_support_operator( $value[0] ) ) {
+				$operator = strtoupper( $value[0] );
+				$val      = $value[1];
+				switch ( $operator ) {
+					case 'IN':
+					case 'NOT IN':
+						if ( is_array( $val ) ) {
+							$clause = array( $field, $operator, $val );
+						}
+						break;
+
+					case 'BETWEEN':
+					case 'NOT BETWEEN':
+						if ( is_array( $val ) && count( $val ) === 2 ) {
+							$val1   = is_numeric( $val[0] ) ? $val[0] : "'" . $val[0] . "'";
+							$val2   = is_numeric( $val[1] ) ? $val[1] : "'" . $val[1] . "'";
+							$clause = array( $field, $operator, "{$val1} AND {$val2}" );
+						}
+						break;
+
+					case 'IS':
+					case 'IS NOT':
+						$val    = strtoupper( $val ) === 'NULL' ? 'NULL' : "'" . $val . "'";
+						$clause = array( $field, $operator, $val );
+						break;
+					case 'RAW':
+						$final_query = '';
+						if ( ! empty( $field ) && is_array( $val ) ) {
+							$final_query = self::prepare_raw_query( $field, $val );
+						}
+						$clause = $final_query;
+						break;
+					default: // =, !=, <, >, <=, >=, LIKE, NOT LIKE, <>
+						$val    = is_numeric( $val ) ? $val : "'" . $val . "'";
+						$clause = array( $field, $operator, $val );
+						break;
+				}
+			} elseif ( is_array( $value ) ) {
+				$clause = array( $field, 'IN', $value );
 			} else {
-				if ( 'null' == $value ) {
-					$value = array( $field, 'IS', 'NULL' );
+				if ( 'null' === strtolower( $value ) ) {
+					$clause = array( $field, 'IS', 'NULL' );
 				} else {
-					$value = is_numeric( $value ) ? $value : "'" . $value . "'";
-					$value = array( $field, '=', $value );
+					$value  = is_numeric( $value ) ? $value : "'" . $value . "'";
+					$clause = array( $field, '=', $value );
 				}
 			}
 
-			$arr[] = self::make_clause( $value );
+			$arr[] = ( 'RAW' === $operator ) ? $clause : self::make_clause( $clause );
 		}
 
 		return implode( ' AND ', $arr );
+	}
+
+	/**
+	 * Prepare raw query for query helper.
+	 *
+	 * @since 3.6.0
+	 *
+	 * @param string $raw_query the query to execute.
+	 * @param array  $parameters the parameters to pass to the query.
+	 *
+	 * @return string
+	 */
+	public static function prepare_raw_query( $raw_query, $parameters ) {
+		/**
+		 * Not allowed unsafe SQL control characters  [;, --, /*]
+		 * Allowed safe SQL control characters only.
+		 */
+		$is_safe = preg_match( '/^[a-zA-Z0-9_%\.=\s\'"<>\(\)\-\[\],]+$/', $raw_query );
+		if ( ! $is_safe ) {
+			return '';
+		}
+
+		if ( ! count( $parameters ) ) {
+			return $raw_query;
+		}
+
+		global $wpdb;
+
+		$final_query = $wpdb->prepare( $raw_query, $parameters ); //phpcs:ignore
+
+		return $final_query;
 	}
 
 	/**
@@ -502,7 +653,7 @@ class QueryHelper {
 	/**
 	 * Make sanitized SQL IN clause value from an array
 	 *
-	 * @param array $arr a sequentital array.
+	 * @param array $arr a sequential array.
 	 * @return string
 	 * @since 2.1.1
 	 */
@@ -865,6 +1016,103 @@ class QueryHelper {
 		}
 
 		return $period_clause;
+	}
+
+	/**
+	 * Get last executed SQL query.
+	 *
+	 * @since 3.6.0
+	 *
+	 * @return string
+	 */
+	public static function get_last_query(){
+		global $wpdb;
+		return $wpdb->last_query;
+	}
+
+	/**
+	 * Get table prefix.
+	 *
+	 * @since 3.7.0
+	 *
+	 * @return string
+	 */
+	public static function get_table_prefix() {
+		global $wpdb;
+		return $wpdb->prefix;
+	}
+
+	/**
+	 * Prepare table name with prefix.
+	 *
+	 * @since 3.7.0
+	 *
+	 * @param string $table_name table name.
+	 *
+	 * @return string
+	 */
+	public static function prepare_table_name( string $table_name ) {
+		$table_prefix = self::get_table_prefix();
+		if ( strpos( $table_name,$table_prefix ) !== 0 ) {
+			$table_name = $table_prefix . $table_name;
+		}
+
+		return $table_name;
+	}
+
+	/**
+	 * Duplicate a row with modification callback support.
+	 *
+	 * @since 3.7.0
+	 *
+	 * @param string             $table_name name of the database table (with prefix if needed).
+	 * @param array              $where      associative array of WHERE conditions.
+	 * @param callable|null      $modifier   optional callback to modify or exclude fields before insertion.
+	 *
+	 * @return int|WP_Error      New row ID on success, or WP_Error on failure.
+	 */
+	public static function duplicate_row( $table_name, array $where, ?callable $modifier = null ) {
+		global $wpdb;
+
+		if ( empty( $where ) ) {
+			return new \WP_Error( 'missing_where', 'No WHERE condition provided.' );
+		}
+
+		$where_clause = self::build_where_clause( $where );
+		$sql          = $wpdb->prepare( "SELECT * FROM `$table_name` WHERE {$where_clause} LIMIT %d", 1 );
+		$row          = $wpdb->get_row( $sql, ARRAY_A );
+
+		if ( ! $row ) {
+			return new \WP_Error( 'not_found', 'No matching row found to duplicate.' );
+		}
+
+		// Apply user-defined modifications (ex: remove ID, change field value)
+		if ( is_callable( $modifier ) ) {
+			$row = call_user_func( $modifier, $row );
+
+			if ( ! is_array( $row ) || empty( $row ) ) {
+				return new \WP_Error( 'invalid_modified_row', 'Modified row is invalid or empty.' );
+			}
+		}
+
+		// Prepare insert
+		$columns      = array_keys( $row );
+		$placeholders = array_fill( 0, count( $columns ), '%s' );
+		$values       = array_values( $row );
+
+		$insert_sql = $wpdb->prepare(
+			"INSERT INTO `$table_name` (`" . implode( '`, `', $columns ) . "`) 
+			VALUES (" . implode( ', ', $placeholders ) . ")",
+			...$values
+		);
+
+		$result = $wpdb->query( $insert_sql );
+
+		if ( false === $result ) {
+			return new \WP_Error( 'insert_failed', 'Failed to insert duplicate row.' );
+		}
+
+		return $wpdb->insert_id;
 	}
 
 }

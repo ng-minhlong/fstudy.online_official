@@ -29,7 +29,7 @@
 				<table class="tutor-email-datatable">
 					<tr>
 						<td class="label"><?php esc_html_e( 'Withdraw Amount:', 'tutor-pro' ); ?></td>
-						<td><strong>{withdraw_amount} <?php esc_html_e( 'USD', 'tutor-pro' ); ?></strong></td>
+						<td><strong>{withdraw_amount}</strong></td>
 					</tr>
 				</table>
 

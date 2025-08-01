@@ -507,7 +507,7 @@ class Tutor_Setup {
 					'currency_position' => array(
 						'type'    => 'select',
 						'options' => $currency_positions,
-						'lable'   => __( 'Currency Position', 'tutor' ),
+						'lable'   => __( 'Currency Symbol Position', 'tutor' ),
 						'tooltip' => __( 'Set the position of the currency symbol', 'tutor' ),
 					),
 
@@ -692,7 +692,7 @@ class Tutor_Setup {
 							<img src="<?php echo esc_url( tutor()->url ) . 'assets/images/setup/welcome-to-tutor-lms.png'; ?>" />
 
 							<p class="description">
-								<?php esc_html_e( 'Get started with an all-in-one platform to create, manage, and sell your courses effortlessly—trusted by over 90,000 eLearning websites worldwide.', 'tutor' ); ?>
+								<?php esc_html_e( 'Get started with an all-in-one platform to create, manage, and sell your courses effortlessly—trusted by over 100,000 eLearning websites worldwide.', 'tutor' ); ?>
 							</p>
 						</div>
 						<div class="">
@@ -838,8 +838,9 @@ class Tutor_Setup {
 		$page = Input::get( 'page', '' );
 		if ( 'tutor-setup' === $page ) {
 			wp_enqueue_style( 'tutor-setup', tutor()->url . 'assets/css/tutor-setup.min.css', array(), TUTOR_VERSION );
-			wp_register_script( 'tutor-setup', tutor()->url . 'assets/js/tutor-setup.min.js', array( 'jquery', 'wp-i18n' ), TUTOR_VERSION, true );
+			wp_register_script( 'tutor-setup', tutor()->url . 'assets/js/tutor-setup.js', array( 'jquery', 'wp-i18n' ), TUTOR_VERSION, true );
 			wp_localize_script( 'tutor-setup', '_tutorobject', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
+			wp_set_script_translations( 'tutor-setup', 'tutor', tutor()->path . 'languages/' );
 		}
 	}
 

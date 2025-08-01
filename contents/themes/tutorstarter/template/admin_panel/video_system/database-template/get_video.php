@@ -1,11 +1,11 @@
 <?php
-require_once('C:\xampp\htdocs\wordpress\wp-load.php');
+require_once(__DIR__ . '/../../../admin_panel/config-custom.php');
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     global $wpdb;
 
     $number = intval($_POST['number']);
-    $result = $wpdb->get_row($wpdb->prepare("SELECT * FROM video_link_generator WHERE number = %d", $number));
+    $result = $wpdb->get_row($wpdb->prepare("SELECT * FROM lessons_management WHERE number = %d", $number));
 
     if ($result) {
         // Return JSON response

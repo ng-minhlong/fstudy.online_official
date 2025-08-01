@@ -34,8 +34,8 @@ $earning_order_icon = 'earning' === $orderby ? ( strtolower( $order ) == 'asc' ?
 
 $search = Input::get( 'search', '' );
 
-$courses      = Analytics::get_courses_with_total_enroll_earning( $user->ID, $sort_order['order'], is_null( $orderby ) ? '' : $orderby, $offset, $per_page, $search );
-$total_course = Analytics::get_courses_with_search_by_user( $user->ID, $search );
+$courses      = Analytics::get_courses_with_total_enroll_earning( $user->ID, $sort_order['order'], is_null( $orderby ) ? '' : $orderby, $offset, $per_page, $search, array( 'publish', 'private' ) );
+$total_course = Analytics::get_courses_with_search_by_user( $user->ID, $search, array( 'publish', 'private' ) );
 
 ?>
 

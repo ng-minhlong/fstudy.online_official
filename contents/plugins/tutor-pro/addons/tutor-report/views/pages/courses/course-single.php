@@ -136,7 +136,7 @@ $edit_course_link = admin_url( "admin.php?page=create-course&course_id=$current_
 					<?php echo esc_html( number_format( $course_rating->rating_avg, 2 ) ); ?>
 					(
 					<?php
-						$text = _n( 'Rating', 'Ratings', $course_rating->rating_count );
+						$text = _n( 'Rating', 'Ratings', $course_rating->rating_count, 'tutor-pro' );
 						// translators: %s: number of ratings.
 						echo esc_html( sprintf( __( '%1$s %2$s', 'tutor-pro' ), $course_rating->rating_count, $text ) );
 					?>
@@ -153,7 +153,7 @@ $edit_course_link = admin_url( "admin.php?page=create-course&course_id=$current_
 			</div>
 			<div class="tutor-admin-report-frequency-wrapper" style="min-width: 260px;">
 				<?php tutor_load_template_from_custom_path( TUTOR_REPORT()->path . 'templates/elements/frequency.php' ); ?>
-				<div class="tutor-v2-date-range-picker inactive" style="width: 305px; position:absolute; z-index: 99;"></div>
+				<div class="tutor-v2-date-range-picker inactive"></div>
 			</div>
 		</div>
 		<div class="tutor-overview-month-graph">

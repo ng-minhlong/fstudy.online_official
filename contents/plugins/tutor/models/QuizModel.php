@@ -52,6 +52,7 @@ class QuizModel {
 				INNER JOIN {$wpdb->posts} topic ON quiz.post_parent=topic.ID 
 				INNER JOIN {$wpdb->posts} course ON topic.post_parent=course.ID 
 			WHERE course.post_type=%s
+				AND course.post_status = 'publish'
 				AND quiz.post_type='tutor_quiz'";
 
 		//phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
@@ -461,7 +462,6 @@ class QuizModel {
 					INNER JOIN {$wpdb->posts} quiz ON quiz_attempts.quiz_id = quiz.ID
 					INNER JOIN {$wpdb->users} AS users ON quiz_attempts.user_id = users.ID
 					INNER JOIN {$wpdb->posts} AS course ON course.ID = quiz_attempts.course_id
-					-- INNER JOIN {$wpdb->prefix}tutor_quiz_attempt_answers AS ans ON quiz_attempts.attempt_id = ans.quiz_attempt_id
 					{$instructor_clause}
 			WHERE 	quiz_attempts.attempt_ended_at IS NOT NULL
 					AND (
@@ -612,10 +612,7 @@ class QuizModel {
 		}
 
 		$order = ' answer_order ASC ';
-		if ( 'ordering' === $question->question_type ) {
-			$order = ' RAND() ';
-		}
-
+		
 		if ( $rand ) {
 			$order = ' RAND() ';
 		}

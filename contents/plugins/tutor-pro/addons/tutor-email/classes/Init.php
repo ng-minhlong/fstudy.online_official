@@ -96,6 +96,8 @@ class Init {
 			$template = Input::get( 'template' );
 			$file     = tutor_get_template( 'email.' . $template, true );
 			if ( file_exists( $file ) ) {
+				status_header( 200 );
+
 				ob_start();
 				include $file;
 				$footer_text = '<div class="tutor-email-footer-content" data-source="email_footer_text">' . json_decode( tutor_utils()->get_option( 'email_footer_text' ) ) . '</div>';

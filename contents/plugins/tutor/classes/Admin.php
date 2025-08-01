@@ -58,7 +58,7 @@ class Admin {
 
 		// Handle flash toast message for redirect_to util helper.
 		add_action( 'admin_head', array( new Utils(), 'handle_flash_message' ), 999 );
-		// add_action( 'tutor_after_settings_menu', '\TUTOR\WhatsNew::whats_new_menu', 11 );
+		add_action( 'tutor_after_settings_menu', '\TUTOR\WhatsNew::whats_new_menu', 11 );
 
 		add_action( 'admin_bar_menu', array( $this, 'add_toolbar_items' ), 100 );
 
@@ -133,17 +133,16 @@ class Admin {
 		// Added @since v2.0.0.
 		add_submenu_page( 'tutor', __( 'Courses', 'tutor' ), __( 'Courses', 'tutor' ), 'manage_tutor_instructor', 'tutor', array( $this, 'tutor_course_list' ) );
 
-		if ( '3.0.0' !== get_option( 'tutor-new-feature' ) ) {
-			add_submenu_page( 'tutor', __( 'What\'s New', 'tutor' ), sprintf( '<span class="tutor-new-feature tutor-text-orange">%s</span>', __( 'What\'s New', 'tutor' ) ), 'manage_tutor', 'tutor-new-feature', array( $this, 'feature_promotion_page' ) );
-		}
-
 		// Ecommerce menu @since 3.0.0.
 		do_action( 'tutor_after_courses_admin_menu' );
 
-		add_submenu_page( 'tutor', __( 'Create Course', 'tutor' ), __( '<span class="tutor-create-course">Create Course</span>', 'tutor' ), 'manage_tutor_instructor', 'create-course', '__return_true' );
+		add_submenu_page( 'tutor', __( 'Course Builder', 'tutor' ), '<span class="tutor-create-course">Create Course</span>', 'manage_tutor_instructor', 'create-course', array( new Course( false ), 'load_course_builder' ) );
 
 		// Extendable action hook @since 2.2.0.
 		do_action( 'tutor_after_courses_menu' );
+
+		// Templates menu @since 3.6.0.
+		add_submenu_page( 'tutor', __( 'Themes', 'tutor' ), __( 'Themes', 'tutor' ), 'manage_tutor', 'tutor-themes', array( $this, 'tutor_themes' ) );
 
 		add_submenu_page( 'tutor', __( 'Categories', 'tutor' ), __( 'Categories', 'tutor' ), 'manage_tutor', 'edit-tags.php?taxonomy=course-category&post_type=' . $course_post_type, null );
 
@@ -175,6 +174,15 @@ class Admin {
 		if ( ! $has_pro ) {
 			add_submenu_page( 'tutor', __( 'Upgrade to Pro', 'tutor' ), sprintf( '<span class="tutor-get-pro-text">%s</span>', __( 'Upgrade to Pro', 'tutor' ) ), 'manage_options', 'tutor-get-pro', array( $this, 'tutor_get_pro' ) );
 		}
+	}
+
+	/**
+	 * Tutor template view
+	 *
+	 * @since 3.6.0
+	 */
+	public function tutor_themes() {
+		include tutor()->path . 'views/template-import/templates.php';
 	}
 
 	/**
@@ -522,7 +530,7 @@ class Admin {
 			$actions['tutor_pro_link'] =
 				'<a href="https://tutorlms.com/pricing?utm_source=tutor_plugin_action_link&utm_medium=wordpress_dashboard&utm_campaign=go_premium" target="_blank">
 					<span style="color: #ff7742; font-weight: bold;">' .
-						__( 'Upgrade to Pro', 'wp-megamenu' ) .
+						__( 'Upgrade to Pro', 'tutor' ) .
 					'</span>
 				</a>';
 		}
@@ -546,14 +554,14 @@ class Admin {
 
 		if ( tutor()->basename === $plugin_file ) {
 			$plugin_meta[] = sprintf(
-				'<a href="%s">%s</a>',
+				'<a href="%s"><strong style="color: #03bd24">%s</strong></a>',
 				esc_url( 'https://docs.themeum.com/tutor-lms/?utm_source=tutor&utm_medium=plugins_installation_list&utm_campaign=plugin_docs_link' ),
-				__( '<strong style="color: #03bd24">Documentation</strong>', 'tutor' )
+				esc_html__( 'Documentation', 'tutor' )
 			);
 			$plugin_meta[] = sprintf(
-				'<a href="%s">%s</a>',
+				'<a href="%s"><strong style="color: #03bd24">%s</strong></a>',
 				esc_url( 'https://www.themeum.com/contact-us/?utm_source=tutor&utm_medium=plugins_installation_list&utm_campaign=plugin_support_link' ),
-				__( '<strong style="color: #03bd24">Get Support</strong>', 'tutor' )
+				esc_html__( 'Get Support', 'tutor' )
 			);
 		}
 
@@ -593,7 +601,7 @@ class Admin {
 	 * @return void
 	 */
 	public function register_course_widget() {
-		register_widget( 'Tutor\Course_Widget' );
+		register_widget( Course_Widget::class );
 	}
 
 	/**
@@ -678,15 +686,15 @@ class Admin {
 		$course_id        = Input::get( 'post', 0, Input::TYPE_INT );
 		$course_post_type = tutor()->course_post_type;
 
-		if ( ! tutor_utils()->can_user_edit_course( get_current_user_id(), $course_id ) ) {
-			return $admin_bar;
-		}
-
 		if ( $admin_bar->get_node( 'new-courses' ) ) {
 			$args                = $admin_bar->get_node( 'new-courses' );
 			$args->href          = '#';
 			$args->meta['class'] = 'tutor-create-new-course';
 			$admin_bar->add_node( $args );
+		}
+
+		if ( ! tutor_utils()->can_user_edit_course( get_current_user_id(), $course_id ) ) {
+			return $admin_bar;
 		}
 
 		if (

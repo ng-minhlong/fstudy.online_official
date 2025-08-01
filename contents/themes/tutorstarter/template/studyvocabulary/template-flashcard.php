@@ -398,7 +398,7 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = `${siteUrl}/practice/vocabulary/package/${packageId}/${currentIdTest}/test/`;
     });
 });
-hidePreloader();
+
 </script>
 
 

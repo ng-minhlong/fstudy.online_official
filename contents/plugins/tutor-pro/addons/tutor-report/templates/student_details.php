@@ -17,7 +17,7 @@ if ( ! $student_id || ! $student_details ) {
 	esc_html_e( 'Invalid student', 'tutor-pro' );
 	return;
 }
-$courses = tutor_utils()->get_courses_by_student_instructor_id( $student_id, $user->ID );
+$courses = tutor_utils()->get_courses_by_student_instructor_id( $student_id, $user->ID, array( 'publish', 'private' ) );
 ?>
 
 <div class="analytics-student-details tutor-user-public-profile tutor-user-public-profile-pp-circle">
@@ -166,12 +166,12 @@ $courses = tutor_utils()->get_courses_by_student_instructor_id( $student_id, $us
 							<img class="tutor-d-inline-block" src="<?php echo esc_url( tutor()->url . 'assets/images/icon-trash.svg' ); ?>" />
 						</div>
 
-						<div class="tutor-fs-3 tutor-fw-medium tutor-color-black tutor-mb-12"><?php esc_html_e( 'Delete This Question?', 'tutor' ); ?></div>
-						<div class="tutor-fs-6 tutor-color-muted"><?php esc_html_e( 'All the replies also will be deleted.', 'tutor' ); ?></div>
+						<div class="tutor-fs-3 tutor-fw-medium tutor-color-black tutor-mb-12"><?php esc_html_e( 'Delete This Question?', 'tutor-pro' ); ?></div>
+						<div class="tutor-fs-6 tutor-color-muted"><?php esc_html_e( 'All the replies also will be deleted.', 'tutor-pro' ); ?></div>
 						
 						<div class="tutor-d-flex tutor-justify-center tutor-my-48">
 							<button data-tutor-modal-close class="tutor-btn tutor-btn-outline-primary">
-								<?php esc_html_e( 'Cancel', 'tutor' ); ?>
+								<?php esc_html_e( 'Cancel', 'tutor-pro' ); ?>
 							</button>
 							<button class="tutor-btn tutor-btn-primary tutor-list-ajax-action tutor-ml-20" data-request_data='{"question_id":<?php echo esc_attr( isset( $qna ) && is_object( $qna ) ? $qna->comment_ID : '' ); ?>,"action":"tutor_delete_dashboard_question"}' data-delete_element_id="<?php echo esc_html( isset( $row_id ) ? $row_id : '' ); ?>">
 								<?php esc_html_e( 'Yes, Delete This', 'tutor-pro' ); ?>

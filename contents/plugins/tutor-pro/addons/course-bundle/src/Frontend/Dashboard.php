@@ -33,36 +33,23 @@ class Dashboard {
 	 */
 	public function __construct() {
 		add_filter( 'tutor_wishlist_post_types', array( $this, 'add_wishlist_post_types' ) );
-		add_filter( 'tutor_pro_create_new_course_button', array( $this, 'change_create_course_button' ) );
-
+		add_action( 'tutor_course_create_button', array( $this, 'create_bundle_button' ) );
 	}
 
 	/**
-	 * Change  create course button.
+	 * Add create new bundle button on dashboard page.
 	 *
-	 * @since 2.2.0
+	 * @since 3.5.0
 	 *
-	 * @param string $btn btn HTML.
-	 *
-	 * @return string
+	 * @return void
 	 */
-	public function change_create_course_button( $btn ) {
-		global $wp_query;
-		$query_vars   = $wp_query->query_vars;
-		$is_dashboard = isset( $query_vars['tutor_dashboard_page'] );
-
-		if ( $is_dashboard && 'my-bundles' === $query_vars['tutor_dashboard_page'] ) {
-			ob_start();
-			?>
-			<a href="#" data-source="frontend" class="tutor-add-new-course-bundle tutor-btn tutor-btn-outline-primary">
-				<i class="tutor-icon-plus-square tutor-my-n4 tutor-mr-8"></i>
-				<?php esc_html_e( 'Create a New Bundle', 'tutor-pro' ); ?>
-			</a>
-			<?php
-			return ob_get_clean();
-		}
-
-		return $btn;
+	public function create_bundle_button() {
+		?>
+		<a href="#" data-source="frontend" class="tutor-add-new-course-bundle tutor-mr-8 tutor-btn tutor-btn-outline-primary">
+			<i class="tutor-icon-bundle tutor-mr-8"></i>
+			<?php esc_html_e( 'New Bundle', 'tutor-pro' ); ?>
+		</a>
+		<?php
 	}
 
 	/**
