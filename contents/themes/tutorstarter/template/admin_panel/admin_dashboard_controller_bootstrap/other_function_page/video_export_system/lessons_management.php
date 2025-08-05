@@ -136,6 +136,8 @@ $result = $conn->query($sql);
         <th>abyss_status</th>
         <th>bunny_slug</th>
         <th>bunny_status</th>
+        <th>external_url</th>
+        <th>external_url_status</th>
         <th>order</th>
         <th>Actions</th>
     </tr>
@@ -154,6 +156,8 @@ $result = $conn->query($sql);
                         <td>{$row['abyss_status']}</td>
                         <td>{$row['bunny_slug']}</td>
                         <td>{$row['bunny_status']}</td>
+                        <td>{$row['external_url']}</td>
+                        <td>{$row['external_url_status']}</td>
                         <td>{$row['order']}</td>
                         <td>";
         
@@ -235,6 +239,8 @@ $result = $conn->query($sql);
                     abyss_status <input type="text" id="edit_abyss_status" name="abyss_status" class="form-control" required><br>
                     bunny_slug <input type="text" id="edit_bunny_slug" name="bunny_slug" class="form-control" required><br>
                     bunny_status <input type="text" id="edit_bunny_status" name="bunny_status" class="form-control" required><br>
+                    external_url <input type="text" id="edit_external_url" name="external_url" class="form-control" required><br>
+                    external_url_status <input type="text" id="edit_external_url_status" name="external_url_status" class="form-control" required><br>
                     order <input type="text" id="edit_order" name="order" class="form-control" required><br>
                 </form>
             </div>
@@ -264,6 +270,8 @@ $result = $conn->query($sql);
                     abyss_status <input type="text" id="add_abyss_status" name="abyss_status" class="form-control" required><br>
                     bunny_slug <input type="text" id="add_bunny_slug" name="bunny_slug" class="form-control" required><br>
                     bunny_status <input type="text" id="add_bunny_status" name="bunny_status" class="form-control" required><br>
+                    external_url <input type="text" id="add_external_url" name="external_url" class="form-control" required><br>
+                    external_url_status <input type="text" id="add_external_url_status" name="external_url_status" class="form-control" required><br>
                     order <input type="text" id="add_order" name="order" class="form-control" required><br>
                 </form>
             </div>

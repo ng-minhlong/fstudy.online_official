@@ -191,6 +191,7 @@ if ($video_id) {
     <div class="error-option"><input type="checkbox" value="Link die"> Link die</div>
     <button id="submit-report-btn" class="submit-report" disabled>Gửi báo cáo</button>
   </div>
+  
 
   <!-- Overlay texts -->
   <div id="promo-top-left" class="overlay">Khám phá kho tàng khóa học online tại <?php echo esc_html($site_url); ?></div>
@@ -254,25 +255,63 @@ if ($video_id) {
       initOverlays();
     });
 
-    function renderYoutube(id) {
-      if (player && player.destroy) player.destroy();
-      document.getElementById('player-container').innerHTML = `
-        <div class="plyr__video-embed" id="player">
-          <iframe src="https://www.youtube.com/embed/${id}?modestbranding=1&autoplay=1" 
-                  allowfullscreen allow="autoplay"></iframe>
-        </div>
-      `;
-      player = new Plyr('#player', {});
-    }
+    async function renderYoutube(youtubeId) {
+    if (player && player.destroy) player.destroy();
+    document.getElementById('error-overlay').style.display = 'none';
+    document.getElementById('loading-overlay').style.display = 'flex';
 
-    function renderIframe(url) {
-      if (player && player.destroy) player.destroy();
+    try {
+      const response = await fetch(`<?php echo URL_PYTHON_API; ?>/get-link-lesson`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: `https://www.youtube.com/watch?v=${youtubeId}` })
+      });
+
+      const data = await response.json();
+      if (!data.video_url) throw new Error(data.error || "Không lấy được link video");
+
+      document.getElementById('player-container').innerHTML = `
+        <video id="player" controls playsinline>
+          <source src="${data.video_url}" type="video/mp4">
+        </video>
+        <div id="error-overlay" style="...">...</div>
+      `;
+
+      player = new Plyr('#player', {
+        autoplay: true,
+        controls: [
+          'play-large', 'rewind', 'play', 'fast-forward', 'progress', 'current-time',
+          'mute', 'volume', 'captions', 'settings', 'fullscreen'
+        ]
+      });
+
+
+      player.play();
+    } catch (err) {
+      console.error('Lỗi khi lấy link MP4:', err);
+      document.getElementById('error-overlay').innerHTML = '❌ Không thể phát video từ YouTube.<br>' + err.message;
+      document.getElementById('error-overlay').style.display = 'flex';
+    } finally {
+      document.getElementById('loading-overlay').style.display = 'none';
+    }
+  }
+
+  function renderIframe(url) {
+    if (player && player.destroy) player.destroy();
+    document.getElementById('loading-overlay').style.display = 'flex';
+    document.getElementById('error-overlay').style.display = 'none';
+
+    // Simulate slight delay
+    setTimeout(() => {
       document.getElementById('player-container').innerHTML = `
         <iframe src="${url}" 
                 style="width:100%;height:100%;border:none;" 
                 allowfullscreen></iframe>
+        <div id="error-overlay" style="...">...</div>
       `;
-    }
+      document.getElementById('loading-overlay').style.display = 'none';
+    }, 500); // Optional delay
+  }
 
     function setupServerButton(data) {
       const btn = document.getElementById('choose-server-btn');
@@ -445,6 +484,37 @@ if ($video_id) {
     });
   </script>
   <?php wp_footer(); ?>
+
+  <div id="loading-overlay" style="
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  z-index: 99999;
+  display: none;
+">Đang tải video, vui lòng chờ...</div>
+<div id="error-overlay" style="
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  color: red;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  z-index: 10000;
+  text-align: center;
+  padding: 20px;
+"></div>
+
 </body>
 </html>
 <?php

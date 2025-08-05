@@ -14,6 +14,8 @@ $abyss_slug = wp_kses_post($_POST['abyss_slug']);
 $abyss_status = wp_kses_post($_POST['abyss_status']);
 $bunny_slug = wp_kses_post($_POST['bunny_slug']);
 $bunny_status = wp_kses_post($_POST['bunny_status']);
+$external_url = wp_kses_post($_POST['external_url']);
+$external_url_status = wp_kses_post($_POST['external_url_status']);
 $order = wp_kses_post($_POST['order']);
 
 // Prepare the data for updating
@@ -25,6 +27,8 @@ $data = array(
     'abyss_status' => $abyss_status,
     'bunny_slug' => $bunny_slug,
     'bunny_status' => $bunny_status,
+    'external_url' => $external_url,
+    'external_url_status' => $external_url_status,
     'order' => $order
 
 );

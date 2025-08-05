@@ -1,4 +1,4 @@
-/*! elementor - v3.30.0 - 22-07-2025 */
+/*! elementor - v3.30.0 - 30-07-2025 */
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -6287,7 +6287,8 @@ function SharedContextProvider(props) {
       referrer: null,
       customPostTypes: [],
       selectedCustomPostTypes: null,
-      currentPage: null
+      currentPage: null,
+      returnTo: null
     },
     _useReducer = (0, _react.useReducer)(_sharedContextReducer.reducer, initialState),
     _useReducer2 = (0, _slicedToArray2.default)(_useReducer, 2),
@@ -6351,6 +6352,10 @@ var reducer = exports.reducer = function reducer(state, _ref) {
     case 'SET_CURRENT_PAGE_NAME':
       return _objectSpread(_objectSpread({}, state), {}, {
         currentPage: payload
+      });
+    case 'SET_RETURN_TO':
+      return _objectSpread(_objectSpread({}, state), {}, {
+        returnTo: payload
       });
     default:
       return state;
@@ -9680,16 +9685,9 @@ var _useQueryParams = _interopRequireDefault(__webpack_require__(/*! elementor-a
 var _useKit2 = _interopRequireWildcard(__webpack_require__(/*! ../../../hooks/use-kit */ "../app/modules/import-export/assets/js/hooks/use-kit.js"));
 var _useImportActions2 = _interopRequireDefault(__webpack_require__(/*! ../hooks/use-import-actions */ "../app/modules/import-export/assets/js/pages/import/hooks/use-import-actions.js"));
 var _useImportKitLibraryApplyAllPlugins = __webpack_require__(/*! ../import-kit/hooks/use-import-kit-library-apply-all-plugins */ "../app/modules/import-export/assets/js/pages/import/import-kit/hooks/use-import-kit-library-apply-all-plugins.js");
+var _redirect = _interopRequireDefault(__webpack_require__(/*! ../../../shared/utils/redirect */ "../app/modules/import-export/assets/js/shared/utils/redirect.js"));
 function _getRequireWildcardCache(e) { if ("function" != typeof WeakMap) return null; var r = new WeakMap(), t = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(e) { return e ? t : r; })(e); }
 function _interopRequireWildcard(e, r) { if (!r && e && e.__esModule) return e; if (null === e || "object" != _typeof(e) && "function" != typeof e) return { default: e }; var t = _getRequireWildcardCache(r); if (t && t.has(e)) return t.get(e); var n = { __proto__: null }, a = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var u in e) if ("default" !== u && {}.hasOwnProperty.call(e, u)) { var i = a ? Object.getOwnPropertyDescriptor(e, u) : null; i && (i.get || i.set) ? Object.defineProperty(n, u, i) : n[u] = e[u]; } return n.default = e, t && t.set(e, n), n; }
-function isValidRedirectUrl(url) {
-  try {
-    var parsedUrl = new URL(url);
-    return parsedUrl.hostname === window.location.hostname;
-  } catch (e) {
-    return false;
-  }
-}
 function ImportProcess() {
   var sharedContext = (0, _react.useContext)(_sharedContextProvider.SharedContext),
     importContext = (0, _react.useContext)(_importContextProvider.ImportContext),
@@ -9710,10 +9708,6 @@ function ImportProcess() {
     _useState8 = (0, _slicedToArray2.default)(_useState7, 2),
     plugins = _useState8[0],
     setPlugins = _useState8[1],
-    _useState9 = (0, _react.useState)(''),
-    _useState10 = (0, _slicedToArray2.default)(_useState9, 2),
-    returnTo = _useState10[0],
-    setReturnTo = _useState10[1],
     missing = (0, _useImportKitLibraryApplyAllPlugins.useImportKitLibraryApplyAllPlugins)(plugins),
     _useKit = (0, _useKit2.default)(),
     kitState = _useKit.kitState,
@@ -9730,6 +9724,7 @@ function ImportProcess() {
     includes = _ref.includes,
     selectedCustomPostTypes = _ref.selectedCustomPostTypes,
     currentPage = _ref.currentPage,
+    returnTo = _ref.returnTo,
     _ref2 = importContext.data || {},
     file = _ref2.file,
     uploadedData = _ref2.uploadedData,
@@ -9821,7 +9816,10 @@ function ImportProcess() {
       });
     }
     if (returnToParam) {
-      setReturnTo(returnToParam);
+      sharedContext.dispatch({
+        type: 'SET_RETURN_TO',
+        payload: returnToParam
+      });
     }
     if (fileURL && !file) {
       // When the starting point of the app is the import/process screen and importing via file_url.
@@ -9884,8 +9882,7 @@ function ImportProcess() {
     if (KIT_STATUS_MAP.INITIAL !== kitState.status || isResolvedData && 'apply-all' === importContext.data.actionType) {
       if (importedData) {
         // After kit upload.
-        if (returnTo && isValidRedirectUrl(decodeURIComponent(returnTo))) {
-          window.location.href = decodeURIComponent(returnTo);
+        if (returnTo && (0, _redirect.default)(returnTo)) {
           return;
         }
         navigate('/import/complete');
@@ -9899,11 +9896,7 @@ function ImportProcess() {
           });
         }
         if (uploadedData.conflicts && Object.keys(uploadedData.conflicts).length && !isResolvedData) {
-          if (returnTo) {
-            navigate('/import/resolver?return_to=' + returnTo);
-          } else {
-            navigate('/import/resolver');
-          }
+          navigate('/import/resolver');
         } else {
           // The kitState must be reset due to staying in the same page, so that the useEffect will be re-triggered.
           kitActions.reset();
@@ -10177,7 +10170,6 @@ var _inlineLink = _interopRequireDefault(__webpack_require__(/*! elementor-app/u
 var _button = _interopRequireDefault(__webpack_require__(/*! elementor-app/ui/molecules/button */ "../app/assets/js/ui/molecules/button.js"));
 var _box = _interopRequireDefault(__webpack_require__(/*! elementor-app/ui/atoms/box */ "../app/assets/js/ui/atoms/box.js"));
 var _list = _interopRequireDefault(__webpack_require__(/*! elementor-app/ui/molecules/list */ "../app/assets/js/ui/molecules/list.js"));
-var _useQueryParams = _interopRequireDefault(__webpack_require__(/*! elementor-app/hooks/use-query-params */ "../app/assets/js/hooks/use-query-params.js"));
 var _appsEventTracking = __webpack_require__(/*! elementor-app/event-track/apps-event-tracking */ "../app/assets/js/event-track/apps-event-tracking.js");
 __webpack_require__(/*! ./import-resolver.scss */ "../app/modules/import-export/assets/js/pages/import/import-resolver/import-resolver.scss");
 function _getRequireWildcardCache(e) { if ("function" != typeof WeakMap) return null; var r = new WeakMap(), t = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(e) { return e ? t : r; })(e); }
@@ -10191,8 +10183,6 @@ function ImportResolver() {
     _ref = sharedContext.data || {},
     referrer = _ref.referrer,
     currentPage = _ref.currentPage,
-    _useQueryParams$getAl = (0, _useQueryParams.default)().getAll(),
-    returnToParam = _useQueryParams$getAl.return_to,
     eventTracking = function eventTracking(command) {
       var sitePart = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
       if ('kit-library' === referrer) {
@@ -10219,9 +10209,6 @@ function ImportResolver() {
         onClick: function onClick() {
           eventTracking('kit-library/approve-selection');
           var url = importContext.data.plugins.length ? 'import/plugins-activation' : 'import/process';
-          if ('import/process' === url && returnToParam) {
-            url += '?return_to=' + returnToParam;
-          }
           importContext.dispatch({
             type: 'SET_IS_RESOLVED',
             payload: true
@@ -11580,6 +11567,8 @@ var _useQueryParams = _interopRequireDefault(__webpack_require__(/*! elementor-a
 var _useAction = _interopRequireDefault(__webpack_require__(/*! elementor-app/hooks/use-action */ "../app/assets/js/hooks/use-action.js"));
 var _inlineLink = _interopRequireDefault(__webpack_require__(/*! elementor-app/ui/molecules/inline-link */ "../app/assets/js/ui/molecules/inline-link.js"));
 var _useKit = __webpack_require__(/*! ../../hooks/use-kit */ "../app/modules/import-export/assets/js/hooks/use-kit.js");
+var _redirect = _interopRequireDefault(__webpack_require__(/*! ../utils/redirect */ "../app/modules/import-export/assets/js/shared/utils/redirect.js"));
+var _sharedContextProvider = __webpack_require__(/*! ../../context/shared-context/shared-context-provider */ "../app/modules/import-export/assets/js/context/shared-context/shared-context-provider.js");
 function _getRequireWildcardCache(e) { if ("function" != typeof WeakMap) return null; var r = new WeakMap(), t = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(e) { return e ? t : r; })(e); }
 function _interopRequireWildcard(e, r) { if (!r && e && e.__esModule) return e; if (null === e || "object" != _typeof(e) && "function" != typeof e) return { default: e }; var t = _getRequireWildcardCache(r); if (t && t.has(e)) return t.get(e); var n = { __proto__: null }, a = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var u in e) if ("default" !== u && {}.hasOwnProperty.call(e, u)) { var i = a ? Object.getOwnPropertyDescriptor(e, u) : null; i && (i.get || i.set) ? Object.defineProperty(n, u, i) : n[u] = e[u]; } return n.default = e, t && t.set(e, n), n; }
 var messagesContent = {
@@ -11648,6 +11637,9 @@ function ProcessFailedDialog(_ref) {
     onError = _ref.onError,
     onLearnMore = _ref.onLearnMore;
   var action = (0, _useAction.default)(),
+    sharedContext = (0, _react.useContext)(_sharedContextProvider.SharedContext),
+    _ref2 = sharedContext.data || {},
+    returnTo = _ref2.returnTo,
     navigate = (0, _router.useNavigate)(),
     _useQueryParams$getAl = (0, _useQueryParams.default)().getAll(),
     referrer = _useQueryParams$getAl.referrer,
@@ -11672,6 +11664,9 @@ function ProcessFailedDialog(_ref) {
     },
     handleOnDismiss = function handleOnDismiss(event) {
       var isLoadingKitFromCloud = _useKit.KIT_SOURCE_MAP.CLOUD === source;
+      if (returnTo && (0, _redirect.default)(returnTo)) {
+        return;
+      }
       if ('general' === error && onDismiss) {
         onDismiss();
       } else if ('kit-library' === referrer) {
@@ -11715,6 +11710,59 @@ ProcessFailedDialog.defaultProps = {
 
 /***/ }),
 
+/***/ "../app/modules/import-export/assets/js/shared/utils/is-valid-redirect-url.js":
+/*!************************************************************************************!*\
+  !*** ../app/modules/import-export/assets/js/shared/utils/is-valid-redirect-url.js ***!
+  \************************************************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = isValidRedirectUrl;
+function isValidRedirectUrl(url) {
+  try {
+    var parsedUrl = new URL(url);
+    return parsedUrl.hostname === window.location.hostname && ('http:' === parsedUrl.protocol || 'https:' === parsedUrl.protocol);
+  } catch (e) {
+    return false;
+  }
+}
+
+/***/ }),
+
+/***/ "../app/modules/import-export/assets/js/shared/utils/redirect.js":
+/*!***********************************************************************!*\
+  !*** ../app/modules/import-export/assets/js/shared/utils/redirect.js ***!
+  \***********************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+
+var _interopRequireDefault = __webpack_require__(/*! @babel/runtime/helpers/interopRequireDefault */ "../node_modules/@babel/runtime/helpers/interopRequireDefault.js");
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = safeRedirect;
+var _isValidRedirectUrl = _interopRequireDefault(__webpack_require__(/*! ./is-valid-redirect-url */ "../app/modules/import-export/assets/js/shared/utils/is-valid-redirect-url.js"));
+function safeRedirect(url) {
+  try {
+    var decodedUrl = decodeURIComponent(url);
+    if ((0, _isValidRedirectUrl.default)(decodedUrl)) {
+      window.location.href = decodedUrl;
+      return true;
+    }
+  } catch (e) {
+    return false;
+  }
+}
+
+/***/ }),
+
 /***/ "../app/modules/import-export/assets/js/templates/layout.js":
 /*!******************************************************************!*\
   !*** ../app/modules/import-export/assets/js/templates/layout.js ***!
@@ -11744,6 +11792,7 @@ var _exportInfoModal = _interopRequireDefault(__webpack_require__(/*! ../shared/
 var _sharedContextProvider = __webpack_require__(/*! ../context/shared-context/shared-context-provider */ "../app/modules/import-export/assets/js/context/shared-context/shared-context-provider.js");
 var _appsEventTracking = __webpack_require__(/*! elementor-app/event-track/apps-event-tracking */ "../app/assets/js/event-track/apps-event-tracking.js");
 var _useQueryParams = _interopRequireDefault(__webpack_require__(/*! elementor-app/hooks/use-query-params */ "../app/assets/js/hooks/use-query-params.js"));
+var _redirect = _interopRequireDefault(__webpack_require__(/*! ../shared/utils/redirect */ "../app/modules/import-export/assets/js/shared/utils/redirect.js"));
 function _getRequireWildcardCache(e) { if ("function" != typeof WeakMap) return null; var r = new WeakMap(), t = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(e) { return e ? t : r; })(e); }
 function _interopRequireWildcard(e, r) { if (!r && e && e.__esModule) return e; if (null === e || "object" != _typeof(e) && "function" != typeof e) return { default: e }; var t = _getRequireWildcardCache(r); if (t && t.has(e)) return t.get(e); var n = { __proto__: null }, a = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var u in e) if ("default" !== u && {}.hasOwnProperty.call(e, u)) { var i = a ? Object.getOwnPropertyDescriptor(e, u) : null; i && (i.get || i.set) ? Object.defineProperty(n, u, i) : n[u] = e[u]; } return n.default = e, t && t.set(e, n), n; }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
@@ -11756,7 +11805,9 @@ function Layout(props) {
     _useQueryParams$getAl = (0, _useQueryParams.default)().getAll(),
     referrer = _useQueryParams$getAl.referrer,
     sharedContext = (0, _react.useContext)(_sharedContextProvider.SharedContext),
-    currentPage = sharedContext.data.currentPage,
+    _sharedContext$data = sharedContext.data,
+    currentPage = _sharedContext$data.currentPage,
+    returnTo = _sharedContext$data.returnTo,
     eventTracking = function eventTracking(command) {
       var elementPosition = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
       var element = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
@@ -11806,7 +11857,9 @@ function Layout(props) {
     },
     _onClose = function onClose() {
       eventTracking('kit-library/close', 'app_header', null, 'click');
-      if ('kit-library' === sharedContext.data.referrer || 'kit-library' === referrer) {
+      if (returnTo && (0, _redirect.default)(returnTo)) {
+        // Do nothing as the redirect is handled by the safeRedirect function.
+      } else if ('kit-library' === sharedContext.data.referrer || 'kit-library' === referrer) {
         window.top.location = elementorAppConfig.admin_url + 'admin.php?page=elementor-app#/kit-library';
       } else {
         window.top.location = elementorAppConfig.admin_url + 'admin.php?page=elementor-tools#tab-import-export-kit';

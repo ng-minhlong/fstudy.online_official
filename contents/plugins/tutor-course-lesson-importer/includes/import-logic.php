@@ -140,7 +140,7 @@ function tutor_import_from_excel($course_id, $file_path) {
                 } elseif (strpos($source_url, 'vimeo.com') !== false) {
                     $source_type = 'vimeo';
                 } else {
-                    $source_type = 'embedded';
+                    $source_type = 'external_url';
                 }
             }
 
@@ -182,6 +182,7 @@ function tutor_import_from_excel($course_id, $file_path) {
                     $youtube_id = ($source_type === 'youtube') ? extract_youtube_id($source_url) : '';
                     $abyss_slug = $row_data['abyss slug'] ?? '';
                     $bunny_slug = $row_data['link bunny'] ?? '';
+                    $external_url = ($source_type === 'external_url') ? $source_url : '';
                     
                     $management_data = [
                         'course_id'      => $course_id,
@@ -191,6 +192,8 @@ function tutor_import_from_excel($course_id, $file_path) {
                         'abyss_status'   => $abyss_slug ? 'Live' : 'Empty',
                         'bunny_slug'     => $bunny_slug,
                         'bunny_status'   => $bunny_slug ? 'Live' : 'Empty',
+                        'external_url'        => $external_url,
+                        'external_url_status' => $external_url ? 'Live' : 'Empty',
                         'order'          => $row_data['stt'] ?? ($row_index + 1),
                         'created_at'     => current_time('mysql'),
                         'updated_at'     => current_time('mysql')
