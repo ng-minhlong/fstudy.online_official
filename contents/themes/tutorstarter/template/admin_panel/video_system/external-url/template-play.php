@@ -25,6 +25,8 @@ if ($video_id) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Video Player</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
   <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
   <style>
     html, body { margin:0; padding:0; height:100%; overflow:hidden; }
@@ -303,48 +305,58 @@ if ($video_id) {
         }
   }
 
+async function renderExternalUrl(external_url) {
+  if (player && player.destroy) player.destroy();
+  document.getElementById('error-overlay').style.display = 'none';
+  document.getElementById('loading-overlay').style.display = 'flex';
 
+  try {
+    const response = await fetch(`<?php echo URL_PYTHON_API; ?>/get-link-lesson`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: `${external_url}` })
+    });
 
-  async function renderExternalUrl(external_url){
-    if (player && player.destroy) player.destroy();
-    document.getElementById('error-overlay').style.display = 'none';
-    document.getElementById('loading-overlay').style.display = 'flex';
+    const data = await response.json();
+    if (!data.video_url) throw new Error(data.error || "Không lấy được link video");
 
-    try {
-      const response = await fetch(`<?php echo URL_PYTHON_API; ?>/get-link-lesson`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: `${external_url}` })
-      });
+    const videoUrl = data.video_url;
+    document.getElementById('player-container').innerHTML = `
+      <video id="player" controls playsinline></video>
+      <div id="error-overlay" style="...">...</div>
+    `;
 
-      const data = await response.json();
-      if (!data.video_url) throw new Error(data.error || "Không lấy được link video");
+    const video = document.getElementById('player');
 
-      document.getElementById('player-container').innerHTML = `
-        <video id="player" controls playsinline>
-          <source src="${data.video_url}" type="video/mp4">
-        </video>
-        <div id="error-overlay" style="...">...</div>
-      `;
-
-      player = new Plyr('#player', {
-        autoplay: true,
-        controls: [
-          'play-large', 'rewind', 'play', 'fast-forward', 'progress', 'current-time',
-          'mute', 'volume', 'captions', 'settings', 'fullscreen'
-        ]
-      });
-
-
-      player.play();
-    } catch (err) {
-      console.error('Lỗi khi lấy link MP4:', err);
-      document.getElementById('error-overlay').innerHTML = '❌ Không thể phát video từ YouTube.<br>' + err.message;
-      document.getElementById('error-overlay').style.display = 'flex';
-    } finally {
-      document.getElementById('loading-overlay').style.display = 'none';
+    // Kiểm tra nếu trình duyệt hỗ trợ native HLS (iOS, Safari)
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = videoUrl;
+    } else if (Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(videoUrl);
+      hls.attachMedia(video);
+    } else {
+      throw new Error("Trình duyệt không hỗ trợ HLS.");
     }
+
+    player = new Plyr(video, {
+      autoplay: true,
+      controls: [
+        'play-large', 'rewind', 'play', 'fast-forward', 'progress', 'current-time',
+        'mute', 'volume', 'captions', 'settings', 'fullscreen'
+      ]
+    });
+
+    player.play();
+  } catch (err) {
+    console.error('Lỗi khi phát video:', err);
+    document.getElementById('error-overlay').innerHTML = '❌ Không thể phát video.<br>' + err.message;
+    document.getElementById('error-overlay').style.display = 'flex';
+  } finally {
+    document.getElementById('loading-overlay').style.display = 'none';
   }
+}
+
 
 
   function renderIframe(url) {
@@ -466,16 +478,24 @@ if ($video_id) {
         submit.disabled = true;
         submit.textContent = 'Đang gửi...';
         
-        const payload = {
-          report_by_username: Currentusername,
-          report_by_user_id: CurrentuserID,
-          course_id: COURSE_ID,
-          source_type: currentServer,
-          source: currentServer === 'youtube' 
-            ? data.youtube_id 
-            : (currentServer === 'abyss' ? data.abyss_slug : data.bunny_slug),
-          error_log: errors
-        };
+       const source =
+            currentServer === 'youtube'
+                ? data.youtube_id
+                : currentServer === 'abyss'
+                ? data.abyss_slug || data.bunny_slug
+                : currentServer === 'External Url'
+                ? data.external_url
+                : '';
+
+            const payload = {
+            report_by_username: Currentusername,
+            report_by_user_id: CurrentuserID,
+            course_id: COURSE_ID,
+            source_type: currentServer,
+            source: source,
+            error_log: errors
+            };
+
         
         try {
           const res = await fetch(`${site_url}/api/v1/report-broken-link`, {
