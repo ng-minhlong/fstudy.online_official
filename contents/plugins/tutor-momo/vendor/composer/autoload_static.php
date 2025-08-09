@@ -7,22 +7,23 @@ namespace Composer\Autoload;
 class ComposerStaticInit89023a050ad48aa51d80081e26c765cc
 {
     public static $prefixLengthsPsr4 = array (
-        'P' => 
+        'T' => 
         array (
-            'Payments\\Custom\\' => 16,
+            'TutorMomo\\' => 10,
         ),
         'O' => 
         array (
+            'Ollyo\\PaymentHub\\Payments\\Momo\\' => 31,
             'Ollyo\\PaymentHub\\' => 17,
-        ),
-        'C' => 
-        array (
-            'CustomPayment\\' => 14,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'Payments\\Custom\\' => 
+        'TutorMomo\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/integration',
+        ),
+        'Ollyo\\PaymentHub\\Payments\\Momo\\' => 
         array (
             0 => __DIR__ . '/../..' . '/payments',
         ),
@@ -30,14 +31,37 @@ class ComposerStaticInit89023a050ad48aa51d80081e26c765cc
         array (
             0 => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src',
         ),
-        'CustomPayment\\' => 
-        array (
-            0 => __DIR__ . '/../..' . '/integration',
-        ),
     );
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'Ollyo\\PaymentHub\\Config\\Repository' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Config/Repository.php',
+        'Ollyo\\PaymentHub\\Contracts\\Config\\RepositoryContract' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Contracts/Config/RepositoryContract.php',
+        'Ollyo\\PaymentHub\\Contracts\\Core\\ContainerContract' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Contracts/Core/ContainerContract.php',
+        'Ollyo\\PaymentHub\\Contracts\\Payment\\ConfigContract' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Contracts/Payment/ConfigContract.php',
+        'Ollyo\\PaymentHub\\Contracts\\Support\\UriContract' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Contracts/Support/UriContract.php',
+        'Ollyo\\PaymentHub\\Core\\Application' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Core/Application.php',
+        'Ollyo\\PaymentHub\\Core\\Container' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Core/Container.php',
+        'Ollyo\\PaymentHub\\Core\\Factory' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Core/Factory.php',
+        'Ollyo\\PaymentHub\\Core\\Payment\\BaseConfig' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Core/Payment/BaseConfig.php',
+        'Ollyo\\PaymentHub\\Core\\Payment\\BasePayment' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Core/Payment/BasePayment.php',
+        'Ollyo\\PaymentHub\\Core\\Support\\Arr' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Core/Support/Arr.php',
+        'Ollyo\\PaymentHub\\Core\\Support\\Path' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Core/Support/Path.php',
+        'Ollyo\\PaymentHub\\Core\\Support\\System' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Core/Support/System.php',
+        'Ollyo\\PaymentHub\\Core\\Support\\Uri' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Core/Support/Uri.php',
+        'Ollyo\\PaymentHub\\Core\\Support\\View' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Core/Support/View.php',
+        'Ollyo\\PaymentHub\\Exceptions\\FilesystemException' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Exceptions/FilesystemException.php',
+        'Ollyo\\PaymentHub\\Exceptions\\InvalidConfigurationException' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Exceptions/InvalidConfigurationException.php',
+        'Ollyo\\PaymentHub\\Exceptions\\InvalidDataException' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Exceptions/InvalidDataException.php',
+        'Ollyo\\PaymentHub\\Exceptions\\InvalidSignatureException' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Exceptions/InvalidSignatureException.php',
+        'Ollyo\\PaymentHub\\Exceptions\\NotFoundException' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Exceptions/NotFoundException.php',
+        'Ollyo\\PaymentHub\\PaymentHub' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/PaymentHub.php',
+        'Ollyo\\PaymentHub\\Payments\\Momo\\Momo' => __DIR__ . '/../..' . '/payments/Momo.php',
+        'Ollyo\\PaymentHub\\Payments\\Paypal\\Config' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Payments/Paypal/Config.php',
+        'Ollyo\\PaymentHub\\Payments\\Paypal\\Paypal' => __DIR__ . '/../..' . '/../tutor/ecommerce/PaymentGateways/Paypal/src/Payments/Paypal/Paypal.php',
+        'TutorMomo\\Init' => __DIR__ . '/../..' . '/integration/Init.php',
+        'TutorMomo\\MomoConfig' => __DIR__ . '/../..' . '/integration/MomoConfig.php',
+        'TutorMomo\\MomoGateway' => __DIR__ . '/../..' . '/integration/MomoGateway.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

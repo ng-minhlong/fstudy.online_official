@@ -8,73 +8,36 @@
  * @since 1.0.0
  */
 
-namespace CustomPayment;
+namespace TutorMomo;
 
-/**
- * Init class
- * 
- * This class initializes the Custom Payment Gateway by registering hooks and filters for integrating with Tutor's payment 
- * system. It adds the Custom Payment method to Tutor's list of payment gateways, allows customization of gateway settingsand 
- * manages the gateway's configuration and functionality.
- */
-final class Init
-{
-    /**
-     * Register hooks
-     * 
-     * This method registers filters that allow Custom Payment Gateway to be added to Tutor's available payment gateway
-     * filter payment methods, and add the gateway's configuration options in Tutor settings.
-     *
-     * @since 1.0.0
-     */
-    public function __construct()
-    {
-        add_filter('tutor_gateways_with_class', __CLASS__ . '::payment_gateways_with_ref', 10, 2); // For Webhook Integration
-        add_filter('tutor_payment_gateways_with_class', __CLASS__ . '::filter_payment_gateways'); // For Checkout Integration
-        add_filter('tutor_payment_gateways', array($this, 'add_tutor_custom_payment_method'), 100); // Add Settings Options
+final class Init {
+
+    public function __construct() {
+        add_filter( 'tutor_gateways_with_class', __CLASS__ . '::payment_gateways_with_ref', 10, 2 );
+        add_filter( 'tutor_payment_gateways_with_class', __CLASS__ . '::filter_payment_gateways' );
+        add_filter( 'tutor_payment_gateways', array( $this, 'add_tutor_momo_payment_method' ), 100 );
     }
 
-    /**
-     * Get payment gateways with reference class
-     *
-     * @since 1.0.0
-     *
-     * @param array  $value Gateway with ref class.
-     * @param string $gateway Payment gateway name.
-     *
-     * @return array|null
-     */
-    public static function payment_gateways_with_ref($value, $gateway)
-    {
+    public static function payment_gateways_with_ref( $value, $gateway ) {
         $arr = array(
-            'momopayment' => array(
-                'gateway_class' => MomoPaymentGateway::class,
-                'config_class' => MomoPaymentConfig::class,
+            'momo' => array(
+                'gateway_class' => MomoGateway::class,
+                'config_class'  => MomoConfig::class,
             ),
         );
 
-        if (isset($arr[$gateway])) {
-            $value[$gateway] = $arr[$gateway];
+        if ( isset( $arr[ $gateway ] ) ) {
+            $value[ $gateway ] = $arr[ $gateway ];
         }
 
         return $value;
     }
 
-    /**
-     * Get payment gateways with reference class
-     *
-     * @since 1.0.0
-     *
-     * @param array $gateways Tutor payment gateways.
-     *
-     * @return array|null
-     */
-    public static function filter_payment_gateways($gateways)
-    {
+    public static function filter_payment_gateways( $gateways ) {
         $arr = array(
-            'momopayment' => array(
-                'gateway_class' => MomoPaymentGateway::class,
-                'config_class' => MomoPaymentConfig::class,
+            'momo' => array(
+                'gateway_class' => MomoGateway::class,
+                'config_class'  => MomoConfig::class,
             ),
         );
 
@@ -83,25 +46,19 @@ final class Init
         return $gateways;
     }
 
-    /**
-     * Add custom payment method.
-     *
-     * This method defines the configuration fields for the Custom Payment method and adds it to Tutor's payment options.
-     *
-     * @since 1.0.0
-     *
-     * @param array $methods Tutor existing payment methods.
-     *
-     * @return array
-     */
-    public function add_tutor_custom_payment_method($methods)
-    {
-        $custom_payment_method = array(
-            'name' => 'momopayment',
-            'label' => 'Momo Payment Automation',
+    public function add_tutor_momo_payment_method( $methods ) {
+        $icon = '';
+        if ( function_exists( 'plugins_url' ) ) {
+            $icon = content_url( '/uploads/2025/02/MoMo_Logo.png' );
+        }
+
+        $momo_method = array(
+            'name' => 'momo',
+            'label' => 'MoMo',
             'is_installed' => true,
+            'is_plugin_active' => true,
             'is_active' => true,
-            'icon' => 'https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png?20201011055544', // Icon url.
+            'icon' => $icon,
             'support_subscription' => false,
             'fields' => array(
                 array(
@@ -109,10 +66,22 @@ final class Init
                     'type' => 'select',
                     'label' => 'Environment',
                     'options' => array(
-                        'sandbox' => 'Sandbox',
+                        'test' => 'Test',
                         'live' => 'Live',
                     ),
-                    'value' => 'sandbox',
+                    'value' => 'test',
+                ),
+                array(
+                    'name' => 'partner_code',
+                    'type' => 'text',
+                    'label' => 'Partner Code',
+                    'value' => '',
+                ),
+                array(
+                    'name' => 'access_key',
+                    'type' => 'secret_key',
+                    'label' => 'Access Key',
+                    'value' => '',
                 ),
                 array(
                     'name' => 'secret_key',
@@ -121,16 +90,15 @@ final class Init
                     'value' => '',
                 ),
                 array(
-                    'name' => 'public_key',
-                    'type' => 'secret_key',
-                    'label' => 'Public Key',
-                    'value' => '',
-                ),
-                array(
-                    'name' => 'client_id',
-                    'type' => 'text',
-                    'label' => 'Client ID',
-                    'value' => '',
+                    'name' => 'request_type',
+                    'type' => 'select',
+                    'label' => 'Request Type',
+                    'options' => array(
+                        'payWithATM' => 'ATM',
+                        'captureWallet' => 'MoMo Wallet',
+                        'payWithCC' => 'Credit Card',
+                    ),
+                    'value' => 'payWithATM',
                 ),
                 array(
                     'name' => 'webhook_url',
@@ -141,8 +109,7 @@ final class Init
             ),
         );
 
-        $methods[] = $custom_payment_method;
+        $methods[] = $momo_method;
         return $methods;
     }
-
 }

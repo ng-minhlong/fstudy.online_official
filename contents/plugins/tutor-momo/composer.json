@@ -1,14 +1,14 @@
 {
-    "name": "themeum/tutor-momo-payment",
-    "description": "Momo payment gateway integration for Tutor LMS",
     "version": "1.0.0",
+    "name": "themeum/tutor-payment-momo",
+    "description": "MoMo payment gateway integration for Tutor LMS",
     "type": "library",
     "license": "MIT",
     "autoload": {
         "psr-4": {
             "Ollyo\\PaymentHub\\": "../tutor/ecommerce/PaymentGateways/Paypal/src",
-            "Payments\\Custom\\": "src/Payments/Custom",
-            "MomoPayment\\": "src/Payments/Momo"
+            "Ollyo\\PaymentHub\\Payments\\Momo\\": "payments",
+            "TutorMomo\\": "integration"
         }
     }
 }

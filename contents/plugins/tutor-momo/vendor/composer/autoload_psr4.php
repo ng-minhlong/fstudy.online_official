@@ -6,7 +6,7 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
-    'Payments\\Custom\\' => array($baseDir . '/payments'),
+    'TutorMomo\\' => array($baseDir . '/integration'),
+    'Ollyo\\PaymentHub\\Payments\\Momo\\' => array($baseDir . '/payments'),
     'Ollyo\\PaymentHub\\' => array($baseDir . '/../tutor/ecommerce/PaymentGateways/Paypal/src'),
-    'CustomPayment\\' => array($baseDir . '/integration'),
 );

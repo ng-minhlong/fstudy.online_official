@@ -1,8 +1,8 @@
 <?php
     include($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php');
-    define('SITE_URL', home_url('/', is_ssl() ? 'https' : 'http'));
+    define('SITE_URL', $WP_HOME);
 
-    echo "<script>const siteurl = '" . SITE_URL . "';</script>";
+    echo "<script>const siteurl = '" . $SITE_URL . "';</script>";
 
 
 class OnlineCheckoutController

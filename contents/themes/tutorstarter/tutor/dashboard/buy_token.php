@@ -188,7 +188,7 @@ $siteurl = get_site_url();
 
   <div class="container" id="card-container"></div>
 
-  <form action="/contents/checkout_gateway/token/checkout_controller.php" id="frmCreateOrder" method="post" style="display:none;">
+  <form action="<?php echo $siteurl ?>/contents/checkout_gateway/token/checkout_controller.php" id="frmCreateOrder" method="post" style="display:none;">
     <input type="hidden" name="bankCode" id="bankCode">
     <input type="hidden" name="amount" id="amount">
     <input type="hidden" name="orderCode" id="orderCode">
