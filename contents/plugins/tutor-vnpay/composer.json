@@ -1,0 +1,14 @@
+{
+    "version": "1.0.0",
+    "name": "custom/tutor-payment-vnpay",
+    "description": "VNPAY payment gateway integration for Tutor LMS",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Ollyo\\PaymentHub\\": "../tutor/ecommerce/PaymentGateways/Paypal/src",
+            "Ollyo\\PaymentHub\\Payments\\Vnpay\\": "payments",
+            "TutorVnpay\\": "integration"
+        }
+    }
+}
