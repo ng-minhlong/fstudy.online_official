@@ -525,7 +525,6 @@ function resetActiveOptions() {
 
 // Initial state: Show practice content and highlight the practice button
 setActiveOption('practice');
-hidePreloader();
 
 </script>
 

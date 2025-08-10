@@ -244,15 +244,12 @@
     <?php endif; ?>
 </div>
 <script>
-    hidePreloader();
 </script>
 
 <?php 
     $conn->close();
     
-    if ( comments_open() || get_comments_number() ) :
-        comments_template();
-    endif;
+   
 
     get_footer(); // Gọi phần cuối trang (footer.php)
 ?>

@@ -476,16 +476,12 @@ function resetActiveOptions() {
 // Initial state: Show practice content and highlight the practice button
 setActiveOption('full-test');
 
-hidePreloader();
 
 </script>
 
 
 
-            
-<?php if ( comments_open() || get_comments_number() ) :
-    comments_template();
-endif; ?>
+
 
 
     

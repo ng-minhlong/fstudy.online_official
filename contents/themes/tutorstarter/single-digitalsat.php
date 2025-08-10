@@ -74,6 +74,71 @@ if (is_user_logged_in()) {
         $custom_number
     );
     $results = $wpdb->get_results($results_query); ?>
+
+
+
+
+    <!--Style Comment-->      
+
+<style>
+.comment-section {
+    margin-top: 40px;
+    border-top: 2px solid #eee;
+    padding-top: 20px;
+    font-family: Arial, sans-serif;
+}
+.comment-section h3 {
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+.comment-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.comment-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #ddd;
+}
+.comment-author {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+.comment-content {
+    margin-bottom: 5px;
+}
+.comment-date {
+    font-size: 12px;
+    color: #777;
+}
+.comment-form textarea {
+    width: 100%;
+    min-height: 80px;
+    resize: vertical;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.comment-form button {
+    margin-top: 8px;
+    padding: 8px 15px;
+    background: #0073aa;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.comment-form button:hover {
+    background: #005f87;
+}
+</style>
+<!--End Style Comment-->      
+
+
+
+
+
+
      <style>
            
 
@@ -350,6 +415,28 @@ if (is_user_logged_in()) {
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
+    .horizontal-ad {
+    margin: 20px 0;
+    text-align: center;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 10px;
+}
+
+.horizontal-ad img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: auto;
+    border-radius: 6px;
+    transition: transform 0.3s ease;
+}
+
+.horizontal-ad img:hover {
+    transform: scale(1.02);
+}
 </style>
 
 
@@ -519,6 +606,9 @@ if (is_user_logged_in()) {
                 });
             </script>
             
+            <div class="horizontal-ad">
+                <img src="https://your-site.com/path-to-ad/digitalsat-horizontal.jpg" alt="Advertisement">
+            </div>
             <div class="results">
                 <p class="h2-test">Kết quả làm bài của bạn:</p>
                 <table class="table table-striped">
@@ -602,11 +692,96 @@ if (is_user_logged_in()) {
 
 
 
-            
-<?php if ( comments_open() || get_comments_number() ) :
-    comments_template();
-endif; ?>
-            
+        <!-- Comment Section-->
+        <div class="comment-section" id="comment">
+    <h3>Bình luận</h3>
+    <ul class="comment-list" id="commentList">Đang tải bình luận...</ul>
+
+    <div class="comment-form">
+        <textarea id="commentContent" placeholder="Nhập bình luận của bạn..."></textarea>
+        <button id="submitComment">Gửi bình luận</button>
+    </div>
+</div>
+
+        <!-- Script Comment--> 
+        <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const commentList = document.getElementById('commentList');
+    const commentContent = document.getElementById('commentContent');
+    const submitBtn = document.getElementById('submitComment');
+
+    const currentUser = "<?php echo is_user_logged_in() ? esc_js(wp_get_current_user()->display_name) : ''; ?>";
+    const postId = "<?php echo $id_test; ?>"; // id_test từ code của bạn
+    const postType = "digitalsat"; // loại post tùy bạn đặt
+
+    // Load comments
+    function loadComments() {
+        fetch(`${siteUrl}/api/v1/comment?post_id=${postId}&post_type=${postType}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.data.length > 0) {
+                    commentList.innerHTML = '';
+                    data.data.forEach(cmt => {
+                        const li = document.createElement('li');
+                        li.className = 'comment-item';
+                        li.innerHTML = `
+                            <div class="comment-author">${cmt.author_name}</div>
+                            <div class="comment-content">${cmt.content}</div>
+                            <div class="comment-date">${cmt.created_at}</div>
+                        `;
+                        commentList.appendChild(li);
+                    });
+                } else {
+                    commentList.innerHTML = '<li>Chưa có bình luận nào.</li>';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                commentList.innerHTML = '<li>Lỗi tải bình luận.</li>';
+            });
+    }
+
+    // Submit comment
+    submitBtn.addEventListener('click', function () {
+        const content = commentContent.value.trim();
+        if (!content) {
+            alert('Vui lòng nhập nội dung bình luận.');
+            return;
+        }
+
+        fetch(`${siteUrl}/api/v1/comment`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                post_id: postId,
+                post_type: postType,
+                user_id: <?php echo get_current_user_id() ?: 'null'; ?>,
+                author_name: currentUser || 'Khách',
+                content: content,
+                status: 'approved'
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                commentContent.value = '';
+                loadComments(); // reload list
+            } else {
+                alert(data.message || 'Lỗi gửi bình luận.');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Có lỗi khi gửi bình luận.');
+        });
+    });
+
+    loadComments();
+});
+</script>
+<!--End Script Comment-->      
 
 <script>
  document.getElementById('practice').addEventListener('click', function() {
@@ -679,7 +854,6 @@ function resetActiveOptions() {
 // Initial state: Show practice content and highlight the practice button
 setActiveOption('full-test');
 
-hidePreloader();
 </script>
 
 <script>
