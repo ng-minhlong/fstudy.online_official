@@ -147,6 +147,9 @@ if (!empty($table_name)) {
     <?php endforeach; ?>
 </div>
 
+
+
+
 <div class="search-feature">
     <!-- Search Form -->
     <form method="get" action="<?php echo esc_url(home_url('/tests/' . ($current_post_type ? $current_post_type : ''))); ?>" class="search-form">
@@ -163,6 +166,29 @@ if (!empty($table_name)) {
 
         <button type="submit">Tìm kiếm & Lọc</button>
     </form>
+    <?php
+        // Mảng quảng cáo cho từng loại test
+        $ads_horizontal = [
+            'digitalsat'        => 'https://your-site.com/path-to-ad/digitalsat-horizontal.jpg',
+            'ieltsreadingtest'  => 'https://your-site.com/path-to-ad/ielts-reading-horizontal.jpg',
+            'ieltsspeakingtests'=> 'https://your-site.com/path-to-ad/ielts-speaking-horizontal.jpg',
+            'ieltslisteningtest'=> 'https://your-site.com/path-to-ad/ielts-listening-horizontal.jpg',
+            'ieltswritingtests' => 'https://your-site.com/path-to-ad/ielts-writing-horizontal.jpg',
+            'thptqg'            => 'https://your-site.com/path-to-ad/thptqg-horizontal.jpg',
+            'topikreading'      => 'https://your-site.com/path-to-ad/topik-reading-horizontal.jpg',
+            'topiklistening'    => 'https://your-site.com/path-to-ad/topik-listening-horizontal.jpg',
+            'topikwriting'      => 'https://your-site.com/path-to-ad/topik-writing-horizontal.jpg',
+            'topikspeaking'     => 'https://your-site.com/path-to-ad/topik-speaking-horizontal.jpg',
+        ];
+
+        // Nếu loại test hiện tại có quảng cáo thì hiển thị
+        if (!empty($ads_horizontal[$current_post_type])) : ?>
+            <div class="horizontal-ad">
+                <img src="<?php echo esc_url($ads_horizontal[$current_post_type]); ?>" alt="Advertisement">
+            </div>
+    <?php endif; ?>
+
+
     <div id = "content-token">
             <div class="loader" id = "token-loader"></div>
             <div id = "token-content"></div>
@@ -480,7 +506,36 @@ function renderTargetList(targetData) {
 
 </script>
 <style>
-    
+ .horizontal-ad {
+    margin: 20px 0;
+    text-align: center;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 10px;
+}
+
+.horizontal-ad img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: auto;
+    border-radius: 6px;
+    transition: transform 0.3s ease;
+}
+
+.horizontal-ad img:hover {
+    transform: scale(1.02);
+}
+
+@media (max-width: 768px) {
+    .horizontal-ad {
+        margin: 15px 0;
+        padding: 5px;
+    }
+}
+   
 /* HTML: <div class="loader"></div> */
 .loader {
   width: 50px;
@@ -620,53 +675,61 @@ function renderTargetList(targetData) {
     border-radius: 4px;
     cursor: pointer;
 }
-
+/* Test grid */
 .test-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 20px;
 }
-
 .test-item {
+    position: relative;
+    background: #fff;
+    border-radius: 12px;
     padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
 }
-
+.test-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
 .test-item h2 {
     font-size: 18px;
     margin: 10px 0;
 }
-
 .test-meta p {
     margin: 5px 0;
     color: #666;
     font-size: 14px;
 }
-
 .test-tags span {
     display: inline-block;
     margin: 5px 5px 0 0;
-    background-color: #e0e0e0;
-    padding: 2px 8px;
-    border-radius: 4px;
+    background-color: #eef0f3;
+    padding: 4px 10px;
+    border-radius: 6px;
     font-size: 13px;
 }
 
 .detail-button {
-    display: inline-block;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     margin-top: 10px;
-    padding: 8px 12px;
+    padding: 8px 14px;
     background-color: #0073aa;
     color: white;
-    border-radius: 4px;
+    border-radius: 8px;
     text-decoration: none;
+    font-weight: 500;
+    min-height: 40px; /* đảm bảo chiều cao nút */
+    text-align: center;
 }
-
 .detail-button:hover {
     background-color: #005a8c;
 }
+
+
 
 .pagination {
     margin-top: 20px;
