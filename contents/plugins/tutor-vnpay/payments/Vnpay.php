@@ -45,9 +45,22 @@ class Vnpay extends BasePayment
             $vnp_TxnRef = $orderIdBase;
             $vnp_Amount = (int) ((float) $this->initialData->total_price);
             $vnp_Item   = 'Order ' . $orderIdBase;
-            $vnp_Locale = $this->config->get('language') ?: 'vn';
+            $vnp_Locale = 'vn';
             $vnp_BankCode = '';
             $vnp_IpAddr   = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+            // Normalize IP to IPv4 if server provides IPv6-mapped or IPv6
+            if (filter_var($vnp_IpAddr, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+                if (strpos($vnp_IpAddr, '::ffff:') === 0) {
+                    $maybeIpv4 = substr($vnp_IpAddr, 7);
+                    if (filter_var($maybeIpv4, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                        $vnp_IpAddr = $maybeIpv4;
+                    } else {
+                        $vnp_IpAddr = '127.0.0.1';
+                    }
+                } else {
+                    $vnp_IpAddr = '127.0.0.1';
+                }
+            }
 
             $startTime = date('YmdHis');
             $expire    = date('YmdHis', strtotime('+15 minutes', strtotime($startTime)));
@@ -59,6 +72,7 @@ class Vnpay extends BasePayment
                 'vnp_Command'   => 'pay',
                 'vnp_CreateDate'=> date('YmdHis'),
                 'vnp_CurrCode'  => 'VND',
+                'vnp_BankCode'  => $vnp_BankCode,
                 'vnp_IpAddr'    => $vnp_IpAddr,
                 'vnp_Locale'    => $vnp_Locale,
                 'vnp_OrderInfo' => $vnp_Item,
@@ -68,6 +82,7 @@ class Vnpay extends BasePayment
                 'vnp_ExpireDate'=> $expire,
             ];
 
+            // Only include optional fields when they have values
             if (!empty($vnp_BankCode)) {
                 $inputData['vnp_BankCode'] = $vnp_BankCode;
             }
@@ -77,19 +92,22 @@ class Vnpay extends BasePayment
             $i = 0;
             $hashdata = '';
             foreach ($inputData as $key => $value) {
+                // Build hashdata WITH URL encoding as per VNPAY PHP example
                 if ($i == 1) {
                     $hashdata .= '&' . urlencode($key) . '=' . urlencode((string) $value);
                 } else {
                     $hashdata .= urlencode($key) . '=' . urlencode((string) $value);
                     $i = 1;
                 }
+                // Build query with URL encoding
                 $query .= urlencode($key) . '=' . urlencode((string) $value) . '&';
             }
 
             $vnp_Url = $vnp_Url . '?' . $query;
             if (!empty($vnp_HashSecret)) {
                 $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
-                $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
+                // Append hash type as recommended by VNPAY docs, do not include it in hashdata
+                $vnp_Url .= 'vnp_SecureHashType=HmacSHA512&vnp_SecureHash=' . $vnpSecureHash;
             }
 
             header('Location: ' . $vnp_Url);
@@ -109,12 +127,53 @@ class Vnpay extends BasePayment
                 return $returnData;
             }
 
+            // Verify checksum from VNPAY return payload
+            $receivedSecureHash = $get['vnp_SecureHash'] ?? '';
+            // Only include vnp_ prefixed keys when computing signature
+            $paramsForHash = [];
+            foreach ($get as $key => $value) {
+                if (strpos($key, 'vnp_') === 0) {
+                    $paramsForHash[$key] = $value;
+                }
+            }
+            unset($paramsForHash['vnp_SecureHash'], $paramsForHash['vnp_SecureHashType']);
+            ksort($paramsForHash);
+            $hashdata = '';
+            $i = 0;
+            foreach ($paramsForHash as $key => $value) {
+                // Build hashdata WITH URL encoding as per VNPAY PHP example
+                if ($i === 1) {
+                    $hashdata .= '&' . urlencode($key) . '=' . urlencode((string) $value);
+                } else {
+                    $hashdata .= urlencode($key) . '=' . urlencode((string) $value);
+                    $i = 1;
+                }
+            }
+
+            $computedHash = '';
+            $hashSecret = (string) ($this->config->get('hash_secret') ?: '');
+            if ($hashSecret !== '') {
+                $computedHash = hash_hmac('sha512', $hashdata, $hashSecret);
+            }
+
             $txnRef   = $get['vnp_TxnRef'] ?? '';
             $amount   = isset($get['vnp_Amount']) ? (int) $get['vnp_Amount'] : 0; // in cents
             $amountMajor = (int) round($amount / 100);
             $responseCode = $get['vnp_ResponseCode'] ?? '';
             $transactionNo= $get['vnp_TransactionNo'] ?? ($get['vnp_TransactionStatus'] ?? '');
             $message      = '';
+
+            if ($computedHash === '' || strcasecmp($receivedSecureHash, $computedHash) !== 0) {
+                // Signature mismatch
+                $returnData->id                   = (string) $txnRef;
+                $returnData->payment_status       = 'failed';
+                $returnData->payment_error_reason = 'Sai chữ ký';
+                $returnData->transaction_id       = (string) $transactionNo;
+                $returnData->payment_method       = $this->config->get('name');
+                $returnData->payment_payload      = json_encode($get);
+                $returnData->earnings             = $amountMajor;
+                return $returnData;
+            }
 
             $status = ($responseCode === '00') ? 'paid' : (($responseCode === '24') ? 'pending' : 'failed');
 

@@ -42,9 +42,14 @@ class MomoConfig extends BaseConfig implements ConfigContract {
 		return (string) $this->secret_key;
 	}
 
-	public function getRequestType(): string {
-		return $this->request_type ?: 'payWithATM';
-	}
+    public function getRequestType(): string {
+        // Valid request types for MoMo create API; 'qrCodeUrl' is a response field, not a request type
+        $type = $this->request_type ?: 'captureWallet';
+        if ($type === 'qrCodeUrl') {
+            $type = 'captureWallet';
+        }
+        return $type;
+    }
 
 	public function is_configured() {
 		return true;

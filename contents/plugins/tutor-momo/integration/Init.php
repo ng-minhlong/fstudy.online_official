@@ -94,11 +94,11 @@ final class Init {
                     'type' => 'select',
                     'label' => 'Request Type',
                     'options' => array(
+                        'captureWallet' => 'MoMo Wallet (qrCodeUrl)',
                         'payWithATM' => 'ATM',
-                        'captureWallet' => 'MoMo Wallet',
                         'payWithCC' => 'Credit Card',
                     ),
-                    'value' => 'payWithATM',
+                    'value' => 'captureWallet',
                 ),
                 array(
                     'name' => 'webhook_url',

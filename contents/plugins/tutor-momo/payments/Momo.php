@@ -31,13 +31,17 @@ class Momo extends BasePayment
 
     public function createPayment()
     {
-        try {
-            // Force sandbox credentials (matching working controller) to avoid auth failures
-            $partnerCode = 'MOMOBKUN20180529';
-            $accessKey   = 'klm05TvNBzhg7h7j';
-            $secretKey   = 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa';
-            $requestType = 'payWithATM';
-            $endpoint    = 'https://test-payment.momo.vn/v2/gateway/api/create';
+        try {   
+            // Read credentials and settings from gateway config
+            $partnerCode = (string) ($this->config->get('partner_code') ?? '');
+            $accessKey   = (string) ($this->config->get('access_key') ?? '');
+            $secretKey   = (string) ($this->config->get('secret_key') ?? '');
+            $requestType = (string) ($this->config->get('request_type') ?? 'captureWallet');
+            if ($requestType === '' || $requestType === 'qrCodeUrl') {
+                // 'qrCodeUrl' is not a valid requestType for MoMo create API; it's a response field
+                $requestType = 'captureWallet';
+            }
+            $endpoint    = (string) ($this->config->get('create_url') ?? 'https://test-payment.momo.vn/v2/gateway/api/create');
 
             // Base order id from Tutor, sanitized
             $orderIdBase = preg_replace('/[^A-Za-z0-9_-]/', '', (string) $this->initialData->order_id);
@@ -53,8 +57,11 @@ class Momo extends BasePayment
             $amount      = (string) (int) $amountMajor;
             $requestId   = (string) time();
 
-            $redirectUrl = function_exists('site_url') ? site_url('/contents/checkout_gateway/token/completed_order_momo.php') : '/';
-            $ipnUrl      = 'https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b';
+            // Use Tutor LMS webhook endpoint for both browser redirect and server IPN.
+            // The handler will compute success/failure based on resultCode and redirect accordingly.
+            // Use dynamic URLs from config instance so runtime filters (payment_method, order_id) apply
+            $redirectUrl = (string) $this->configInstance->getWebhookUrl();
+            $ipnUrl      = (string) $this->configInstance->getWebhookUrl();
             // Preserve the original order id for mapping on IPN
             $extraData   = $orderIdBase;
 
@@ -64,7 +71,7 @@ class Momo extends BasePayment
             $payload = [
                 'partnerCode' => $partnerCode,
                 'partnerName' => 'Test',
-                'storeId'     => 'MomoTestStore',
+                'storeId'     => 'EduHUB',
                 'requestId'   => $requestId,
                 'amount'      => $amount,
                 'orderId'     => $orderId,
@@ -89,9 +96,10 @@ class Momo extends BasePayment
                 throw new ErrorException($message);
             }
 
-            $checkoutUrl = $body->payUrl ?? $body->deeplink ?? null;
+            // Prefer qrCodeUrl when available; fall back to payUrl/deeplink
+            $checkoutUrl = $body->qrCodeUrl ?? $body->payUrl ?? $body->deeplink ?? null;
             if (!$checkoutUrl) {
-                throw new ErrorException('MoMo response missing payUrl');
+                throw new ErrorException('MoMo response missing qrCodeUrl/payUrl/deeplink');
             }
 
             header("Location: {$checkoutUrl}");
@@ -105,7 +113,7 @@ class Momo extends BasePayment
 
     public function verifyAndCreateOrderData(object $payload): object
     {
-        $returnData = System::defaultOrderData();
+            $returnData = System::defaultOrderData();
         try {
             $post = $payload->post;
             if (empty($post)) {
@@ -121,7 +129,8 @@ class Momo extends BasePayment
             $transId      = $post['transId'] ?? '';
             $amount       = isset($post['amount']) ? (int) $post['amount'] : 0;
 
-            $status = ($resultCode === 0) ? 'paid' : (($resultCode === 1006) ? 'pending' : 'failed');
+            // MoMo: resultCode 0 = success, others = failure
+            $status = ($resultCode === 0) ? 'paid' : 'failed';
 
             $returnData->id                   = (string) $originalId;
             $returnData->payment_status       = $status;
@@ -130,6 +139,16 @@ class Momo extends BasePayment
             $returnData->payment_method       = $this->config->get('name');
             $returnData->payment_payload      = json_encode($post);
             $returnData->earnings             = $amount;
+
+            // Prepare redirect URL to Tutor LMS success/failure page with order id
+            $successUrl = (string) $this->configInstance->getSuccessUrl();
+            $cancelUrl  = (string) $this->configInstance->getCancelUrl();
+
+            // Ensure order_id query arg is set to original order id on both URLs
+            $successUrl = \add_query_arg('order_id', (string) $originalId, $successUrl);
+            $cancelUrl  = \add_query_arg('order_id', (string) $originalId, $cancelUrl);
+
+            $returnData->redirectUrl = $status === 'paid' ? $successUrl : $cancelUrl;
 
             return $returnData;
         } catch (Throwable $e) {
