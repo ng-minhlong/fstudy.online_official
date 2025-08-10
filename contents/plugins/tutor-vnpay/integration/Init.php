@@ -10,12 +10,17 @@
 
 namespace TutorVnpay;
 
+use Tutor\Ecommerce\Ecommerce;
+
 final class Init {
 
     public function __construct() {
         add_filter( 'tutor_gateways_with_class', __CLASS__ . '::payment_gateways_with_ref', 10, 2 );
         add_filter( 'tutor_payment_gateways_with_class', __CLASS__ . '::filter_payment_gateways' );
         add_filter( 'tutor_payment_gateways', array( $this, 'add_tutor_vnpay_payment_method' ), 100 );
+        
+        // Add hook to handle VNPay callback in success URL
+        add_action( 'tutor_order_placement_success', array( $this, 'handle_vnpay_callback' ), 10, 1 );
     }
 
     public static function payment_gateways_with_ref( $value, $gateway ) {
@@ -105,5 +110,59 @@ final class Init {
 
         $methods[] = $vnpay_method;
         return $methods;
+    }
+
+    /**
+     * Handle VNPay callback when redirecting to success URL
+     * 
+     * @param int $order_id Order ID
+     */
+    public function handle_vnpay_callback( $order_id ) {
+        // Check if this is a VNPay callback
+        if ( ! isset( $_GET['vnp_ResponseCode'] ) || ! isset( $_GET['vnp_TxnRef'] ) ) {
+            return;
+        }
+
+        // Verify that the order ID matches
+        if ( $_GET['vnp_TxnRef'] != $order_id ) {
+            error_log( 'VNPay callback: Order ID mismatch. Expected: ' . $order_id . ', Got: ' . $_GET['vnp_TxnRef'] );
+            return;
+        }
+
+        error_log( 'VNPay callback: Processing order ' . $order_id . ' with response code: ' . $_GET['vnp_ResponseCode'] );
+
+        // Create webhook data object
+        $webhook_data = (object) array(
+            'get'    => $_GET,
+            'post'   => $_POST,
+            'server' => $_SERVER,
+            'stream' => file_get_contents( 'php://input' ),
+        );
+
+        try {
+            // Get VNPay payment gateway
+            $payment_gateways = apply_filters( 'tutor_gateways_with_class', array(), 'vnpay' );
+            $payment_gateway_class = isset( $payment_gateways['vnpay'] ) 
+                ? $payment_gateways['vnpay']['gateway_class'] 
+                : null;
+
+            if ( $payment_gateway_class ) {
+                $payment = Ecommerce::get_payment_gateway_object( $payment_gateway_class );
+                $res = $payment->verify_webhook_signature( $webhook_data );
+                
+                if ( is_object( $res ) && property_exists( $res, 'id' ) ) {
+                    error_log( 'VNPay callback: Payment verification successful. Order: ' . $res->id . ', Status: ' . $res->payment_status );
+                    // Trigger payment update action
+                    do_action( 'tutor_order_payment_updated', $res );
+                } else {
+                    error_log( 'VNPay callback: Payment verification failed or returned invalid data' );
+                }
+            } else {
+                error_log( 'VNPay callback: Could not find VNPay gateway class' );
+            }
+        } catch ( \Throwable $e ) {
+            // Log error but don't break the page
+            error_log( 'VNPay callback error: ' . $e->getMessage() );
+        }
     }
 }

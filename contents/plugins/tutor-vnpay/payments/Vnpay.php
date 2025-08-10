@@ -72,7 +72,6 @@ class Vnpay extends BasePayment
                 'vnp_Command'   => 'pay',
                 'vnp_CreateDate'=> date('YmdHis'),
                 'vnp_CurrCode'  => 'VND',
-                'vnp_BankCode'  => $vnp_BankCode,
                 'vnp_IpAddr'    => $vnp_IpAddr,
                 'vnp_Locale'    => $vnp_Locale,
                 'vnp_OrderInfo' => $vnp_Item,
@@ -82,10 +81,14 @@ class Vnpay extends BasePayment
                 'vnp_ExpireDate'=> $expire,
             ];
 
-            // Only include optional fields when they have values
-            if (!empty($vnp_BankCode)) {
+          
+
+            if (isset($vnp_BankCode) && $vnp_BankCode != "") {
                 $inputData['vnp_BankCode'] = $vnp_BankCode;
             }
+            
+
+            
 
             ksort($inputData);
             $query = '';
@@ -107,7 +110,8 @@ class Vnpay extends BasePayment
             if (!empty($vnp_HashSecret)) {
                 $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
                 // Append hash type as recommended by VNPAY docs, do not include it in hashdata
-                $vnp_Url .= 'vnp_SecureHashType=HmacSHA512&vnp_SecureHash=' . $vnpSecureHash;
+                $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
+                
             }
 
             header('Location: ' . $vnp_Url);
@@ -172,6 +176,12 @@ class Vnpay extends BasePayment
                 $returnData->payment_method       = $this->config->get('name');
                 $returnData->payment_payload      = json_encode($get);
                 $returnData->earnings             = $amountMajor;
+                
+                // Add redirect URL for failed payment
+                $cancelUrl = (string) $this->config->get('cancel_url');
+                $cancelUrl = \add_query_arg('order_id', (string) $txnRef, $cancelUrl);
+                $returnData->redirectUrl = $cancelUrl;
+                
                 return $returnData;
             }
 
@@ -184,6 +194,17 @@ class Vnpay extends BasePayment
             $returnData->payment_method       = $this->config->get('name');
             $returnData->payment_payload      = json_encode($get);
             $returnData->earnings             = $amountMajor;
+
+            // Add redirect URL based on payment status
+            if ($status === 'paid') {
+                $successUrl = (string) $this->config->get('success_url');
+                $successUrl = \add_query_arg('order_id', (string) $txnRef, $successUrl);
+                $returnData->redirectUrl = $successUrl;
+            } else {
+                $cancelUrl = (string) $this->config->get('cancel_url');
+                $cancelUrl = \add_query_arg('order_id', (string) $txnRef, $cancelUrl);
+                $returnData->redirectUrl = $cancelUrl;
+            }
 
             return $returnData;
         } catch (Throwable $e) {

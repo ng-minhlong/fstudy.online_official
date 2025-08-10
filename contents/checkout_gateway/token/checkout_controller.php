@@ -1,8 +1,8 @@
 <?php
     include($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php');
-    define('SITE_URL', $WP_HOME);
+    define('WP_SITEURL', $WP_SITEURL);
 
-    echo "<script>const siteurl = '" . $SITE_URL . "';</script>";
+    echo "<script>const WP_SITEURL = '" . $WP_SITEURL . "';</script>";
 
 
 class OnlineCheckoutController
@@ -21,7 +21,7 @@ class OnlineCheckoutController
                 $orderInfo = $_POST['item'];
                 $amount = $_POST['amount'];
                 $orderId = $_POST['orderCode'];
-                $redirectUrl = SITE_URL . "/contents/checkout_gateway/token/completed_order_momo.php";
+                $redirectUrl = WP_SITEURL . "/contents/checkout_gateway/token/completed_order_momo.php";
                 $ipnUrl = "https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b";
                 $extraData = "";
 
@@ -81,6 +81,7 @@ class OnlineCheckoutController
                         "vnp_CreateDate" => date('YmdHis'),
                         "vnp_CurrCode" => "VND",
                         "vnp_IpAddr" => $vnp_IpAddr,
+                        "vnp_BankCode" => $vnp_BankCode,
                         "vnp_Locale" => $vnp_Locale,
                         //"vnp_OrderInfo" => "Thanh toan GD: $vnp_Item",
                         "vnp_OrderInfo" =>  $vnp_Item,
