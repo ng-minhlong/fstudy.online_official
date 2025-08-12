@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     );
 
     // Insert the data into the database
-    $inserted = $wpdb->insert('dictation_question', $data);
+    $inserted = $wpdb->insert('shadowing_dictation_question', $data);
 
     if ($inserted) {
         echo "New record created successfully";

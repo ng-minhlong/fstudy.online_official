@@ -1,6 +1,6 @@
 <?php
 /*
- * Template Name: Dictation Excercise
+ * Template Name: Dictation Shadowing Excercise
  */
 // Kiểm tra đường dẫn WordPress
 require_once(__DIR__ . '/../../../config-custom.php');
@@ -31,7 +31,7 @@ $limit = 10; // Number of records per page
 $page = isset($_GET['page']) ? $_GET['page'] : 1; // Current page number
 $offset = ($page - 1) * $limit; // Calculate offset
 
-$total_sql = "SELECT COUNT(*) FROM dictation_question";
+$total_sql = "SELECT COUNT(*) FROM shadowing_dictation_question";
 if ($id_test_filter) {
     $total_sql .= " WHERE id_test LIKE '%$id_test_filter%'"; // Apply filter to total count
 }
@@ -39,7 +39,7 @@ $total_result = $conn->query($total_sql);
 $total_rows = $total_result->fetch_row()[0];
 $total_pages = ceil($total_rows / $limit); // Calculate total pages
 
-$sql = "SELECT * FROM dictation_question";
+$sql = "SELECT * FROM shadowing_dictation_question";
 if ($id_test_filter) {
     $sql .= " WHERE id_test LIKE '%$id_test_filter%'"; // Apply filter to the SQL query
 }
@@ -71,7 +71,7 @@ $result = $conn->query($sql);
     <link href="../../css/sb-admin-2.min.css" rel="stylesheet">
 
     <meta charset="UTF-8">
-    <title>Dictaion Questions Database</title>
+    <title>Dictaion & Shadowing Questions Database</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
@@ -116,7 +116,7 @@ $result = $conn->query($sql);
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
 
-                <h1>Dictation Practice Tests</h1>
+                <h1>Dictation & Shadowing Practice Tests</h1>
 <b>Question Content (Các câu hỏi) nên up trực tiếp trong database. Ở đây dễ sai</b>
 
 <!-- Filter form -->

@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $number = intval($_POST['number']);
     
     // Fetch the record from the database
-    $row = $wpdb->get_row($wpdb->prepare("SELECT * FROM dictation_question WHERE number = %d", $number), ARRAY_A);
+    $row = $wpdb->get_row($wpdb->prepare("SELECT * FROM shadowing_dictation_question WHERE number = %d", $number), ARRAY_A);
 
     if ($row) {
 ?>

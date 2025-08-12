@@ -302,9 +302,9 @@ require_once(__DIR__ . '/../config-custom.php');
 
 <!-- Nav Item - Charts -->
 <li class="nav-item">
-    <a class="nav-link" href="<?php echo MAIN_PATH; ?>exam_questions_database/dictation_excercise/add_dictation_tests.php">
+    <a class="nav-link" href="<?php echo MAIN_PATH; ?>exam_questions_database/shadowing_dictation_excercise/add_test.php">
         <i class="fas fa-fw fa-chart-area"></i>
-        <span>Dictation Excercise</span></a>
+        <span>Dictation & Shadowing Excercise</span></a>
 </li>
 
 

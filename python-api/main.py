@@ -22,6 +22,6 @@ app.register_blueprint(get_link_lesson__bp)
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, threaded=True)
 
     #app.run(host='0.0.0.0', port=5000, debug=True)

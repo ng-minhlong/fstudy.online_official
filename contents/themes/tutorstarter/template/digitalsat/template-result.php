@@ -739,7 +739,9 @@ $new_skip_ans = 0;
                 echo '<td>' . esc_html($time_spent) . '</td>';
 
                 $explanation = isset($question_data['explanation']) ? htmlspecialchars($question_data['explanation'], ENT_QUOTES, 'UTF-8') : 'Explanation not available';
-                echo '<td><a onclick="openDetailExplanation(\'' . esc_js($question_number) . '\', \'' . esc_js($question_data['id_question']) . '\', \'' . esc_js(trim(json_encode($question_data['question_content']), '"')) . '\', \'' . esc_js($question_data['image_link']) . '\', \'' . esc_js(trim(json_encode($question_data['answer_1']), '"')) . '\', \'' . esc_js(trim(json_encode($question_data['answer_2']), '"')) . '\', \'' . esc_js(trim(json_encode($question_data['answer_3']), '"')) . '\', \'' . esc_js(trim(json_encode($question_data['answer_4']), '"')) . '\', \'' . esc_js(trim(json_encode($correct_answer_text), '"')) . '\', \'' . esc_js($user_answer) . '\', `' . htmlspecialchars($question_data['explanation'], ENT_QUOTES, 'UTF-8') . '`)" id="quick-view-' . $question_data['id_question'] . '">Review</a></td>';
+                echo '<td><a onclick="openDetailExplanation(\'' . esc_js($question_number) . '\', \'' . esc_js($question_data['id_question']) . '\', \'' . esc_js(trim(json_encode($question_data['question_content']), '"')) . '\', \'' . 
+                    ($question_data['image_link'] != '' ? esc_js('/fstudy/contents/themes/tutorstarter/template/media_img_intest/digital_sat/' . $question_data['id_question'] . '.png') : esc_js($question_data['image_link'])) . 
+                    '\', \'' . esc_js(trim(json_encode($question_data['answer_1']), '"')) . '\', \'' . esc_js(trim(json_encode($question_data['answer_2']), '"')) . '\', \'' . esc_js(trim(json_encode($question_data['answer_3']), '"')) . '\', \'' . esc_js(trim(json_encode($question_data['answer_4']), '"')) . '\', \'' . esc_js(trim(json_encode($correct_answer_text), '"')) . '\', \'' . esc_js($user_answer) . '\', `' . htmlspecialchars($question_data['explanation'], ENT_QUOTES, 'UTF-8') . '`)" id="quick-view-' . $question_data['id_question'] . '">Review</a></td>';
                 
                 echo '</tr>';
 

@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $number = intval($_POST['number']); // Sanitize the input
 
     // Prepare the SQL statement for deletion
-    $deleted = $wpdb->delete('dictation_question', array('number' => $number));
+    $deleted = $wpdb->delete('shadowing_dictation_question', array('number' => $number));
 
     if ($deleted) {
         echo "Record deleted successfully";

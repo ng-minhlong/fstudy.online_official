@@ -38,7 +38,7 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-$sql_test = "SELECT * FROM shadowing_question WHERE id_test = ?";
+$sql_test = "SELECT * FROM shadowing_dictation_question WHERE id_test = ?";
 
 
 $stmt_test = $conn->prepare($sql_test);
@@ -148,15 +148,13 @@ if ($result_test->num_rows > 0) {
 
 
 
-
-echo '
-<script>
-const rawTranscript = [' . $transcript . '];
-
-
-console.log(rawTranscript);
-</script>
-';
+            echo '
+            <script>
+            const rawTranscript = ' . $transcript . ';
+            console.log(rawTranscript);
+            </script>
+            ';
+            
 
 
 // Đóng kết nối
@@ -1298,21 +1296,10 @@ border: 3px solid transparent;
         <div id = 'content-side' class="content-side">
 
 
-        <div id = "checkpoint" class = "checkpoint">
-                <?php
-                    if($premium_test == "True"){
-                        echo "<script >console.log('Thông báo. Bạn còn {$foundUser['time_left']} lượt làm bài. success ');</script>";
-                        echo " <p style = 'color:green'> Bạn còn {$foundUser['time_left']} lượt làm bài này <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='#7ed321' stroke-width='2' stroke-linecap='round' stroke-linejoin='arcs'><path d='M22 11.08V12a10 10 0 1 1-5.93-9.14'></path><polyline points='22 4 12 14.01 9 11.01'></polyline></svg> </p> ";
-                        echo "<script>console.log('This is premium test');</script>";
-                    }
-                    else{
-                        echo "<script>console.log('This is free test');</script>"; 
-                    }
-                        ?>
-        </div>    
+         
        
         <div class = "video-div">
-            <div id ="start-dictation" style="display: none;">
+            <div id ="start-shadowing" style="display: none;">
                 <div id="video-container">
                   <image id="hide-player" class = "hide-player" src = "http://localhost/contents/uploads/2025/01/StudyAI.com_-1.png"></image>
                   <div id="player" class = "player"></div>
@@ -1688,19 +1675,41 @@ function isOperaBrowser() {
     function getStart() {    
         document.getElementById("test-prepare").style.display = "none";
         document.getElementById("content-side").style.display = "block";
-        document.getElementById("start-dictation").style.display = "block";
+        document.getElementById("start-shadowing").style.display = "block";
         navigateTranscript(0);
     }
 
     // JSON transcript data (replaced with the correct format)
-    const transcript = rawTranscript.map(item => {
-        return { 
-            ...item, 
-            end: item.start + item.duration 
-        };
-    });
     
+    // Build transcript with end + effectiveEnd (no merging, chỉ trim để tránh overlap)
+    const transcript = (function(raw) {
+        if (!Array.isArray(raw)) return [];
+        // copy + end
+        const arr = raw.map(item => ({ ...item, end: item.start + item.duration }));
+
+        for (let i = 0; i < arr.length; i++) {
+            const next = arr[i + 1];
+            if (next && next.start < arr[i].end) {
+                // Nếu overlap: cắt end của câu hiện tại sao cho không vượt quá start của câu tiếp
+                // Nhưng đảm bảo duration tối thiểu (minDur) để không thành 0
+                const minDur = 0.05; // giây, điều chỉnh nếu muốn
+                const trimmedEnd = Math.max(arr[i].start + minDur, Math.min(arr[i].end, next.start));
+                arr[i].effectiveEnd = trimmedEnd;
+            } else {
+                // không overlap -> phát đến end như bình thường
+                arr[i].effectiveEnd = arr[i].end;
+            }
+            arr[i].effectiveDuration = Math.max(0, arr[i].effectiveEnd - arr[i].start);
+        }
+
+        // loại bỏ những đoạn có effectiveDuration bằng 0 (nếu có)
+        return arr.filter(it => it.effectiveDuration > 0);
+    })(rawTranscript);
+
     const totalQuestions = transcript.length;
+    console.log('Processed transcript (no merge, trimmed):', transcript);
+
+
     let currentQuestion = 1;
     let player;
     let currentTranscriptIndex = 0;
@@ -1754,13 +1763,20 @@ function isOperaBrowser() {
         if (currentItem) {
             clearTimeout(timeoutId);
             document.getElementById('transcript').innerText = currentItem.text;
-            player.seekTo(currentItem.start, true);
-            player.playVideo();
-            const duration = currentItem.duration * 1000;
-            timeoutId = setTimeout(() => player.pauseVideo(), duration);
+            document.getElementById('userInput').value = "";
+
+            if (player && player.seekTo) {
+                player.seekTo(currentItem.start, true);
+                player.playVideo();
+                const duration = (currentItem.effectiveDuration || currentItem.duration) * 1000;
+                timeoutId = setTimeout(() => player.pauseVideo(), duration);
+            }
+
             updateQuestionNumber();
         }
     }
+
+
     function navigateTranscript(direction) {
         currentQuestion += direction;
         if (currentQuestion < 1) currentQuestion = 1;
@@ -1770,15 +1786,16 @@ function isOperaBrowser() {
     }
 
     document.getElementById('listenAgain').addEventListener('click', () => {
-        const currentItem = transcript[currentTranscriptIndex];
-        if (currentItem) {
-            clearTimeout(timeoutId);
-            player.seekTo(currentItem.start, true);
-            player.playVideo();
-            const duration = currentItem.duration * 1000;
-            timeoutId = setTimeout(() => player.pauseVideo(), duration);
-        }
-    });
+      const currentItem = transcript[currentTranscriptIndex];
+      if (currentItem) {
+          clearTimeout(timeoutId);
+          player.seekTo(currentItem.start, true);
+          player.playVideo();
+          const duration = (currentItem.effectiveDuration || currentItem.duration) * 1000;
+          timeoutId = setTimeout(() => player.pauseVideo(), duration);
+      }
+  });
+
 
     function sanitizeInput(input) {
         if (input === undefined || input === null) {
@@ -1990,7 +2007,7 @@ else{
                 data: {
                     action: 'update_buy_test',
                     type_transaction: 'paid',
-                    table: 'shadowing_question',
+                    table: 'shadowing_dictation_question',
                     change_token: '$token_need',
                     payment_gate: 'token',
                     type_token: 'token_practice',

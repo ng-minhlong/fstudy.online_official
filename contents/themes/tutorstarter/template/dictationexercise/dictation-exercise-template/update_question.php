@@ -30,7 +30,7 @@ $data = array(
 );
 
 // Update the record in the database
-$wpdb->update('dictation_question', $data, array('number' => $number));
+$wpdb->update('shadowing_dictation_question', $data, array('number' => $number));
 
 // Return a response
 echo json_encode(array('status' => 'success'));

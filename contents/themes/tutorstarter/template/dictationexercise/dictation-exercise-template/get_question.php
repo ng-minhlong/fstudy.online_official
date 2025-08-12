@@ -5,7 +5,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     global $wpdb;
 
     $number = intval($_POST['number']);
-    $result = $wpdb->get_row($wpdb->prepare("SELECT * FROM dictation_question WHERE number = %d", $number));
+    $result = $wpdb->get_row($wpdb->prepare("SELECT * FROM shadowing_dictation_question WHERE number = %d", $number));
 
     if ($result) {
         // Return JSON response

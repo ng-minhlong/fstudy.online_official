@@ -41,7 +41,7 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-$sql_test = "SELECT * FROM dictation_question WHERE id_test = ?";
+$sql_test = "SELECT * FROM shadowing_dictation_question WHERE id_test = ?";
 
 
 $stmt_test = $conn->prepare($sql_test);
