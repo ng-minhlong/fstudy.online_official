@@ -26,8 +26,8 @@ $test_tables = [
     
     'talk-with-edward' => 'conversation_with_ai_list',
     'studyvocabulary' => 'list_vocabulary_package',
-    'dictation' => 'dictation_question',
-    'shadowing' => 'shadowing_question',
+    'dictation' => 'shadowing_dictation_question',
+    'shadowing' => 'shadowing_dictation_question',
 
 
 
@@ -268,6 +268,8 @@ $query = new WP_Query($args);
             <div class="test-meta">
                 <p>⏱️ <?php echo esc_html($test->time ?? ''); ?> minutes</p>
                 <p>📄 <?php echo esc_html($test->number_question ?? ''); ?> questions</p>
+                <p><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> <?php echo esc_html($test->test_taker_count ?? ''); ?></p>
+                <p><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> <?php echo esc_html($test->created_at ?? ''); ?></p>
             </div>
             <?php if ($completed) : ?>
                 <div class="completed-icon">
@@ -297,7 +299,24 @@ $query = new WP_Query($args);
             ?>
 
 
-                <a href="<?php echo esc_url($test_url); ?>" class="detail-button">Take Test</a>
+        <div class="test-actions <?php echo $completed ? 'completed' : 'not-completed'; ?>">
+            <a href="<?php echo esc_url($test_url); ?>" class="btn-take-test">Take Test</a>
+
+            <div class="btn-group">
+                <?php if ($completed) : ?>
+                    <!-- Result button -->
+                    <button class="btn-icon result-icon" data-test-id="<?php echo $test->id_test; ?>" title="View Result">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    </button>
+                <?php endif; ?>
+
+                <!-- Info button -->
+                <button class="btn-icon info-icon" data-test-id="<?php echo $test->id_test; ?>" data-completed="<?php echo $completed ? '1' : '0'; ?>" title="Test Info">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                </button>
+            </div>
+        </div>
+
         </div>
     <?php endforeach; ?>
 </div>
@@ -347,6 +366,61 @@ $query = new WP_Query($args);
 
     </aside>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">Loading...</span>
+                <span class="modal-close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Vui lòng chờ...</p>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+
+    const modalTitle = overlay.querySelector('.modal-title');
+    const modalBody = overlay.querySelector('.modal-body');
+
+    function openModal(title, content) {
+        modalTitle.textContent = title;
+        modalBody.innerHTML = content;
+        overlay.style.display = 'flex';
+    }
+
+    function closeModal() {
+        overlay.style.display = 'none';
+    }
+
+    overlay.querySelector('.modal-close').addEventListener('click', closeModal);
+    overlay.addEventListener('click', e => {
+        if (e.target === overlay) closeModal();
+    });
+
+    document.querySelectorAll('.info-icon').forEach(icon => {
+        icon.addEventListener('click', function() {
+            const id = this.dataset.testId;
+            const completed = this.dataset.completed === '1';
+            if (completed) {
+                openModal("Kết quả bài test", `<p>Hiển thị kết quả cho test ID: <b>${id}</b></p>`);
+            } else {
+                openModal("Thông tin bài test", `<p>Hiển thị thông tin cho test ID: <b>${id}</b></p>`);
+            }
+        });
+    });
+
+    document.querySelectorAll('.result-icon').forEach(icon => {
+        icon.addEventListener('click', function() {
+            const id = this.dataset.testId;
+            openModal("Kết quả bài test", `<p>Hiển thị kết quả cho test ID: <b>${id}</b></p>`);
+        });
+    });
+});
+</script>
 
 <script>
     console.log('<?php echo esc_js($username); ?>');
@@ -462,7 +536,150 @@ function renderTargetList(targetData) {
 
 </script>
 
+    
 <style>
+    
+    .test-actions {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.btn-take-test {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 14px;
+    background-color: #0073aa;
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    height: 44px;
+    transition: background 0.2s ease;
+}
+
+.btn-take-test:hover {
+    background-color: #005a8c;
+}
+
+/* Kích thước theo trạng thái */
+.test-actions.completed .btn-take-test {
+    flex: 0 0 50%;
+}
+.test-actions.completed .btn-group {
+    flex: 0 0 50%;
+}
+
+.test-actions.not-completed .btn-take-test {
+    flex: 0 0 75%;
+}
+.test-actions.not-completed .btn-group {
+    flex: 0 0 25%;
+}
+
+/* Group chứa icon */
+.btn-group {
+    display: flex;
+    gap: 6px;
+    height: 44px;
+}
+
+.btn-icon {
+    flex: 1;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+    background: #f5f5f5;
+    transform: translateY(-1px);
+}
+
+.btn-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: #333;
+}
+
+/* Overlay */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+/* Modal container */
+.modal {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    width: 90%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: modalFadeIn 0.25s ease;
+}
+
+/* Header */
+.modal-header {
+    background: linear-gradient(135deg, #0073aa, #005a8c);
+    color: white;
+    padding: 14px 20px;
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-close {
+    font-size: 22px;
+    cursor: pointer;
+    transition: 0.2s;
+    user-select: none;
+}
+.modal-close:hover {
+    transform: rotate(90deg);
+}
+
+/* Body */
+.modal-body {
+    padding: 20px;
+    font-size: 15px;
+    color: #333;
+    line-height: 1.5;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* Animation */
+@keyframes modalFadeIn {
+    from { transform: translateY(-20px) scale(0.98); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(-10px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+
+
  .horizontal-ad {
     margin: 20px 0;
     text-align: center;
