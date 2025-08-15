@@ -69,6 +69,13 @@ $test_labels = [
     'shadowing' => 'Shadowing',*/
 ];
 
+// Book options per test type (multi-select)
+$books_by_type = [
+    'ieltsreadingtest' => ['Ielts Cambridge', 'Recent Actual Test', 'Road to Ielts'],
+    'ieltslisteningtest' => ['Ielts Cambridge', 'Recent Actual Test', 'Road to Ielts'],
+    'ieltsspeakingtests' => ['Ielts Cambridge', 'Recent Actual Test'],
+];
+
 // Get the current post type and search term
 $current_post_type = get_query_var('search_url', 'digitalsat');
 $search_term = $_GET['term'] ?? '';
@@ -82,6 +89,13 @@ $limit = 12;
 $offset = ($paged - 1) * $limit;
 
 if (!empty($table_name)) {
+    // Sort parameter: name_asc (default), takers_desc, created_desc
+    $sort = $_GET['sort'] ?? 'name_asc';
+    $allowed_sorts = ['name_asc', 'takers_desc', 'created_desc'];
+    if (!in_array($sort, $allowed_sorts, true)) {
+        $sort = 'name_asc';
+    }
+
     $price_filter = $_GET['price'] ?? '';  
     if (!is_array($price_filter)) {
         $price_filter = [$price_filter]; // Chuyển về mảng nếu chỉ có một giá trị
@@ -92,8 +106,15 @@ if (!empty($table_name)) {
         $test_type_filter = [$test_type_filter]; // Chuyển về mảng nếu chỉ có một giá trị
     }
     
+    // Lọc theo Book (đa lựa chọn theo từng loại bài test)
+    $book_filter = $_GET['book'] ?? [];
+    if (!is_array($book_filter)) {
+        $book_filter = [$book_filter];
+    }
+    
     $conditions = [];
-    $params = ['%' . $wpdb->esc_like($search_term) . '%', $limit, $offset];
+    $query_params = ['%' . $wpdb->esc_like($search_term) . '%'];
+    $count_params = $query_params;
 
     // Điều kiện lọc theo giá
     if (in_array('free', $price_filter) && in_array('premium', $price_filter)) {
@@ -115,13 +136,42 @@ if (!empty($table_name)) {
         $conditions[] = "test_type = 'Full Test'";
     }
     
+    // Điều kiện lọc theo Book (chỉ nhận những book hợp lệ của loại test hiện tại)
+    $available_books_for_type = $books_by_type[$current_post_type] ?? [];
+    $selected_books = array_values(array_intersect($book_filter, $available_books_for_type));
+    if (!empty($selected_books)) {
+        $placeholders = implode(',', array_fill(0, count($selected_books), '%s'));
+        $conditions[] = "book IN ($placeholders)";
+        // Thêm tham số cho cả query chính và query đếm
+        foreach ($selected_books as $b) {
+            $query_params[] = $b;
+            $count_params[] = $b;
+        }
+    }
+
 
     // Gộp các điều kiện thành câu SQL
     $where_clause = !empty($conditions) ? 'AND ' . implode(' AND ', $conditions) : '';
 
+    // Xác định ORDER BY theo sort
+    switch ($sort) {
+        case 'takers_desc':
+            $order_by_sql = 'ORDER BY test_taker_count DESC, created_at DESC';
+            break;
+        case 'created_desc':
+            $order_by_sql = 'ORDER BY created_at DESC';
+            break;
+        case 'name_asc':
+        default:
+            $order_by_sql = 'ORDER BY testname ASC';
+            break;
+    }
+
+    // Thêm limit/offset vào cuối tham số
+    $query_params_full = array_merge($query_params, [$limit, $offset]);
     $query = $wpdb->prepare(
-        "SELECT * FROM {$table_name} WHERE testname LIKE %s $where_clause ORDER BY testname ASC LIMIT %d OFFSET %d",
-        ...$params
+        "SELECT * FROM {$table_name} WHERE testname LIKE %s $where_clause $order_by_sql LIMIT %d OFFSET %d",
+        ...$query_params_full
     );
 
     $results = $wpdb->get_results($query);
@@ -153,18 +203,39 @@ if (!empty($table_name)) {
 <div class="search-feature">
     <!-- Search Form -->
     <form method="get" action="<?php echo esc_url(home_url('/tests/' . ($current_post_type ? $current_post_type : ''))); ?>" class="search-form">
-        <input type="text" name="term" placeholder="Nhập từ khóa..." value="<?php echo esc_attr($search_term); ?>" />
+        <input class="search-input" type="text" name="term" placeholder="Tìm kiếm bài test..." value="<?php echo esc_attr($search_term); ?>" />
 
-        <div class="test-type-option">
-            <label><input type="checkbox" name="price[]" value="free" <?php if (in_array('free', $price_filter)) echo 'checked'; ?>> Free</label>
-            <label><input type="checkbox" name="price[]" value="premium" <?php if (in_array('premium', $price_filter)) echo 'checked'; ?>> Premium</label>
+        <div class="filters-bar">
+            <div class="test-type-option">
+                <label class="chip"><input type="checkbox" name="price[]" value="free" <?php if (in_array('free', $price_filter)) echo 'checked'; ?>><span>Free</span></label>
+                <label class="chip"><input type="checkbox" name="price[]" value="premium" <?php if (in_array('premium', $price_filter)) echo 'checked'; ?>><span>Premium</span></label>
 
-            <label><input type="checkbox" name="test_type[]" value="Practice" <?php if (in_array('Practice', $test_type_filter)) echo 'checked'; ?>> Practice</label>
-            <label><input type="checkbox" name="test_type[]" value="Full Test" <?php if (in_array('Full Test', $test_type_filter)) echo 'checked'; ?>> Full Length</label>
+                <label class="chip"><input type="checkbox" name="test_type[]" value="Practice" <?php if (in_array('Practice', $test_type_filter)) echo 'checked'; ?>><span>Practice</span></label>
+                <label class="chip"><input type="checkbox" name="test_type[]" value="Full Test" <?php if (in_array('Full Test', $test_type_filter)) echo 'checked'; ?>><span>Full Length</span></label>
+            </div>
 
+            <?php if (!empty($books_by_type[$current_post_type])) : ?>
+            <div class="test-type-option">
+                <?php foreach ($books_by_type[$current_post_type] as $bookOption) : ?>
+                    <label class="chip">
+                        <input type="checkbox" name="book[]" value="<?php echo esc_attr($bookOption); ?>" <?php if (in_array($bookOption, $book_filter ?? [])) echo 'checked'; ?>>
+                        <span><?php echo esc_html($bookOption); ?></span>
+                    </label>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+
+            <div class="sort-group">
+                <label for="sort" class="sort-label">Sắp xếp</label>
+                <select id="sort" name="sort" class="sort-select">
+                    <option value="name_asc" <?php if (($sort ?? 'name_asc') === 'name_asc') echo 'selected'; ?>>Tên (A–Z)</option>
+                    <option value="takers_desc" <?php if (($sort ?? 'name_asc') === 'takers_desc') echo 'selected'; ?>>Nhiều người làm</option>
+                    <option value="created_desc" <?php if (($sort ?? 'name_asc') === 'created_desc') echo 'selected'; ?>>Mới nhất</option>
+                </select>
+            </div>
         </div>
 
-        <button type="submit">Tìm kiếm & Lọc</button>
+        <button type="submit" class="btn-filter-submit">Tìm kiếm & Lọc</button>
     </form>
     <?php
         // Mảng quảng cáo cho từng loại test
@@ -302,6 +373,7 @@ $query = new WP_Query($args);
             <div class="test-meta">
                 <p>⏱️ <?php echo esc_html($test->time ?? ''); ?> minutes</p>
                 <p>📄 <?php echo esc_html($test->number_question ?? ''); ?> questions</p>
+                <p><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg> <?php echo esc_html($test->book ?? ''); ?></p>
                 <p><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> <?php echo esc_html($test->test_taker_count ?? ''); ?></p>
                 <p><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> <?php echo esc_html($test->created_at ?? ''); ?></p>
             </div>
@@ -369,15 +441,8 @@ $query = new WP_Query($args);
         <!-- Pagination -->
         <div class="pagination">
             <?php
-            $total_tests_query = $wpdb->prepare(
-                "SELECT COUNT(*) FROM {$table_name} WHERE testname LIKE %s",
-                '%' . $wpdb->esc_like($search_term) . '%'
-            );
-          
-            $total_tests = $wpdb->get_var($wpdb->prepare(
-                "SELECT COUNT(*) FROM {$table_name} WHERE testname LIKE %s $where_clause",
-                ...$params
-            ));
+            $count_sql = "SELECT COUNT(*) FROM {$table_name} WHERE testname LIKE %s $where_clause";
+            $total_tests = $wpdb->get_var($wpdb->prepare($count_sql, ...$count_params));
             $total_pages = ceil($total_tests / $limit);
             
 
@@ -387,7 +452,13 @@ $query = new WP_Query($args);
                 'format' => '?paged=%#%',
                 'prev_text' => '&laquo; Prev',
                 'next_text' => 'Next &raquo;',
-                'add_args' => ['term' => $search_term],
+                'add_args' => [
+                    'term' => $search_term,
+                    'sort' => $sort ?? 'name_asc',
+                    'price' => $price_filter,
+                    'test_type' => $test_type_filter,
+                    'book' => $book_filter,
+                ],
             ]);
             ?>
         </div>
@@ -788,15 +859,25 @@ function renderTargetList(targetData) {
     .container-search {
         display: flex;
         gap: 20px;
+        align-items: flex-start;
+        min-height: 100vh;
     }
     .content {
         flex: 1;
+        min-width: 0;
     }
     .sidebar {
-        width: 250px;
-        background-color: #f4f4f4;
+        width: 280px;
+        background-color: #f8fafc;
         padding: 20px;
-        border-radius: 8px;
+        border-radius: 12px;
+        position: sticky;
+        top: 20px;
+        height: calc(100vh - 40px);
+        overflow: auto;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.06);
+        border: 1px solid #eef2f7;
+        z-index: 5;
     }
     @media (max-width: 768px) {
         .container-search {
@@ -875,25 +956,57 @@ function renderTargetList(targetData) {
 
 .search-form {
     display: flex;
-    gap: 10px;
+    flex-direction: column;
+    gap: 12px;
     margin-bottom: 20px;
+    background: #ffffff;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
 }
 
-.search-form input[type="text"] {
-    flex: 1;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+.search-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #dde3ea;
+    border-radius: 10px;
+    outline: none;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+.search-input:focus {
+    border-color: #0073aa;
+    box-shadow: 0 0 0 4px rgba(0,115,170,.08);
 }
 
-.search-form button {
-    padding: 8px 16px;
-    background-color: #0073aa;
-    color: white;
+.filters-bar {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.test-type-option { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 8px; background: #f3f6f9; border: 1px solid #e5ebf2; padding: 6px 10px; border-radius: 999px; cursor: pointer; user-select: none; }
+.chip input { accent-color: #0073aa; }
+.chip span { font-size: 13px; color: #334155; }
+
+.sort-group { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.sort-label { font-size: 13px; color: #64748b; }
+.sort-select { padding: 8px 10px; border: 1px solid #dde3ea; border-radius: 10px; background: #fff; }
+
+.btn-filter-submit {
+    align-self: flex-start;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #0073aa, #005a8c);
+    color: #fff;
     border: none;
-    border-radius: 4px;
+    border-radius: 10px;
     cursor: pointer;
+    transition: transform .15s ease, box-shadow .2s ease;
+    box-shadow: 0 6px 16px rgba(0, 115, 170, 0.18);
 }
+.btn-filter-submit:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0, 115, 170, 0.22); }
 /* Test grid */
 .test-grid {
     display: grid;
@@ -903,14 +1016,14 @@ function renderTargetList(targetData) {
 .test-item {
     position: relative;
     background: #fff;
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 6px 24px rgba(2, 8, 20, 0.06);
     transition: transform 0.2s, box-shadow 0.2s;
 }
 .test-item:hover {
     transform: translateY(-3px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    box-shadow: 0 10px 28px rgba(2, 8, 20, 0.1);
 }
 .test-item h2 {
     font-size: 18px;
@@ -1028,6 +1141,20 @@ function renderTargetList(targetData) {
 .test-item {
     position: relative; /* Giúp biểu tượng nằm trong item */
     padding-top: 40px; /* Dành không gian cho biểu tượng */
+}
+
+/* Ensure sticky works well with very tall content */
+.content .test-library { min-height: 50vh; }
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .sidebar { top: 12px; max-height: calc(100vh - 24px); }
+}
+@media (max-width: 768px) {
+    .container-search { flex-direction: column; width: 100%; height: 100%; }
+    .sidebar { order: -1; width: 100%; height: auto; max-height: none; position: static; }
+    .filters-bar { flex-direction: column; align-items: flex-start; }
+    .sort-group { margin-left: 0; }
 }
 
 </style>
