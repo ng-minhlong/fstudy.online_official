@@ -1007,7 +1007,7 @@ html {
     <?php echo'
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://smtpjs.com/v3/smtp.js"></script>
-    <script src="'.$site_url.'/contents/themes/tutorstarter/ielts-reading-tookit/script_reading_practice_5.js"></script>
+    <script src="'.$site_url.'/contents/themes/tutorstarter/ielts-reading-tookit/script_reading_practice_6.js"></script>
     <script src="'.$site_url.'/contents/themes/tutorstarter/ielts-reading-tookit/highlight-text.js"></script>'
     ?>
 

@@ -153,38 +153,63 @@ function loadPart(partIndex) {
             let questionContent = question.question;
             const completionInputIds = []; // Lưu trữ danh sách các ID để kiểm tra sau
         
+            // Determine if option_choice exists and is a non-empty array
+            const hasOptionChoices = Array.isArray(group.option_choice) && group.option_choice.length > 0;
+            const optionChoices = hasOptionChoices ? group.option_choice.map(String) : [];
+        
             question.box_answers.forEach((boxAnswer, boxIndex) => {
                 const completionNumber = currentQuestionNumber + boxIndex;
                 const questionNumber = completionNumber;
                 let questionType = ""; // Mặc định là chuỗi rỗng
-
+        
                 // Kiểm tra trước khi gán giá trị từ part.question_types
                 if (part.question_types && part.question_types[completionNumber]) {
                     questionType = part.question_types[questionNumber];
                 }
-
-                
-                
-
-               const inputElementHtml = `
-                    <span style="display: inline-flex; align-items: center;">
-                        <span id="mark-question-${completionNumber}" class="number-question">
-                            <b type="${questionType}" style="margin: 0;">${completionNumber}</b>
+        
+                let inputElementHtml = '';
+        
+                if (hasOptionChoices) {
+                    // Build select with an initial empty option
+                    let optionsHtml = `<option value="">` + `</option>`; // default empty
+                    optionChoices.forEach(opt => {
+                        // escape option text to avoid HTML injection
+                        const safeOpt = String(opt).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+                        optionsHtml += `<option value="${safeOpt}">${safeOpt}</option>`;
+                    });
+        
+                    inputElementHtml = `
+                        <span style="display: inline-flex; align-items: center;">
+                            <span id="mark-question-${completionNumber}" class="number-question">
+                                <b type="${questionType}" style="margin: 0;">${completionNumber}</b>
+                            </span>
+                            <select class="form-control completion-select"
+                                    name="question-id-${completionNumber}"
+                                    id="answer-input-${completionNumber}">
+                                ${optionsHtml}
+                            </select>
                         </span>
-                        <input class="form-control"
-                            autocomplete="off"
-                            name="question-id-${completionNumber}"
-                            type="text"
-                            id="answer-input-${completionNumber}" />
-                    </span>
                     `;
-
-  
-
+                } else {
+                    // fallback to text input (original behaviour)
+                    inputElementHtml = `
+                        <span style="display: inline-flex; align-items: center;">
+                            <span id="mark-question-${completionNumber}" class="number-question">
+                                <b type="${questionType}" style="margin: 0;">${completionNumber}</b>
+                            </span>
+                            <input class="form-control completion-input"
+                                autocomplete="off"
+                                name="question-id-${completionNumber}"
+                                type="text"
+                                id="answer-input-${completionNumber}" />
+                        </span>
+                    `;
+                }
+        
                 questionContent = questionContent.replace('<input>', inputElementHtml);
                 completionInputIds.push(`answer-input-${completionNumber}`);
-                
             });
+        
             let currentIndexQuestion = currentQuestionNumber;
         
             // Gắn nội dung đã thay thế vào DOM
@@ -200,20 +225,46 @@ function loadPart(partIndex) {
                         return;
                     }
         
-                    // Thêm sự kiện khi người dùng nhập
-                    inputElement.addEventListener('input', (event) => {
-                        const isAnswered = event.target.value.trim() != ''; // true nếu có nội dung, false nếu trống
-
-                        checkboxCurrent(currentIndexQuestion + boxIndex);          
-                        saveCompletionAnswer(partIndex, groupIndex, questionIndex, boxIndex, event.target.value);
+                    // Handler chung cho input/select
+                    const handler = (value) => {
+                        const isAnswered = String(value).trim() !== '';
+                        checkboxCurrent(currentIndexQuestion + boxIndex);
+                        // Lưu value (select sẽ lưu "" nếu chưa chọn)
+                        saveCompletionAnswer(partIndex, groupIndex, questionIndex, boxIndex, value);
                         updateAnsweredCheckbox(currentIndexQuestion + boxIndex, isAnswered);
-
-                    });
+                    };
+        
+                    // Gán event: 'input' cho text, 'change' cho select
+                    if (inputElement.tagName.toLowerCase() === 'select') {
+                        inputElement.addEventListener('change', (event) => {
+                            handler(event.target.value);
+                        });
+                    } else {
+                        inputElement.addEventListener('input', (event) => {
+                            handler(event.target.value);
+                        });
+                    }
         
                     // Khôi phục dữ liệu đã lưu
                     const savedAnswer = userAnswers?.[partIndex]?.[groupIndex]?.[questionIndex]?.[boxIndex];
-                    if (savedAnswer) {
-                        inputElement.value = savedAnswer;
+                    if (savedAnswer !== undefined && savedAnswer !== null && String(savedAnswer) !== '') {
+                        // Nếu là select, set value; nếu input text, set value
+                        if (inputElement.tagName.toLowerCase() === 'select') {
+                            // đảm bảo giá trị có trong options, nếu không thì giữ rỗng
+                            const opt = Array.from(inputElement.options).find(o => o.value === String(savedAnswer));
+                            if (opt) inputElement.value = String(savedAnswer);
+                            // nếu không tìm thấy, để rỗng (user có thể chọn lại)
+                        } else {
+                            inputElement.value = String(savedAnswer);
+                        }
+                        // cập nhật checkbox hiển thị answered
+                        updateAnsweredCheckbox(currentIndexQuestion + boxIndex, true);
+                    } else {
+                        // nếu không có savedAnswer, đảm bảo select mặc định là rỗng
+                        if (inputElement.tagName.toLowerCase() === 'select') {
+                            inputElement.value = '';
+                        }
+                        updateAnsweredCheckbox(currentIndexQuestion + boxIndex, false);
                     }
                 });
             }, 0); // Delay để DOM cập nhật trước khi gán sự kiện
@@ -295,6 +346,7 @@ function loadPart(partIndex) {
 
     document.getElementById("test-prepare").style.display = "none";
     document.getElementById("content1").style.display = "block";
+    devOnMode(currentPartIndex + 1, id_test);
 
 
 }
@@ -1115,6 +1167,7 @@ function startTest()
     startTimer(full_time * 60); // 1 hour
     loadPart(currentPartIndex, full_time);
     DoingTest = true;
+    
 }
 
 
@@ -1133,10 +1186,9 @@ function main(){
 
     setTimeout(function(){
         console.log("Show Test!");
-        document.getElementById("start_test").style.display="block";
-        
+        document.getElementById("start_test").style.display="block";        
         document.getElementById("welcome").style.display="block";
-        hidePreloader();
+        
     }, 1000);
     
 }

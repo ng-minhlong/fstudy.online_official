@@ -144,63 +144,86 @@ function loadPart(partIndex) {
             let questionContent = question.question;
             const completionInputIds = []; // Lưu trữ danh sách các ID để kiểm tra sau
             const correctAnswers = question.box_answers.map(box => box.answer || "Not available");
-
-            // Thay thế tất cả placeholder <input> bằng thẻ input động
+        
+            // Determine if option_choice exists and is a non-empty array
+            const hasOptionChoices = Array.isArray(group.option_choice) && group.option_choice.length > 0;
+            const optionChoices = hasOptionChoices ? group.option_choice.map(String) : [];
+        
+            // Thay thế tất cả placeholder <input> bằng thẻ input/select động
             question.box_answers.forEach((boxAnswer, boxIndex) => {
                 const completionNumber = currentQuestionNumber + boxIndex;
                 const questionNumber = completionNumber;
-
+        
                 let questionType = ""; // Mặc định là chuỗi rỗng
-
-                // Kiểm tra trước khi gán giá trị từ part.question_types
                 if (part.question_types && part.question_types[completionNumber]) {
                     questionType = part.question_types[questionNumber];
                 }
-
-                
-                
-            var inputElementHtml;
-                
-
-                    if (DoingTest == true){
-                        inputElementHtml = `
-                <div style="display: inline-flex; align-items: center;">
-                    <span id = "mark-question-${completionNumber}" class = "number-question"> <p type = "${questionType}" style="margin: 0;"> <b >${completionNumber}</b> </p> </span> <input class="form-control"  autocomplete="off" name = "question-id-${completionNumber}"  type="text" id="answer-input-${completionNumber}" class="answer-input" name="question-${completionNumber}" />    
-                </div>
+        
+                // Build input/select HTML
+                let inputElementHtml;
+                if (hasOptionChoices) {
+                    // build options html with a default empty option (value = "")
+                    let optionsHtml = `<option value=""></option>`;
+                    optionChoices.forEach(opt => {
+                        // escape to avoid HTML injection
+                        const safeOpt = String(opt)
+                            .replace(/&/g, '&amp;')
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;')
+                            .replace(/"/g, '&quot;');
+                        optionsHtml += `<option value="${safeOpt}">${safeOpt}</option>`;
+                    });
+        
+                    // disabled nếu không đang làm bài
+                    const disabledAttr = DoingTest ? '' : ' disabled';
+        
+                    inputElementHtml = `
+                        <div style="display: inline-flex; align-items: center;">
+                            <span id="mark-question-${completionNumber}" class="number-question">
+                                <p type="${questionType}" style="margin: 0;"><b>${completionNumber}</b></p>
+                            </span>
+                            <select class="form-control completion-select"
+                                    autocomplete="off"
+                                    name="question-id-${completionNumber}"
+                                    id="answer-input-${completionNumber}"${disabledAttr}>
+                                ${optionsHtml}
+                            </select>
+                        </div>
                     `;
-                    }
-                        else if(DoingTest == false){
-                            inputElementHtml = `
-                            <div style="display: inline-flex; align-items: center;">
-                                <span id = "mark-question-${completionNumber}" class = "number-question"> <p type = "${questionType}" style="margin: 0;"> <b >${completionNumber}</b> </p> </span> <input class="form-control"  autocomplete="off" name = "question-id-${completionNumber}"  type="text" id="answer-input-${completionNumber}" class="answer-input" name="question-${completionNumber}" disabled />    
-                            </div>
-                                `;                 
-                    }
-
-                    
+                } else {
+                    // text input fallback
+                    const disabledAttr = DoingTest ? '' : ' disabled';
+                    inputElementHtml = `
+                        <div style="display: inline-flex; align-items: center;">
+                            <span id="mark-question-${completionNumber}" class="number-question">
+                                <p type="${questionType}" style="margin: 0;"><b>${completionNumber}</b></p>
+                            </span>
+                            <input class="form-control completion-input"
+                                autocomplete="off"
+                                name="question-id-${completionNumber}"
+                                type="text"
+                                id="answer-input-${completionNumber}" ${disabledAttr} />
+                        </div>
+                    `;
+                }
+        
                 questionContent = questionContent.replace('<input>', inputElementHtml);
                 completionInputIds.push(`answer-input-${completionNumber}`);
-                
             });
+        
             let currentIndexQuestion = currentQuestionNumber;
         
             // Gắn nội dung đã thay thế vào DOM
-            questionElement.innerHTML = `
-                    <p>${questionContent}</p>
-
-            `;
-
-
-            if (DoingTest == true){
-                correctAnswerElement.innerHTML = `<p class ="correct-ans" style = "display:none"><b>Correct Answer:</b> ${correctAnswers.join(', ')}</p>`;
+            questionElement.innerHTML = `<p>${questionContent}</p>`;
+        
+            // Hiển thị correct answers theo DoingTest
+            if (DoingTest == true) {
+                correctAnswerElement.innerHTML = `<p class="correct-ans" style="display:none"><b>Correct Answer:</b> ${correctAnswers.join(', ')}</p>`;
+            } else {
+                correctAnswerElement.innerHTML = `<p class="correct-ans" style="display:block"><b>Correct Answer:</b> ${correctAnswers.join(', ')}</p>`;
             }
-            else if(DoingTest == false){
-                correctAnswerElement.innerHTML = `<p class ="correct-ans" style = "display:block"><b>Correct Answer:</b> ${correctAnswers.join(', ')}</p>`;
-            }
-
-
             questionElement.appendChild(correctAnswerElement);
-
+        
             // Chờ DOM cập nhật hoàn tất rồi mới gán sự kiện
             setTimeout(() => {
                 completionInputIds.forEach((inputId, boxIndex) => {
@@ -211,23 +234,52 @@ function loadPart(partIndex) {
                         return;
                     }
         
-                    // Thêm sự kiện khi người dùng nhập
-                    inputElement.addEventListener('input', (event) => {
-                        const isAnswered = event.target.value.trim() != ''; // true nếu có nội dung, false nếu trống
-
-                        checkboxCurrent(currentIndexQuestion + boxIndex);          
-                        saveCompletionAnswer(partIndex, groupIndex, questionIndex, boxIndex, event.target.value);
-                      //  updateAnsweredCheckbox(currentIndexQuestion + boxIndex, isAnswered);
-
-                    });
+                    // common handler
+                    const handler = (value) => {
+                        const isAnswered = String(value).trim() !== '';
+                        checkboxCurrent(currentIndexQuestion + boxIndex);
+                        saveCompletionAnswer(partIndex, groupIndex, questionIndex, boxIndex, value);
+                        // nếu bạn muốn cập nhật trạng thái answered checkbox, mở comment dưới
+                        // updateAnsweredCheckbox(currentIndexQuestion + boxIndex, isAnswered);
+                    };
         
-                    // Khôi phục dữ liệu đã lưu
+                    // gán event: 'change' cho select, 'input' cho text input
+                    if (inputElement.tagName.toLowerCase() === 'select') {
+                        inputElement.addEventListener('change', (event) => {
+                            handler(event.target.value);
+                        });
+                    } else {
+                        inputElement.addEventListener('input', (event) => {
+                            handler(event.target.value);
+                        });
+                    }
+        
+                    // Khôi phục dữ liệu đã lưu (nếu có)
                     const savedAnswer = userAnswers?.[partIndex]?.[groupIndex]?.[questionIndex]?.[boxIndex];
-                    if (savedAnswer) {
-                        inputElement.value = savedAnswer;
+                    if (savedAnswer !== undefined && savedAnswer !== null && String(savedAnswer) !== '') {
+                        if (inputElement.tagName.toLowerCase() === 'select') {
+                            // nếu giá trị saved tồn tại trong options thì set, nếu không thì để rỗng
+                            const optExists = Array.from(inputElement.options).some(o => o.value === String(savedAnswer));
+                            if (optExists) {
+                                inputElement.value = String(savedAnswer);
+                            } else {
+                                inputElement.value = ''; // giữ mặc định rỗng
+                            }
+                        } else {
+                            inputElement.value = String(savedAnswer);
+                        }
+                        updateAnsweredCheckbox(currentIndexQuestion + boxIndex, true);
+                    } else {
+                        // giữ default rỗng cho select hoặc input rỗng
+                        if (inputElement.tagName.toLowerCase() === 'select') {
+                            inputElement.value = '';
+                        } else {
+                            inputElement.value = '';
+                        }
+                        updateAnsweredCheckbox(currentIndexQuestion + boxIndex, false);
                     }
                 });
-            }, 0); // Delay để DOM cập nhật trước khi gán sự kiện
+            }, 0);
         
             // Tăng số thứ tự câu hỏi
             currentQuestionNumber += question.box_answers.length;

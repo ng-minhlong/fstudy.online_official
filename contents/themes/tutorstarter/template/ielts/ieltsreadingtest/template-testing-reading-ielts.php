@@ -974,7 +974,9 @@ html {
 </style>
 </head>
 <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-<script> let pre_id_test_ = `<?php echo esc_html($custom_number); ?>`;</script>
+<script> 
+    let pre_id_test_ = `<?php echo esc_html($custom_number); ?>`;
+</script>
 <body onload="main()">
     <div id = "test-prepare">
         <div class="loader"></div>
@@ -1186,7 +1188,8 @@ html {
 echo'
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://smtpjs.com/v3/smtp.js"></script>
-    <script src="'. $site_url .'/contents/themes/tutorstarter/ielts-reading-tookit/script_reading_12.js"></script>
+    <script src="'. $site_url .'/contents/themes/tutorstarter/ielts-reading-tookit/script_reading_13.js"></script>
+    <script src="'. $site_url .'/contents/themes/tutorstarter/ielts-reading-tookit/dev-script.js"></script>
     <script src="'. $site_url .'/contents/themes/tutorstarter/ielts-reading-tookit/highlight-text-1.js"></script>'
     ?>
 
