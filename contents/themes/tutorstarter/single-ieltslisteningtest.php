@@ -419,6 +419,21 @@ $parts = explode(',', $question_choose);
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
+        
+        /* Comment Section Styles */
+        .comment-section-container {
+            margin-top: 40px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .comment-section-container h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
 </style>
 
         <div class="container-info-test">
@@ -689,9 +704,16 @@ document.getElementById('full-test').addEventListener('click', function() {
     setActiveOption('full-test');
 });
 
-// Event listener for the discussion tab to redirect to #comment
+// Event listener for the discussion tab to redirect to comment section
 document.getElementById('discussion').addEventListener('click', function() {
-    window.location.href = '#comment';  // Redirect to #comment
+    // Scroll to comment section smoothly
+    const commentSection = document.querySelector('.comment-section-container');
+    if (commentSection) {
+        commentSection.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Set active state
+    setActiveOption('discussion');
 });
 
 function setActiveOption(optionId) {
@@ -940,14 +962,19 @@ function showNotification(message, type) {
 }
 </script>
 
-
-            
-<?php if ( comments_open() || get_comments_number() ) :
-    comments_template();
-endif; ?>
-
-
-    
+        <!-- Custom Comment Section -->
+        <div class="comment-section-container" style="margin-top: 40px; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+            <h2 class="h2-test" style="margin-bottom: 20px;">Thảo luận và bình luận</h2>
+            <?php 
+            // Include custom comment template
+            $custom_comment_path = get_template_directory() . '/custom-comment/index.php';
+            if (file_exists($custom_comment_path)) {
+                include $custom_comment_path;
+            } else {
+                echo '<p style="color: #666; text-align: center; padding: 20px;">Không thể tải comment template.</p>';
+            }
+            ?>
+        </div>
     
     <?php
     

@@ -46,109 +46,134 @@
   
     // ---------- ADD CATEGORY MODAL (unchanged behavior) ----------
     function showAddCategoryModal(container, partIndex, idTest) {
-      const ctxText = (container.innerText || '') + '\n' +
-                      (container.previousElementSibling ? container.previousElementSibling.innerText : '') + '\n' +
-                      (container.nextElementSibling ? container.nextElementSibling.innerText : '');
-      const parsed = parseRangeFromText(ctxText);
-  
-      const overlay = el('div', { class: 'dev-add-cat-overlay', style: {
-        position: 'fixed', left: '0', top: '0', right: '0', bottom: '0',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        zIndex: '99999', background: 'rgba(0,0,0,0.3)'
-      }});
-  
-      const box = el('div', { class: 'dev-add-cat-box', style: {
-        minWidth: '320px', maxWidth: '720px', padding: '16px', borderRadius: '8px',
-        background: '#fff', boxShadow: '0 6px 24px rgba(0,0,0,0.2)'
-      }});
-  
-      const title = el('h3', {}, [`Add category (Part ${partIndex}, Test ${idTest})`]);
-      const info = el('div', { style: { marginBottom: '8px', fontSize: '13px', color: '#333' } }, [
-        'Hệ thống sẽ cố gắng lấy range từ nội dung (ví dụ "Question 1-6"). Nếu không chính xác, chỉnh tay start/end.'
-      ]);
-  
-      const select = el('select', { style: { width: '100%', padding: '8px', marginBottom: '8px' } });
-      CATEGORY_OPTIONS.forEach(opt => {
-        select.appendChild(el('option', { value: opt.value }, opt.label));
-      });
-  
-      const row = el('div', { style: { display: 'flex', gap: '8px', marginBottom: '8px' } });
-      const startInput = el('input', { type: 'number', placeholder: 'start', style: { flex: '1', padding: '8px' } });
-      const endInput = el('input', { type: 'number', placeholder: 'end', style: { flex: '1', padding: '8px' } });
-      if (parsed) {
-        startInput.value = parsed.start;
-        endInput.value = parsed.end;
-      }
-  
-      row.appendChild(startInput);
-      row.appendChild(endInput);
-  
-      const btnRow = el('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: '8px' }});
-      const cancelBtn = el('button', { type: 'button', style: { padding: '8px 12px' } }, 'Cancel');
-      const saveBtn = el('button', { type: 'button', style: { padding: '8px 12px' } }, 'Save');
-  
-      const status = el('div', { style: { marginTop: '8px', fontSize: '13px' } }, '');
-  
-      btnRow.appendChild(cancelBtn);
-      btnRow.appendChild(saveBtn);
-  
-      box.appendChild(title);
-      box.appendChild(info);
-      box.appendChild(select);
-      box.appendChild(row);
-      box.appendChild(btnRow);
-      box.appendChild(status);
-      overlay.appendChild(box);
-      document.body.appendChild(overlay);
-  
-      function close() { overlay.remove(); }
-      cancelBtn.addEventListener('click', close);
-  
-      saveBtn.addEventListener('click', async function() {
-        const startVal = parseInt(startInput.value, 10);
-        const endVal = parseInt(endInput.value, 10);
-        const typeVal = select.value;
-        if (!Number.isInteger(startVal) || !Number.isInteger(endVal) || startVal <= 0 || endVal <= 0 || endVal < startVal) {
-          status.textContent = 'Vui lòng nhập start/end hợp lệ (end >= start).';
-          status.style.color = 'red';
-          return;
-        }
-        const categoryStructure = [{ start: String(startVal), end: String(endVal), type: typeVal }];
-  
-        status.textContent = 'Đang gửi...';
-        status.style.color = '#333';
-  
-        try {
-          const resp = await fetch(`${siteUrl}/api/v1/dev/ielts/reading_listening/update-category`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              idTest: idTest,
-              partIndex: partIndex,
-              typeRequest: 'ielts_reading',
-              category: categoryStructure
-            })
-          });
-  
-          if (!resp.ok) {
-            const txt = await resp.text();
-            throw new Error('Server trả lỗi: ' + resp.status + ' ' + txt);
+        // Gather context text for this container
+        const ctxText = (container.innerText || '') + '\n' +
+                        (container.previousElementSibling ? container.previousElementSibling.innerText : '') + '\n' +
+                        (container.nextElementSibling ? container.nextElementSibling.innerText : '');
+        const parsed = parseRangeFromText(ctxText); // may be null
+      
+        // --- compute global minimum start across all group-containers ---
+        let minStart = Infinity;
+        document.querySelectorAll('.group-container').forEach(c => {
+          const t = (c.innerText || '') + '\n' +
+                    (c.previousElementSibling ? c.previousElementSibling.innerText : '') + '\n' +
+                    (c.nextElementSibling ? c.nextElementSibling.innerText : '');
+          const p = parseRangeFromText(t);
+          if (p && Number.isInteger(p.start)) {
+            if (p.start < minStart) minStart = p.start;
           }
-          const json = await resp.json();
-          if (json.success) {
-            status.textContent = 'Lưu thành công.';
-            status.style.color = 'green';
-            setTimeout(() => { close(); }, 800);
-          } else {
-            status.textContent = 'Lưu thất bại: ' + (json.message || 'unknown');
+        });
+        if (!isFinite(minStart)) minStart = 1; // if nothing found, assume 1
+        const offset = (minStart > 1) ? (minStart - 1) : 0; // amount to subtract to normalize to start-from-1
+      
+        // modal overlay
+        const overlay = el('div', { class: 'dev-add-cat-overlay', style: {
+          position: 'fixed', left: '0', top: '0', right: '0', bottom: '0',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: '99999', background: 'rgba(0,0,0,0.3)'
+        }});
+      
+        const box = el('div', { class: 'dev-add-cat-box', style: {
+          minWidth: '320px', maxWidth: '720px', padding: '16px', borderRadius: '8px',
+          background: '#fff', boxShadow: '0 6px 24px rgba(0,0,0,0.2)'
+        }});
+      
+        const title = el('h3', {}, [`Add category (Part ${partIndex}, Test ${idTest})`]);
+        const info = el('div', { style: { marginBottom: '8px', fontSize: '13px', color: '#333' } }, [
+          // show helpful hint about normalization
+          `Hệ thống cố gắng lấy range từ nội dung. Nếu các Q bắt đầu từ ${minStart} trên trang, hệ thống sẽ chuẩn hoá để bắt đầu từ 1 (trừ ${offset}). Bạn vẫn có thể chỉnh tay start/end.`
+        ]);
+      
+        const select = el('select', { style: { width: '100%', padding: '8px', marginBottom: '8px' } });
+        CATEGORY_OPTIONS.forEach(opt => {
+          select.appendChild(el('option', { value: opt.value }, opt.label));
+        });
+      
+        const row = el('div', { style: { display: 'flex', gap: '8px', marginBottom: '8px' } });
+        const startInput = el('input', { type: 'number', placeholder: 'start', style: { flex: '1', padding: '8px' } });
+        const endInput = el('input', { type: 'number', placeholder: 'end', style: { flex: '1', padding: '8px' } });
+      
+        // If we parsed a range, normalize it by subtracting offset so it becomes relative-to-1
+        if (parsed) {
+          const displayStart = Math.max(1, parsed.start - offset);
+          const displayEnd = Math.max(displayStart, parsed.end - offset);
+          startInput.value = displayStart;
+          endInput.value = displayEnd;
+        }
+      
+        row.appendChild(startInput);
+        row.appendChild(endInput);
+      
+        const btnRow = el('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: '8px' }});
+        const cancelBtn = el('button', { type: 'button', style: { padding: '8px 12px' } }, 'Cancel');
+        const saveBtn = el('button', { type: 'button', style: { padding: '8px 12px' } }, 'Save');
+      
+        const status = el('div', { style: { marginTop: '8px', fontSize: '13px' } }, '');
+      
+        btnRow.appendChild(cancelBtn);
+        btnRow.appendChild(saveBtn);
+      
+        box.appendChild(title);
+        box.appendChild(info);
+        box.appendChild(select);
+        box.appendChild(row);
+        box.appendChild(btnRow);
+        box.appendChild(status);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+      
+        function close() { overlay.remove(); }
+        cancelBtn.addEventListener('click', close);
+      
+        saveBtn.addEventListener('click', async function() {
+          const startVal = parseInt(startInput.value, 10);
+          const endVal = parseInt(endInput.value, 10);
+          const typeVal = select.value;
+          if (!Number.isInteger(startVal) || !Number.isInteger(endVal) || startVal <= 0 || endVal <= 0 || endVal < startVal) {
+            status.textContent = 'Vui lòng nhập start/end hợp lệ (end >= start).';
+            status.style.color = 'red';
+            return;
+          }
+      
+          // startVal/endVal are already normalized (relative to 1). Send them as-is.
+          const categoryStructure = [{ start: String(startVal), end: String(endVal), type: typeVal }];
+      
+          status.textContent = 'Đang gửi...';
+          status.style.color = '#333';
+      
+          try {
+            // NOTE: keep your existing endpoint pattern; here I use the same as your snippet
+            const resp = await fetch(`${siteUrl}/api/v1/dev/ielts/reading_listening/update-category`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                idTest: idTest,
+                partIndex: partIndex,
+                typeRequest: 'ielts_reading',
+                category: categoryStructure
+              })
+            });
+      
+            if (!resp.ok) {
+              const txt = await resp.text();
+              throw new Error('Server trả lỗi: ' + resp.status + ' ' + txt);
+            }
+            const json = await resp.json();
+            if (json.success) {
+              status.textContent = 'Lưu thành công.';
+              status.style.color = 'green';
+              setTimeout(() => { close(); }, 800);
+            } else {
+              status.textContent = 'Lưu thất bại: ' + (json.message || 'unknown');
+              status.style.color = 'red';
+            }
+          } catch (err) {
+            status.textContent = 'Lỗi: ' + err.message;
             status.style.color = 'red';
           }
-        } catch (err) {
-          status.textContent = 'Lỗi: ' + err.message;
-          status.style.color = 'red';
-        }
-      });
-    }
+        });
+      }
+      
   
     // ---------- CHANGE TYPE (option_choice) MODAL (auto-detect group and allow edit) ----------
     function showChangeTypeModal(container, partIndex, idTest) {
